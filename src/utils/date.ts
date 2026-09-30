@@ -93,6 +93,11 @@ export function getUpcomingClasses(entries: ScheduleEntry[]): ScheduleEntry[] {
       // 3. Exclude non-class entries
       if (entry.type !== "CLASS") return false;
       
+      // 4. Exclude weekend entries (Saturday = 6, Sunday = 0) as no actual classes occur on weekends
+      const startDate = parseKietDateTime(entry.start);
+      const dayOfWeek = startDate.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) return false;
+
       return true;
     })
     .filter((entry) => parseKietDateTime(entry.end).getTime() >= now)
@@ -126,7 +131,7 @@ export function getWeeklyClasses(entries: ScheduleEntry[]): ScheduleEntry[] {
 
   return entries
     .filter((entry) => {
-      // 2. Exclude ANY event occurring on an exam date
+      // 2. Exclude ANY event occurring on an event/exam date
       const eventDate = formatIsoDate(parseKietDateTime(entry.start));
       if (examDates.has(eventDate)) {
         return false;
@@ -134,6 +139,11 @@ export function getWeeklyClasses(entries: ScheduleEntry[]): ScheduleEntry[] {
       
       // 3. Exclude non-class entries
       if (entry.type !== "CLASS") return false;
+
+      // 4. Exclude weekend entries (Saturday = 6, Sunday = 0) as no actual classes occur on weekends
+      const startDate = parseKietDateTime(entry.start);
+      const dayOfWeek = startDate.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) return false;
       
       return true;
     })
