@@ -99,7 +99,7 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <img
             src="/favicon.png"
-            alt="kiet-bunk-helper logo"
+            alt="Safe75 Attendance logo"
             style={{
               width: 52,
               height: 52,
@@ -118,12 +118,12 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
               letterSpacing: "-0.5px",
             }}
           >
-            kiet-bunk-helper
+            Safe75 Attendance
           </h1>
           <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 14, lineHeight: 1.5 }}>
             {transactionId
-              ? otpMessage || "Enter the 6-digit OTP sent by CyberVidya"
-              : "Enter your CyberVidya credentials to continue."}
+              ? otpMessage || "Enter the 6-digit OTP sent to your mobile/email"
+              : "Enter your Student ID & Password to continue."}
           </p>
         </div>
 

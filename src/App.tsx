@@ -850,7 +850,7 @@ function App() {
             <div className="mobile-nav-collapsible">
               <Link to="/" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>📊 Dashboard</Link>
               <Link to="/today" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/today' ? 'active' : ''}`}>📌 Today's Status</Link>
-              <Link to="/strategy" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/strategy' ? 'active' : ''}`}>🎯 Bunk Planner</Link>
+              <Link to="/strategy" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/strategy' ? 'active' : ''}`}>🎯 Attendance Planner</Link>
               <Link to="/multiverse" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/multiverse' ? 'active' : ''}`}>🌀 What If? (Multiverse)</Link>
               <Link to="/calendar" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/calendar' ? 'active' : ''}`}>📅 Class Schedule</Link>
               <Link to="/history" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/history' ? 'active' : ''}`}>📜 Attendance History</Link>
@@ -933,7 +933,7 @@ function App() {
                     color: "var(--text-primary)",
                   }}
                 >
-                  KIET Bunk Helper is Open Source
+                  Safe75 Attendance is Open Source
                 </h3>
               </div>
               <p
@@ -945,7 +945,7 @@ function App() {
                   lineHeight: 1.5,
                 }}
               >
-                Built for KIETians to track attendance, plan safe bunks, calculate medical leave rescue, and simulate multiverse scenarios with 100% privacy.
+                Built for students to track attendance, plan safe margins, calculate medical leave rescue, and simulate academic scenarios with 100% privacy.
               </p>
             </div>
 
@@ -1002,6 +1002,20 @@ function App() {
           <FooterCollaborators />
 
           <div
+            style={{
+              padding: "14px 18px",
+              borderRadius: 14,
+              background: "var(--bg-card-subtle)",
+              border: "1px solid var(--border)",
+              fontSize: 12,
+              color: "var(--text-muted)",
+              lineHeight: 1.5,
+            }}
+          >
+            <strong>Legal & Privacy Disclaimer:</strong> Safe75 Attendance is an independent, user-side utility designed to assist students in monitoring and maintaining mandatory attendance compliance. It is not affiliated with, endorsed by, or connected to any educational institution or portal software provider. All credentials and data processing remain strictly on your local device.
+          </div>
+
+          <div
 
             style={{
               paddingTop: 12,
@@ -1016,10 +1030,10 @@ function App() {
             }}
           >
             <div>
-              Made with ❤️ for KIET Students • <a href="https://github.com/siddharthavsomvanshi/kiet-bunk-helper" target="_blank" rel="noreferrer" style={{ color: "var(--primary)", textDecoration: "none", fontWeight: 600 }}>siddharthavsomvanshi/kiet-bunk-helper</a>
+              Made with ❤️ for Students • <strong>Safe75 Attendance</strong>
             </div>
             <div>
-              MIT Licensed • Community Driven
+              MIT Licensed • Client-Side Privacy
             </div>
           </div>
         </footer>
@@ -1053,7 +1067,7 @@ export function SetupCard({ hasData, onLoginClick }: { hasData: boolean; onLogin
             fontWeight: 600,
           }}
         >
-          Connect KIET to load your attendance.
+          Connect your student portal to load your attendance.
         </div>
       )}
 

@@ -22,7 +22,7 @@ clientsClaim();
 // 4. Web Push Event Listener
 self.addEventListener("push", (event: PushEvent) => {
   let payload = {
-    title: "KIET Bunk Helper",
+    title: "Safe75 Attendance",
     body: "You have a new notification.",
     icon: "/favicon.png",
     badge: "/favicon.png",

@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.png"],
       manifest: {
-        name: "KIET Attendance Dashboard",
-        short_name: "Attendance",
-        description: "KIET ERP Attendance Tracker & Planner",
+        name: "Safe75 Attendance",
+        short_name: "Safe75",
+        description: "Smart Attendance Tracker & Academic Planning Suite",
         theme_color: "#ffffff",
         background_color: "#f8fafc",
         display: "standalone",

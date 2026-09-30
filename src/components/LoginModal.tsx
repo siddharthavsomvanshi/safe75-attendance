@@ -95,8 +95,8 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
       title={transactionId ? "Verify OTP" : "Login to CyberVidya"}
       subtitle={
         transactionId
-          ? otpMessage || "Enter the 6-digit OTP sent by CyberVidya"
-          : "Connect your KIET ERP account directly without needing the Chrome extension."
+          ? otpMessage || "Enter the 6-digit OTP sent to your registered mobile/email"
+          : "Connect your Student ERP portal directly without needing the Chrome extension."
       }
       onClose={onClose}
     >

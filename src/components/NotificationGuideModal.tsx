@@ -63,7 +63,7 @@ export function NotificationGuideModal({
                 How Smart Notifications Work
               </h3>
               <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: 0 }}>
-                Get accurate daily morning bunk recommendations
+                Get accurate daily morning attendance recommendations
               </p>
             </div>
           </div>
@@ -113,7 +113,7 @@ export function NotificationGuideModal({
                   >
                     🎯
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#f8fafc" }}>KIET Bunk Helper</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#f8fafc" }}>Safe75 Attendance</span>
                 </div>
                 <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>8:00 AM IST</span>
               </div>
@@ -172,10 +172,10 @@ export function NotificationGuideModal({
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
-                  Check the app at least once daily (After College)
+                  Check the app at least once daily (After Classes)
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2, lineHeight: 1.4 }}>
-                  Whenever you open KIET Bunk Helper after college, it automatically captures your latest CyberVidya attendance numbers so the system knows your exact counts.
+                  Whenever you open Safe75 Attendance after class, it automatically captures your latest attendance numbers so the system knows your exact counts.
                 </div>
               </div>
             </div>

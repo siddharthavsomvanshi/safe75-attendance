@@ -323,8 +323,8 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
     <>
       <section style={{ display: "grid", gap: 14 }}>
         <Panel
-          title="Whole Day Bunk Planner"
-          subtitle="Plan your bunks without dropping below 75%."
+          title="Whole Day Absence Planner"
+          subtitle="Plan off-days safely without dropping below 75%."
         >
           <div className="planner-panel-shell" style={{ display: "grid", gap: 18 }}>
             <div
@@ -338,7 +338,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
               }}
             >
               <div style={{ color: "var(--text-secondary)", fontSize: 14, maxWidth: "72ch" }}>
-                Pick future dates and see the impact before you skip.
+                Pick future dates and see the impact before taking planned leave.
               </div>
             </div>
 
@@ -361,7 +361,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                     border: "1px solid var(--border)",
                   }}
                 >
-                  <strong>Pick bunk days</strong>
+                  <strong>Pick planned leave days</strong>
                   <span style={{ color: "var(--text-muted)", fontSize: 14 }}>
                     Selected: {data.selectedBunkDates.size}
                     {data.selectedBunkCutoffDateKey
@@ -449,7 +449,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                         }}
                       >
                         <div>
-                          <div style={{ fontWeight: 800, fontSize: 18 }}>Overall after bunks</div>
+                          <div style={{ fontWeight: 800, fontSize: 18 }}>Overall after planned leave</div>
                           <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
                             Your attendance after the last selected day.
                           </div>
@@ -475,7 +475,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                               fontSize: 13,
                             }}
                           >
-                            After bunks:{" "}
+                            After leave:{" "}
                             {data.overallWholeDayPlan.afterSelectedPercentage.toFixed(1)}%
                           </span>
                         </div>
@@ -487,7 +487,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                         healthy={data.overallWholeDayPlan.currentPercentage >= 75}
                       />
                       <ProgressBar
-                        label={`After bunks (${data.overallWholeDayPlan.selectedClassCount} missed)`}
+                        label={`After leave (${data.overallWholeDayPlan.selectedClassCount} missed)`}
                         percentage={data.overallWholeDayPlan.afterSelectedPercentage}
                         healthy={data.overallWholeDayPlan.afterSelectedPercentage >= 75}
                       />
