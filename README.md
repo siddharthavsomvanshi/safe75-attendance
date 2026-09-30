@@ -1,4 +1,4 @@
-# KIET Attendance Dashboard (KIET Bunk Helper)
+# Attendance Dashboard (Safe75 Attendance)
 
 A modern, privacy-first attendance tracking, bunk strategy planning, and analytical platform designed for **KIET Group of Institutions** students accessing KIET ERP (CyberVidya).
 
@@ -6,7 +6,7 @@ A modern, privacy-first attendance tracking, bunk strategy planning, and analyti
 
 ## 🚀 Key Features
 
-- **🔑 Direct In-App Login**: Sign in directly using your CyberVidya Roll Number / Student ID, Password, and 6-digit OTP—**no Chrome extension required**.
+- **🔑 Direct In-App Login**: Sign in directly using your CyberVidya Roll Number / Student ID, Password, and 6-digit OTP.
 - **📊 Real-Time Attendance Overview**: Instant view of total lectures, present count, extra attendance, current percentages, safe bunks left, and lectures needed to reach target thresholds (e.g., 75%).
 - **🔥 Streak Tracker & Reliability Index**: Calculates strict consecutive attendance streaks across subjects with data reliability indicators.
 - **🎯 Bunk Strategy & Recovery Planner**: Forecasts future attendance based on planned bunks across upcoming weeks and builds custom recovery plans.
@@ -67,8 +67,8 @@ dashboard/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/siddharthavsomvanshi/kiet-bunk-helper.git
-   cd kiet-bunk-helper
+   git clone https://github.com/siddharthavsomvanshi/safe75-attendance.git
+   cd safe75-attendnace
    ```
 
 2. **Install dependencies**:
