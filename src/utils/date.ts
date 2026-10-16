@@ -198,3 +198,76 @@ export function getPreviousWorkingDay(date: Date): Date {
 export function formatDisplayDate(date: Date): string {
   return DATE_FORMATTER.format(date);
 }
+
+export function parseTimeToMinutes(timeStr: string | null | undefined): number | null {
+  if (!timeStr || typeof timeStr !== "string") return null;
+  // Clean whitespace, narrow non-breaking spaces (\u202F), and non-breaking spaces (\u00A0)
+  const cleaned = timeStr.trim().replace(/[\u202F\u00A0\s]+/g, " ");
+  const match = cleaned.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+  if (!match) return null;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const meridiem = match[3] ? match[3].toUpperCase() : null;
+
+  if (meridiem === "PM" && hours !== 12) {
+    hours += 12;
+  } else if (meridiem === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  return hours * 60 + minutes;
+}
+
+export function matchesScheduleTimeSlot(
+  scheduleStart: string,
+  scheduleEnd: string | null | undefined,
+  lectureTimeSlot: string | null | undefined
+): boolean {
+  if (!lectureTimeSlot || !scheduleStart) return false;
+
+  const startDateObj = parseKietDateTime(scheduleStart);
+  const schedStartMinutes = startDateObj.getHours() * 60 + startDateObj.getMinutes();
+
+  const endDateObj = scheduleEnd ? parseKietDateTime(scheduleEnd) : null;
+  const schedEndMinutes = endDateObj
+    ? endDateObj.getHours() * 60 + endDateObj.getMinutes()
+    : schedStartMinutes + 50;
+
+  // Split lecture time slot by "-" or "to"
+  const slotParts = lectureTimeSlot.split(/[-–—]|(?:\bto\b)/i).map((s) => s.trim());
+  if (slotParts.length === 0) return false;
+
+  const slotStartMinutes = parseTimeToMinutes(slotParts[0]);
+  if (slotStartMinutes === null) {
+    // Fallback: substring check if format is non-standard
+    const kietTimeStart = new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+      .format(startDateObj)
+      .toUpperCase()
+      .replace(/[\u202F\u00A0\s]+/g, " ");
+    const normalizedSlot = lectureTimeSlot.toUpperCase().replace(/[\u202F\u00A0\s]+/g, " ");
+    return normalizedSlot.includes(kietTimeStart);
+  }
+
+  const slotEndMinutes =
+    slotParts.length > 1 ? parseTimeToMinutes(slotParts[1]) : slotStartMinutes + 50;
+
+  // 1. Direct start match within 15 mins (e.g. 09:00 vs 09:05)
+  if (Math.abs(schedStartMinutes - slotStartMinutes) <= 15) {
+    return true;
+  }
+
+  // 2. Overlap / Containment (for multi-period labs or block classes)
+  // e.g. Lab from 09:00 AM - 10:40 AM covers Period 1 (09:00-09:50) and Period 2 (09:50-10:40)
+  if (slotEndMinutes !== null) {
+    if (schedStartMinutes >= slotStartMinutes - 5 && schedStartMinutes < slotEndMinutes - 5) {
+      return true;
+    }
+  }
+
+  return false;
+}

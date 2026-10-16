@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { fetchScheduleUnified, fetchDatewiseAttendanceUnified } from "../services/cybervidyaApi";
-import { getWeekRange, parseKietDateTime, formatIsoDate, getPreviousWorkingDay, formatDisplayDate } from "../utils/date";
+import { getWeekRange, parseKietDateTime, formatIsoDate, getPreviousWorkingDay, formatDisplayDate, matchesScheduleTimeSlot } from "../utils/date";
 import type { StudentContext } from "../App";
 import type { StudentDetails, ScheduleEntry, DatewiseAttendanceBucket } from "../types/kiet";
 import { Notice, StatusCard, secondaryButtonStyle } from "../App";
@@ -150,31 +150,11 @@ export function TodayStatus({ attendance, studentContext }: TodayStatusProps) {
          });
          
          let matchedLecture = null;
-         
-         // Format start time to "hh:mm A" robustly for matching KIET's format "09:00 AM - 09:50 AM"
-         const entryDateObj = parseKietDateTime(tc.entry.start);
-         let kietTimeStart = new Intl.DateTimeFormat("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-         }).format(entryDateObj).toUpperCase(); // e.g. "09:00 AM"
-
-         // Standardize specific formatting quirks
-         if (kietTimeStart.startsWith("0") && kietTimeStart.charAt(1) !== ":") {
-             // Already "09:00 AM"
-         } else if (kietTimeStart.length === 7) { // "9:00 AM" -> "09:00 AM"
-             kietTimeStart = "0" + kietTimeStart;
-         }
-
          for (const l of lectures) {
-            if (l.timeSlot && l.timeSlot.toUpperCase().includes(kietTimeStart)) {
+            if (matchesScheduleTimeSlot(tc.entry.start, tc.entry.end, l.timeSlot)) {
                matchedLecture = l;
                break;
             }
-         }
-         
-         if (!matchedLecture && lectures.length > 0) {
-            matchedLecture = lectures[0];
          }
          
          return {
@@ -347,6 +327,12 @@ export function TodayStatus({ attendance, studentContext }: TodayStatusProps) {
                       background: "var(--danger-soft)",
                       color: "var(--danger)",
                     };
+                 } else if (currentStatus === "ADJUSTED") {
+                    statusDisplay = "Adjusted";
+                    statusTheme = {
+                      background: "var(--warning-soft)",
+                      color: "var(--warning)",
+                    };
                  } else if (!tc.courseId || !tc.courseComponentId) {
                     statusDisplay = "Unavailable";
                     statusTheme = {
@@ -363,9 +349,11 @@ export function TodayStatus({ attendance, studentContext }: TodayStatusProps) {
                        ? "status-badge status-badge--success"
                        : currentStatus === "ABSENT"
                          ? "status-badge status-badge--danger"
-                         : !tc.courseId || !tc.courseComponentId
-                           ? "status-badge status-badge--neutral"
-                           : "status-badge status-badge--warning";
+                         : currentStatus === "ADJUSTED"
+                           ? "status-badge status-badge--warning"
+                           : !tc.courseId || !tc.courseComponentId
+                             ? "status-badge status-badge--neutral"
+                             : "status-badge status-badge--warning";
 
                  return (
                    <div key={idx} className="standard-card interactive-row" style={{ 

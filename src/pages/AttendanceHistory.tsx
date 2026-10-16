@@ -3,7 +3,7 @@ import type { StudentContext, SubjectSummary } from "../App";
 import { EmptyMessage, Panel } from "../components/UI";
 import type { DatewiseAttendanceBucket, DatewiseAttendanceLecture, ScheduleEntry } from "../types/kiet";
 import { fetchScheduleUnified, fetchDatewiseAttendanceUnified } from "../services/cybervidyaApi";
-import { formatIsoDate, getWeekRange, parseKietDateTime } from "../utils/date";
+import { formatIsoDate, getWeekRange, parseKietDateTime, matchesScheduleTimeSlot } from "../utils/date";
 
 type HistoryRow = {
   key: string;
@@ -73,13 +73,10 @@ function getLectureForClass(
     return null;
   }
 
-  const start = new Intl.DateTimeFormat("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  }).format(parseKietDateTime(entry.start)).toUpperCase();
-
-  return onDate.find((lecture) => lecture.timeSlot?.toUpperCase().includes(start)) ?? onDate[0];
+  return (
+    onDate.find((lecture) => matchesScheduleTimeSlot(entry.start, entry.end, lecture.timeSlot)) ??
+    null
+  );
 }
 
 export function AttendanceHistory({
