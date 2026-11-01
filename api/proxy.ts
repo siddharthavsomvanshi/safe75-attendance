@@ -40,7 +40,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const queryString = searchParams.toString();
-  const targetUrl = `https://kiet.cybervidya.net/api/${targetPath}${queryString ? `?${queryString}` : ""}`;
+  const upstreamBase = (process.env.CYBERVIDYA_UPSTREAM_URL || "https://kiet.cybervidya.net/api").replace(/\/$/, "");
+  const targetUrl = `${upstreamBase}/${targetPath}${queryString ? `?${queryString}` : ""}`;
 
   // Extract client IP address - take only the first client IP and ensure no proxy/AWS IPs are attached
   const rawXff = req.headers["x-forwarded-for"];
@@ -130,6 +131,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     if (contentDisposition) {
       res.setHeader("Content-Disposition", contentDisposition);
+    }
+
+    if (response.status === 403) {
+      res.setHeader("Content-Type", "application/json");
+      res.json({
+        error: {
+          code: "CYBERVIDYA_FIREWALL_BLOCKED",
+          reason:
+            "CyberVidya's network firewall blocked the cloud server (403 Forbidden). Please use the KIET Auth Bridge Chrome Extension, or route requests via a Cloudflare Worker proxy.",
+        },
+      });
+      return;
     }
 
     if (contentType.includes("application/json")) {

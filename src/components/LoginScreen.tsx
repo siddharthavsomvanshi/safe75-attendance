@@ -131,18 +131,48 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
         {error && (
           <div
             style={{
-              padding: "12px 16px",
+              padding: "14px 16px",
               borderRadius: 14,
               backgroundColor: "rgba(239, 68, 68, 0.12)",
               border: "1px solid rgba(239, 68, 68, 0.25)",
               color: "#f87171",
-              fontSize: 14,
+              fontSize: 13,
               marginBottom: 20,
-              lineHeight: 1.4,
-              textAlign: "center",
+              lineHeight: 1.5,
+              textAlign: "left",
             }}
           >
-            {error}
+            <div style={{ fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+              <span>⚠️</span>
+              <span>{error.includes("403") || error.includes("firewall") ? "CyberVidya Cloud Firewall (403)" : "Authentication Error"}</span>
+            </div>
+            <div>{error}</div>
+            {(error.includes("403") || error.includes("firewall")) && (
+              <div
+                style={{
+                  marginTop: 10,
+                  paddingTop: 10,
+                  borderTop: "1px solid rgba(239, 68, 68, 0.2)",
+                  fontSize: 12,
+                  color: "var(--text-muted)",
+                }}
+              >
+                <p style={{ margin: "0 0 6px 0", fontWeight: 600, color: "var(--text-primary)" }}>
+                  💡 How to resolve:
+                </p>
+                <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
+                  <li>
+                    CyberVidya's servers block direct logins from cloud hosting (AWS / Vercel).
+                  </li>
+                  <li>
+                    <strong>On Desktop Chrome:</strong> Load the <code>extension/chrome</code> folder unpacked in <code>chrome://extensions</code> to bypass server blocks directly from your browser.
+                  </li>
+                  <li>
+                    <strong>For in-app login:</strong> Deploy the <code>cloudflare-worker.js</code> proxy on Cloudflare and add <code>CYBERVIDYA_UPSTREAM_URL</code> in Vercel settings.
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
