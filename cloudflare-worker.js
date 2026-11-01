@@ -32,7 +32,8 @@ export default {
     }
 
     const url = new URL(request.url);
-    const targetUrl = `https://kiet.cybervidya.net${url.pathname}${url.search}`;
+    const pathname = url.pathname.startsWith("/api") ? url.pathname : `/api${url.pathname.startsWith("/") ? "" : "/"}${url.pathname}`;
+    const targetUrl = `https://kiet.cybervidya.net${pathname}${url.search}`;
 
     const headers = new Headers(request.headers);
     headers.set("Origin", "https://kiet.cybervidya.net");

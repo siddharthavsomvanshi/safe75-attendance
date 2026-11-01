@@ -40,7 +40,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const queryString = searchParams.toString();
-  const upstreamBase = (process.env.CYBERVIDYA_UPSTREAM_URL || "https://kiet.cybervidya.net/api").replace(/\/$/, "");
+  let upstreamBase = (process.env.CYBERVIDYA_UPSTREAM_URL || "https://kiet.cybervidya.net/api").replace(/\/$/, "");
+  if (!upstreamBase.endsWith("/api")) {
+    upstreamBase = `${upstreamBase}/api`;
+  }
   const targetUrl = `${upstreamBase}/${targetPath}${queryString ? `?${queryString}` : ""}`;
 
   // Extract client IP address - take only the first client IP and ensure no proxy/AWS IPs are attached
