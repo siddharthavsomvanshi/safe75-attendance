@@ -16,7 +16,7 @@ const STORAGE_KEYS = {
   CAPTURED_AT: "cybervidya_capturedAt",
 };
 
-const API_BASE = "/api/cybervidya";
+const API_BASES = ["/api/cybervidya", "https://cybervidya.amanpal.tech/api"];
 
 function base64ToUint8Array(b64: string): Uint8Array {
   const binary = atob(b64);
@@ -147,53 +147,73 @@ async function requestApi<T>(
     headers["UID"] = String(session.studentId);
   }
 
-  const response = await fetch(`${API_BASE}${pathname}`, {
-    method: options.method || "GET",
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+  let lastResponse: Response | null = null;
+  let lastError: Error | null = null;
 
-  if (response.status === 401) {
-    clearStoredSession();
-    throw new Error("Your KIET session expired. Please log in again.");
-  }
-
-  if (response.status === 500) {
-    throw new Error(
-      "CyberVidya server error (500). CyberVidya's servers are temporarily experiencing issues. Please try again in a few moments."
-    );
-  }
-
-  if (!response.ok) {
-    let errorMsg = `CyberVidya error (${response.status})`;
+  for (let i = 0; i < API_BASES.length; i++) {
+    const base = API_BASES[i];
     try {
-      const text = await response.text();
-      try {
-        const jsonErr = JSON.parse(text);
-        if (jsonErr?.error?.reason) {
-          errorMsg = jsonErr.error.reason;
-        } else if (jsonErr?.message) {
-          errorMsg = jsonErr.message;
-        } else if (jsonErr?.error) {
-          errorMsg = typeof jsonErr.error === "string" ? jsonErr.error : JSON.stringify(jsonErr.error);
-        }
-      } catch {
-        if (text && text.trim()) {
-          const trimmed = text.trim();
-          if (trimmed === "Blocked" || response.status === 403) {
-            errorMsg = "CyberVidya security firewall blocked the request (403 Forbidden). If you are using a VPN, please disable it.";
-          } else {
-            errorMsg = trimmed.slice(0, 160);
-          }
-        }
+      const response = await fetch(`${base}${pathname}`, {
+        method: options.method || "GET",
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      });
+
+      lastResponse = response;
+
+      // If the first endpoint (e.g. Vercel proxy) is blocked with 403, immediately try the direct proxy
+      if (response.status === 403 && i < API_BASES.length - 1) {
+        console.warn(`Endpoint ${base} returned 403 Forbidden, falling back to ${API_BASES[i + 1]}...`);
+        continue;
       }
-    } catch {
-      // fallback to status code errorMsg
+
+      if (response.status === 401) {
+        clearStoredSession();
+        throw new Error("Your KIET session expired. Please log in again.");
+      }
+
+      if (response.status === 500) {
+        throw new Error(
+          "CyberVidya server error (500). CyberVidya's servers are temporarily experiencing issues. Please try again in a few moments."
+        );
+      }
+
+      if (!response.ok) {
+        let errorMsg = `CyberVidya error (${response.status})`;
+        try {
+          const text = await response.text();
+          try {
+            const jsonErr = JSON.parse(text);
+            if (jsonErr?.error?.reason) {
+              errorMsg = jsonErr.error.reason;
+            } else if (jsonErr?.message) {
+              errorMsg = jsonErr.message;
+            } else if (jsonErr?.error) {
+              errorMsg = typeof jsonErr.error === "string" ? jsonErr.error : JSON.stringify(jsonErr.error);
+            }
+          } catch {
+            if (text && text.trim()) {
+              errorMsg = text.slice(0, 160);
+            }
+          }
+        } catch {
+          // fallback to status code errorMsg
+        }
+        throw new Error(errorMsg);
+      }
+
+      return (await response.json()) as Promise<T>;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (i < API_BASES.length - 1 && !(err instanceof Error && err.message.includes("KIET session expired"))) {
+        console.warn(`Failed request on ${base}, attempting fallback to ${API_BASES[i + 1]}:`, err);
+        continue;
+      }
+      throw lastError;
     }
-    throw new Error(errorMsg);
   }
 
-  return response.json() as Promise<T>;
+  throw lastError || new Error("Failed to connect to CyberVidya");
 }
 
 export interface LoginResult {
@@ -383,21 +403,33 @@ export async function downloadHallTicketPdfDirect(
     headers["UID"] = String(uid);
   }
 
-  const response = await fetch(`${API_BASE}/report/pdf/exam/student/hall-ticket/download/${hallTicketId}`, {
-    method: "GET",
-    headers,
-  });
+  for (let i = 0; i < API_BASES.length; i++) {
+    const base = API_BASES[i];
+    try {
+      const response = await fetch(`${base}/report/pdf/exam/student/hall-ticket/download/${hallTicketId}`, {
+        method: "GET",
+        headers,
+      });
 
-  if (response.status === 401) {
-    throw new Error("CyberVidya session expired or Unauthorized (HTTP 401). Please re-login to CyberVidya.");
+      if (response.status === 403 && i < API_BASES.length - 1) {
+        continue;
+      }
+      if (response.status === 401) {
+        throw new Error("CyberVidya session expired or Unauthorized (HTTP 401). Please re-login to CyberVidya.");
+      }
+      if (!response.ok) {
+        throw new Error(`Failed to download Hall Ticket PDF (HTTP ${response.status})`);
+      }
+
+      const blob = await response.blob();
+      return new Blob([blob], { type: "application/pdf" });
+    } catch (err) {
+      if (i < API_BASES.length - 1) continue;
+      throw err;
+    }
   }
 
-  if (!response.ok) {
-    throw new Error(`Failed to download Hall Ticket PDF (HTTP ${response.status})`);
-  }
-
-  const blob = await response.blob();
-  return new Blob([blob], { type: "application/pdf" });
+  throw new Error("Failed to download Hall Ticket PDF");
 }
 
 /* Unified Handlers (Check Direct API first, Fallback to Extension if needed) */

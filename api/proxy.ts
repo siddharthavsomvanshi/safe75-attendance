@@ -40,11 +40,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const queryString = searchParams.toString();
-  let upstreamBase = (process.env.CYBERVIDYA_UPSTREAM_URL || "https://kiet.cybervidya.net/api").replace(/\/$/, "");
-  if (!upstreamBase.endsWith("/api")) {
-    upstreamBase = `${upstreamBase}/api`;
-  }
-  const targetUrl = `${upstreamBase}/${targetPath}${queryString ? `?${queryString}` : ""}`;
+  const upstreamCandidates = [
+    process.env.CYBERVIDYA_UPSTREAM_URL,
+    "https://cybervidya.amanpal.tech/api",
+    "https://kiet.cybervidya.net/api",
+  ].filter(Boolean) as string[];
 
   // Extract client IP address - take only the first client IP and ensure no proxy/AWS IPs are attached
   const rawXff = req.headers["x-forwarded-for"];
@@ -113,53 +113,68 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : req.headers["content-type"];
   }
 
-  try {
-    const fetchOptions: RequestInit = {
-      method: req.method,
-      headers: forwardHeaders,
-    };
+  const fetchOptions: RequestInit = {
+    method: req.method,
+    headers: forwardHeaders,
+  };
 
-    if (req.method !== "GET" && req.method !== "HEAD" && req.body) {
-      fetchOptions.body = typeof req.body === "object" ? JSON.stringify(req.body) : req.body;
-    }
-
-    const response = await fetch(targetUrl, fetchOptions);
-    const contentType = response.headers.get("content-type") || "";
-    const contentDisposition = response.headers.get("content-disposition");
-
-    res.status(response.status);
-
-    if (contentType) {
-      res.setHeader("Content-Type", contentType);
-    }
-    if (contentDisposition) {
-      res.setHeader("Content-Disposition", contentDisposition);
-    }
-
-    if (response.status === 403) {
-      res.setHeader("Content-Type", "application/json");
-      res.json({
-        error: {
-          code: "CYBERVIDYA_FIREWALL_BLOCKED",
-          reason:
-            "CyberVidya's network firewall blocked the cloud server (403 Forbidden). Please use the KIET Auth Bridge Chrome Extension, or route requests via a Cloudflare Worker proxy.",
-        },
-      });
-      return;
-    }
-
-    if (contentType.includes("application/json")) {
-      const data = await response.json();
-      res.json(data);
-    } else {
-      const arrayBuffer = await response.arrayBuffer();
-      res.send(Buffer.from(arrayBuffer));
-    }
-  } catch (error) {
-    console.error("Vercel Proxy error:", error);
-    res.status(500).json({
-      error: "Failed to proxy request to CyberVidya API",
-      message: error instanceof Error ? error.message : String(error),
-    });
+  if (req.method !== "GET" && req.method !== "HEAD" && req.body) {
+    fetchOptions.body = typeof req.body === "object" ? JSON.stringify(req.body) : req.body;
   }
+
+  let lastResponse: Response | null = null;
+  let lastError: Error | null = null;
+
+  for (const base of upstreamCandidates) {
+    const cleanBase = base.replace(/\/$/, "");
+    const upstreamUrl = cleanBase.endsWith("/api") ? cleanBase : `${cleanBase}/api`;
+    const targetUrl = `${upstreamUrl}/${targetPath}${queryString ? `?${queryString}` : ""}`;
+
+    try {
+      const response = await fetch(targetUrl, fetchOptions);
+      lastResponse = response;
+
+      // If this upstream returns 403 Forbidden ("Blocked"), try the next candidate
+      if (response.status === 403 && upstreamCandidates.indexOf(base) < upstreamCandidates.length - 1) {
+        console.warn(`Upstream ${upstreamUrl} returned 403, falling back to next upstream...`);
+        continue;
+      }
+
+      const contentType = response.headers.get("content-type") || "";
+      const contentDisposition = response.headers.get("content-disposition");
+
+      res.status(response.status);
+
+      if (contentType) {
+        res.setHeader("Content-Type", contentType);
+      }
+      if (contentDisposition) {
+        res.setHeader("Content-Disposition", contentDisposition);
+      }
+
+      if (contentType.includes("application/json")) {
+        const data = await response.json();
+        res.json(data);
+      } else {
+        const arrayBuffer = await response.arrayBuffer();
+        res.send(Buffer.from(arrayBuffer));
+      }
+      return;
+    } catch (err) {
+      console.warn(`Upstream ${targetUrl} failed:`, err);
+      lastError = err instanceof Error ? err : new Error(String(err));
+    }
+  }
+
+  if (lastResponse) {
+    res.status(lastResponse.status);
+    const text = await lastResponse.text();
+    res.send(text);
+    return;
+  }
+
+  res.status(500).json({
+    error: "Failed to proxy request to any CyberVidya upstream server",
+    message: lastError ? lastError.message : "Unknown error",
+  });
 }
