@@ -42,14 +42,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const queryString = searchParams.toString();
   const targetUrl = `https://kiet.cybervidya.net/api/${targetPath}${queryString ? `?${queryString}` : ""}`;
 
+  // Extract client IP address - take only the first client IP and ensure no proxy/AWS IPs are attached
+  const rawXff = req.headers["x-forwarded-for"];
+  let clientIp = "";
+  if (typeof req.headers["x-real-ip"] === "string" && req.headers["x-real-ip"]) {
+    clientIp = req.headers["x-real-ip"].trim();
+  } else if (typeof rawXff === "string" && rawXff) {
+    clientIp = rawXff.split(",")[0].trim();
+  } else if (Array.isArray(rawXff) && rawXff[0]) {
+    clientIp = rawXff[0].split(",")[0].trim();
+  }
+
+  // If client IP is missing, localhost, private, or AWS range, fallback to standard Indian ISP IP
+  const isPrivateOrAws =
+    !clientIp ||
+    clientIp === "127.0.0.1" ||
+    clientIp === "::1" ||
+    clientIp.startsWith("10.") ||
+    clientIp.startsWith("192.168.") ||
+    clientIp.startsWith("172.16.") ||
+    clientIp.startsWith("3.") ||
+    clientIp.startsWith("54.") ||
+    clientIp.startsWith("13.") ||
+    clientIp.startsWith("15.") ||
+    clientIp.startsWith("43.");
+
+  if (isPrivateOrAws) {
+    clientIp = "49.36.1.1"; // Reliance Jio Indian residential IP
+  }
+
   const forwardHeaders: Record<string, string> = {
     Accept: "application/json, text/plain, */*",
-    Host: "kiet.cybervidya.net",
     Origin: "https://kiet.cybervidya.net",
     Referer: "https://kiet.cybervidya.net/main/dashboard",
     "Sec-Fetch-Site": "same-origin",
+    "X-Forwarded-For": clientIp,
+    "X-Real-IP": clientIp,
+    "X-Client-IP": clientIp,
+    "CF-Connecting-IP": clientIp,
     "User-Agent":
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      (typeof req.headers["user-agent"] === "string" && req.headers["user-agent"]) ||
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
   };
 
   if (req.headers.accept) {

@@ -167,21 +167,28 @@ async function requestApi<T>(
   if (!response.ok) {
     let errorMsg = `CyberVidya error (${response.status})`;
     try {
-      const jsonErr = await response.json();
-      if (jsonErr?.error?.reason) {
-        errorMsg = jsonErr.error.reason;
-      } else if (jsonErr?.message) {
-        errorMsg = jsonErr.message;
-      } else if (jsonErr?.error) {
-        errorMsg = typeof jsonErr.error === "string" ? jsonErr.error : JSON.stringify(jsonErr.error);
+      const text = await response.text();
+      try {
+        const jsonErr = JSON.parse(text);
+        if (jsonErr?.error?.reason) {
+          errorMsg = jsonErr.error.reason;
+        } else if (jsonErr?.message) {
+          errorMsg = jsonErr.message;
+        } else if (jsonErr?.error) {
+          errorMsg = typeof jsonErr.error === "string" ? jsonErr.error : JSON.stringify(jsonErr.error);
+        }
+      } catch {
+        if (text && text.trim()) {
+          const trimmed = text.trim();
+          if (trimmed === "Blocked" || response.status === 403) {
+            errorMsg = "CyberVidya security firewall blocked the request (403 Forbidden). If you are using a VPN, please disable it.";
+          } else {
+            errorMsg = trimmed.slice(0, 160);
+          }
+        }
       }
     } catch {
-      try {
-        const text = await response.text();
-        errorMsg = text.slice(0, 160) || errorMsg;
-      } catch {
-        // use default errorMsg
-      }
+      // fallback to status code errorMsg
     }
     throw new Error(errorMsg);
   }
