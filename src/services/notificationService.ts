@@ -229,10 +229,22 @@ export async function registerPushSubscriptionAsync(
     });
 
     if (!response.ok) {
-      const errJson = await response.json().catch(() => ({}));
+      let errorMsg = `Server responded with status ${response.status}`;
+      try {
+        const text = await response.text();
+        try {
+          const errJson = JSON.parse(text);
+          if (errJson.error) errorMsg = errJson.error;
+          else if (errJson.message) errorMsg = errJson.message;
+        } catch {
+          if (text && text.trim().length > 0 && text.trim().length < 200 && !text.includes("<html")) {
+            errorMsg = text.trim();
+          }
+        }
+      } catch {}
       return {
         ok: false,
-        error: errJson.error || `Server responded with status ${response.status}`,
+        error: errorMsg,
       };
     }
 
@@ -317,14 +329,27 @@ export async function sendTestNotificationAsync(): Promise<{
       headers,
     });
 
-    const data = await response.json().catch(() => ({}));
-
     if (!response.ok) {
+      let errorMsg = `Server status ${response.status}`;
+      try {
+        const text = await response.text();
+        try {
+          const data = JSON.parse(text);
+          if (data.message) errorMsg = data.message;
+          else if (data.error) errorMsg = data.error;
+        } catch {
+          if (text && text.trim().length > 0 && text.trim().length < 200 && !text.includes("<html")) {
+            errorMsg = text.trim();
+          }
+        }
+      } catch {}
       return {
         ok: false,
-        message: data.message || data.error || `Server status ${response.status}`,
+        message: errorMsg,
       };
     }
+
+    const data = await response.json().catch(() => ({}));
 
     return {
       ok: data.ok ?? true,
