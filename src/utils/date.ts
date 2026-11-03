@@ -1,4 +1,5 @@
 import type { ScheduleEntry } from "../types/kiet";
+import { GLOBAL_HOLIDAYS } from "../data/mse2Datesheet";
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("en-IN", {
   weekday: "short",
@@ -67,11 +68,14 @@ export function parseKietDateTime(value: string): Date {
   return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 }
 
-export function getUpcomingClasses(entries: ScheduleEntry[]): ScheduleEntry[] {
+export function getUpcomingClasses(
+  entries: ScheduleEntry[],
+  customExcludedDates?: Set<string>,
+): ScheduleEntry[] {
   const now = Date.now();
   const seen = new Set<string>();
 
-  // 1. Identify any dates that have exams planned.
+  // 1. Identify any dates that have exams planned in CyberVidya raw schedule entries.
   const examDates = new Set<string>();
   for (const entry of entries) {
     const isExam = [entry.title, entry.courseName, entry.type].some(
@@ -84,16 +88,27 @@ export function getUpcomingClasses(entries: ScheduleEntry[]): ScheduleEntry[] {
 
   return entries
     .filter((entry) => {
-      // 2. Exclude ANY event occurring on an exam date
       const eventDate = formatIsoDate(parseKietDateTime(entry.start));
+
+      // Global off-days / holidays (e.g. 2026-11-06)
+      if (GLOBAL_HOLIDAYS[eventDate]) {
+        return false;
+      }
+
+      // Branch/semester specific exam dates or other exclusions
+      if (customExcludedDates && customExcludedDates.has(eventDate)) {
+        return false;
+      }
+
+      // Exclude ANY event occurring on an exam date found in entries
       if (examDates.has(eventDate)) {
         return false;
       }
       
-      // 3. Exclude non-class entries
+      // Exclude non-class entries
       if (entry.type !== "CLASS") return false;
       
-      // 4. Exclude weekend entries (Saturday = 6, Sunday = 0) as no actual classes occur on weekends
+      // Exclude weekend entries (Saturday = 6, Sunday = 0) as no actual classes occur on weekends
       const startDate = parseKietDateTime(entry.start);
       const dayOfWeek = startDate.getDay();
       if (dayOfWeek === 0 || dayOfWeek === 6) return false;
@@ -115,7 +130,10 @@ export function getUpcomingClasses(entries: ScheduleEntry[]): ScheduleEntry[] {
     );
 }
 
-export function getWeeklyClasses(entries: ScheduleEntry[]): ScheduleEntry[] {
+export function getWeeklyClasses(
+  entries: ScheduleEntry[],
+  customExcludedDates?: Set<string>,
+): ScheduleEntry[] {
   const seen = new Set<string>();
 
   // 1. Identify any dates that have exams planned.
@@ -131,16 +149,27 @@ export function getWeeklyClasses(entries: ScheduleEntry[]): ScheduleEntry[] {
 
   return entries
     .filter((entry) => {
-      // 2. Exclude ANY event occurring on an event/exam date
       const eventDate = formatIsoDate(parseKietDateTime(entry.start));
+
+      // Global off-days / holidays (e.g. 2026-11-06)
+      if (GLOBAL_HOLIDAYS[eventDate]) {
+        return false;
+      }
+
+      // Branch/semester specific exam dates or other exclusions
+      if (customExcludedDates && customExcludedDates.has(eventDate)) {
+        return false;
+      }
+
+      // Exclude ANY event occurring on an event/exam date
       if (examDates.has(eventDate)) {
         return false;
       }
       
-      // 3. Exclude non-class entries
+      // Exclude non-class entries
       if (entry.type !== "CLASS") return false;
 
-      // 4. Exclude weekend entries (Saturday = 6, Sunday = 0) as no actual classes occur on weekends
+      // Exclude weekend entries (Saturday = 6, Sunday = 0) as no actual classes occur on weekends
       const startDate = parseKietDateTime(entry.start);
       const dayOfWeek = startDate.getDay();
       if (dayOfWeek === 0 || dayOfWeek === 6) return false;

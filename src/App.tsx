@@ -28,6 +28,8 @@ import type {
   SubjectAbsencesByDate,
 } from "./utils/streak";
 
+import { getStudentExamSchedule } from "./data/mse2Datesheet";
+import type { StudentExamInfo } from "./data/mse2Datesheet";
 import { lazy, Suspense } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import { Dashboard } from "./pages/Dashboard";
@@ -476,9 +478,11 @@ function App() {
         fetchScheduleUnified(getWeekRange(now, 0)),
       ]);
 
+      const examInfo = getStudentExamSchedule(attendanceData);
+
       const currentWeekSchedule = currentWeekScheduleUnfiltered ?? [];
-      const currentWeekClasses = getUpcomingClasses(currentWeekSchedule);
-      const fullWeekClasses = getWeeklyClasses(currentWeekSchedule);
+      const currentWeekClasses = getUpcomingClasses(currentWeekSchedule, examInfo.allExcludedDates);
+      const fullWeekClasses = getWeeklyClasses(currentWeekSchedule, examInfo.allExcludedDates);
       
       setAttendance(attendanceData);
       setUpcomingClasses(currentWeekClasses);
@@ -517,7 +521,7 @@ function App() {
             );
           }
           const allSchedules = [currentWeekScheduleUnfiltered, ...futureWeekSchedules];
-          const allFutureClasses = getUpcomingClasses(allSchedules.flat());
+          const allFutureClasses = getUpcomingClasses(allSchedules.flat(), examInfo.allExcludedDates);
           const availableBunkDates = new Set(allFutureClasses.map(getScheduleDateKey));
           
           setFutureClasses(allFutureClasses);
@@ -728,6 +732,8 @@ function App() {
     });
   }
 
+  const studentExamInfo = useMemo(() => getStudentExamSchedule(attendance), [attendance]);
+
   const dashboardData = {
     extensionDetected,
     isSyncingFuture,
@@ -747,6 +753,7 @@ function App() {
     datewiseAttendance,
     plannedBunks,
     bunkableDays,
+    studentExamInfo,
   };
 
   const dashboardHandlers = {
@@ -782,6 +789,7 @@ function App() {
   const calendarData = {
     upcomingClasses,
     currentWeekFullClasses,
+    studentExamInfo,
   };
 
   const multiverseData = {
@@ -886,14 +894,14 @@ function App() {
                 </div>
               </section>
             }>
-              <TodayStatus attendance={attendance} studentContext={studentContext} />
+              <TodayStatus attendance={attendance} studentContext={studentContext} studentExamInfo={studentExamInfo} />
             </Suspense>
           } />
           <Route path="/strategy" element={<Strategy data={strategyData} handlers={strategyHandlers} />} />
           <Route path="/multiverse" element={<MultiversePage data={multiverseData} />} />
           <Route path="/calendar" element={<CalendarPage data={calendarData} />} />
           <Route path="/history" element={<AttendanceHistory studentContext={studentContext} subjects={subjectSummaries} knownSchedule={currentWeekFullClasses} />} />
-          <Route path="/exam" element={<Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading exam resources...</div>}><ExamMode attendance={attendance} subjects={subjectSummaries} overallSummary={overallSummary} /></Suspense>} />
+          <Route path="/exam" element={<Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading exam resources...</div>}><ExamMode attendance={attendance} subjects={subjectSummaries} overallSummary={overallSummary} studentExamInfo={studentExamInfo} /></Suspense>} />
           <Route path="/contribute" element={<Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading upload form...</div>}><Contribute /></Suspense>} />
           <Route path="/feedback" element={<Snitch />} />
           <Route path="/admin-login" element={

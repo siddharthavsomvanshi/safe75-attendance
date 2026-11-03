@@ -3,6 +3,8 @@ import { fetchScheduleUnified, fetchDatewiseAttendanceUnified } from "../service
 import { getWeekRange, parseKietDateTime, formatIsoDate, getPreviousWorkingDay, formatDisplayDate, matchesScheduleTimeSlot } from "../utils/date";
 import type { StudentContext } from "../App";
 import type { StudentDetails, ScheduleEntry, DatewiseAttendanceBucket } from "../types/kiet";
+import { GLOBAL_HOLIDAYS } from "../data/mse2Datesheet";
+import type { StudentExamInfo } from "../data/mse2Datesheet";
 import { Notice, StatusCard, secondaryButtonStyle } from "../App";
 import { Panel } from "../components/UI";
 import { formatScheduleTime } from "../utils/date";
@@ -10,6 +12,7 @@ import { formatScheduleTime } from "../utils/date";
 export interface TodayStatusProps {
   attendance: StudentDetails | null;
   studentContext: StudentContext | null;
+  studentExamInfo?: StudentExamInfo | null;
 }
 
 type TodayClass = {
@@ -26,7 +29,7 @@ let moduleScheduleCaches: Record<string, ScheduleEntry[]> = {};
 let moduleAttendanceCache: Record<string, DatewiseAttendanceBucket[]> = {};
 let moduleLastFetchDateIso: string | null = null;
 
-export function TodayStatus({ attendance, studentContext }: TodayStatusProps) {
+export function TodayStatus({ attendance, studentContext, studentExamInfo }: TodayStatusProps) {
   const [mode, setMode] = useState<"today" | "yesterday">("today");
   const [hasFetchedToday, setHasFetchedToday] = useState(false);
   const [hasFetchedYesterday, setHasFetchedYesterday] = useState(false);
@@ -66,6 +69,8 @@ export function TodayStatus({ attendance, studentContext }: TodayStatusProps) {
       const entriesForDay = (schedule || []).filter((entry: ScheduleEntry) => {
          if (entry.type !== "CLASS") return false;
          const entryDate = formatIsoDate(parseKietDateTime(entry.start));
+         if (GLOBAL_HOLIDAYS[entryDate]) return false;
+         if (studentExamInfo?.examDates?.has(entryDate)) return false;
          return entryDate === targetDateIso;
       }).sort((a: ScheduleEntry, b: ScheduleEntry) => parseKietDateTime(a.start).getTime() - parseKietDateTime(b.start).getTime());
 
@@ -172,7 +177,7 @@ export function TodayStatus({ attendance, studentContext }: TodayStatusProps) {
     } finally {
       setIsLoadingSchedule(false);
     }
-  }, [attendance, studentContext]);
+  }, [attendance, studentContext, studentExamInfo]);
 
   useEffect(() => {
     if (studentContext && attendance) {
@@ -268,13 +273,62 @@ export function TodayStatus({ attendance, studentContext }: TodayStatusProps) {
         <Notice tone="var(--danger)" background="var(--danger-soft)">{scheduleError}</Notice>
       )}
 
-      {!isLoadingSchedule && totalClasses === 0 && !scheduleError && (
-        <Panel title={`No classes ${mode}`} subtitle={`Nothing is scheduled for ${mode}.`}>
-          <div style={{ padding: 24, textAlign: "center", color: "var(--text-muted)", fontSize: 16 }}>
-            You're all clear for {mode}.
-          </div>
-        </Panel>
-      )}
+      {!isLoadingSchedule && totalClasses === 0 && !scheduleError && (() => {
+        const targetDateObj = mode === "today" ? new Date() : getPreviousWorkingDay(new Date());
+        const targetDateIso = formatIsoDate(targetDateObj);
+        const holidayReason = GLOBAL_HOLIDAYS[targetDateIso];
+        const matchingExamSlots = studentExamInfo?.examSlots?.filter((slot) => slot.date === targetDateIso) ?? [];
+
+        if (holidayReason) {
+          return (
+            <Panel title="College Off / No Classes" subtitle={holidayReason}>
+              <div style={{ padding: 24, textAlign: "center", color: "var(--text-muted)", fontSize: 16 }}>
+                🎉 <strong>{holidayReason}</strong> ({formatDisplayDate(targetDateObj)}). No lectures are scheduled for this day.
+              </div>
+            </Panel>
+          );
+        }
+
+        if (matchingExamSlots.length > 0) {
+          return (
+            <Panel title="📝 MSE 2 Examination Day" subtitle={`Scheduled exams for ${formatDisplayDate(targetDateObj)}`}>
+              <div style={{ display: "grid", gap: 12, padding: "8px 0" }}>
+                {matchingExamSlots.map((slot, idx) => (
+                  <div
+                    key={idx}
+                    className="standard-card border-l-primary"
+                    style={{ padding: 16, display: "grid", gap: 6 }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                      <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text-primary)" }}>
+                        {slot.subjectName}
+                      </span>
+                      <span className="status-badge status-badge--info">
+                        {slot.subjectCode}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", gap: 16, color: "var(--text-muted)", fontSize: 13.5, flexWrap: "wrap" }}>
+                      <span>⏰ <strong>{slot.time}</strong></span>
+                      {slot.mode && <span>📋 {slot.mode}</span>}
+                    </div>
+                  </div>
+                ))}
+                <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", marginTop: 4 }}>
+                  Regular classes are suspended during MSE 2 examination slots.
+                </div>
+              </div>
+            </Panel>
+          );
+        }
+
+        return (
+          <Panel title={`No classes ${mode}`} subtitle={`Nothing is scheduled for ${mode}.`}>
+            <div style={{ padding: 24, textAlign: "center", color: "var(--text-muted)", fontSize: 16 }}>
+              You're all clear for {mode}.
+            </div>
+          </Panel>
+        );
+      })()}
 
       {totalClasses > 0 && (
         <>

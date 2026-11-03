@@ -130,6 +130,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const supabase = getSupabase();
     const todayIstDate = getTodayIstDateString();
 
+    const GLOBAL_OFF_DAYS: Record<string, string> = {
+      "2026-11-06": "No Classes (College Off)",
+    };
+
+    if (GLOBAL_OFF_DAYS[todayIstDate]) {
+      res.status(200).json({
+        ok: true,
+        todayIstDate,
+        processedUsers: 0,
+        message: `Skipped daily reminders: ${GLOBAL_OFF_DAYS[todayIstDate]}`,
+      });
+      return;
+    }
+
     // 2. Query enabled push subscriptions
     const { data: activeSubs, error: subErr } = await supabase
       .from("push_subscriptions")

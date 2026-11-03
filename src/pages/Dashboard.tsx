@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import type { StudentExamInfo } from "../data/mse2Datesheet";
 import { LoginScreen } from "../components/LoginScreen";
 import { NotificationBanner } from "../components/NotificationBanner";
 import {
@@ -50,6 +52,7 @@ export interface DashboardData {
   datewiseAttendance: Record<string, DatewiseAttendanceState>;
   plannedBunks: Set<string>;
   bunkableDays: BunkableDay[];
+  studentExamInfo?: StudentExamInfo | null;
 }
 
 export interface DashboardHandlers {
@@ -162,6 +165,41 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
           {data.error && <Notice tone="var(--danger)" background="var(--danger-soft)">{data.error}</Notice>}
 
           <NotificationBanner studentName={data.attendance?.fullName} />
+
+          {data.studentExamInfo && data.studentExamInfo.examSlots.length > 0 && (
+            <div
+              className="standard-card rise-in border-l-primary"
+              style={{
+                padding: "16px 20px",
+                borderRadius: 18,
+                background: "var(--bg-card)",
+                border: "1px solid var(--border)",
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 22 }}>📋</span>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text-primary)" }}>
+                      MSE 2 & PUE Datesheet Active ({data.studentExamInfo.degree} Sem {data.studentExamInfo.semester} • {data.studentExamInfo.branch})
+                    </div>
+                    <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                      Exams from Nov 18–26. Lectures during exams & 6 Nov off-day are excluded from attendance targets.
+                    </div>
+                  </div>
+                </div>
+                <Link
+                  to="/exam"
+                  className="action-button action-button--secondary"
+                  style={{ padding: "6px 14px", fontSize: 13, textDecoration: "none" }}
+                >
+                  View Datesheet →
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* PROMINENT OVERALL ATTENDANCE CARD */}
           {data.overallSummary && (

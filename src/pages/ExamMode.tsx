@@ -5,6 +5,7 @@ import { Panel, EmptyMessage } from '../components/UI';
 import { HallTicketCard } from '../components/Attendance/HallTicketCard';
 import type { StudentDetails } from '../types/kiet';
 import type { SubjectSummary } from '../utils/attendanceCalculations';
+import type { StudentExamInfo } from '../data/mse2Datesheet';
 
 interface ExamModeProps {
   attendance?: StudentDetails | null;
@@ -14,6 +15,7 @@ interface ExamModeProps {
     total: number;
     percentage: number;
   } | null;
+  studentExamInfo?: StudentExamInfo | null;
 }
 
 interface ExamResource {
@@ -133,7 +135,7 @@ function formatResourceType(type: string): string {
   }
 }
 
-export function ExamMode({ attendance, subjects, overallSummary }: ExamModeProps = {}) {
+export function ExamMode({ attendance, subjects, overallSummary, studentExamInfo }: ExamModeProps = {}) {
   const navigate = useNavigate();
   const [resources, setResources] = useState<ExamResource[]>([]);
   const [loading, setLoading] = useState(true);
@@ -271,6 +273,52 @@ export function ExamMode({ attendance, subjects, overallSummary }: ExamModeProps
         subjects={subjects ?? []}
         overallSummary={overallSummary}
       />
+
+      {studentExamInfo && studentExamInfo.examSlots.length > 0 && (
+        <Panel
+          title="MSE 2 & PUE Examination Datesheet"
+          subtitle={`${studentExamInfo.degree} • Semester ${studentExamInfo.semester} • Branch: ${studentExamInfo.branch} (Odd Sem 2026-27)`}
+        >
+          <div style={{ display: "grid", gap: 12, padding: "8px 0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+              {studentExamInfo.examSlots.map((slot, index) => (
+                <div
+                  key={index}
+                  className="standard-card border-l-primary"
+                  style={{
+                    padding: "16px 18px",
+                    display: "grid",
+                    gap: 8,
+                    background: "var(--bg-card)",
+                    borderRadius: 16,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text-primary)" }}>
+                        {slot.subjectName}
+                      </div>
+                      <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 2 }}>
+                        Code: <strong>{slot.subjectCode}</strong>
+                      </div>
+                    </div>
+                    <span className="status-badge status-badge--info">
+                      {slot.date} ({slot.day})
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 16, fontSize: 13, color: "var(--text-muted)", flexWrap: "wrap", marginTop: 4 }}>
+                    <span>⏰ <strong>{slot.time}</strong></span>
+                    {slot.mode && <span>📋 {slot.mode}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 6, textAlign: "center" }}>
+              💡 Regular class lectures during your MSE 2 examination slots are automatically excluded from attendance targets and bunk plans. (6 November is also excluded as an off-day).
+            </div>
+          </div>
+        </Panel>
+      )}
       <Panel
         title="Exam Mode"
         subtitle="Notes, PYQs, and key topics, organized and ready."
