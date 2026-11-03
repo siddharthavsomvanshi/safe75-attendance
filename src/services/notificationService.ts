@@ -73,11 +73,14 @@ export function getNotificationPermissionState(): NotificationPermission {
   return Notification.permission;
 }
 
+export const DEFAULT_VAPID_PUBLIC_KEY =
+  "BPUsLEOcdm8qcsjbiJoy3PQCmH0Pg8adhr0sUSOFl4DDzXZCkO3WwVdpBhLl8q5bUPb8qkP5tNk_OQo6VWEyDXM";
+
 /**
  * Retrieves the VAPID Public Key configured for client-side push subscriptions.
  */
 export function getVapidPublicKey(): string {
-  return (import.meta.env.VITE_VAPID_PUBLIC_KEY as string) || "";
+  return (import.meta.env.VITE_VAPID_PUBLIC_KEY as string) || DEFAULT_VAPID_PUBLIC_KEY;
 }
 
 /**
@@ -99,7 +102,8 @@ export function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuf
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
+  const buffer = new ArrayBuffer(rawData.length);
+  const outputArray = new Uint8Array(buffer);
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
@@ -147,12 +151,37 @@ export async function subscribeToPushManager(
 
   const applicationServerKey = urlBase64ToUint8Array(publicVapidKey);
 
-  // Check for existing subscription first
+  // Check for existing subscription first and ensure it matches the current applicationServerKey
   let subscription = await registration.pushManager.getSubscription();
+  if (subscription) {
+    try {
+      const existingKey = subscription.options?.applicationServerKey;
+      if (existingKey) {
+        const existingBytes = new Uint8Array(existingKey);
+        let matches = existingBytes.length === applicationServerKey.length;
+        if (matches) {
+          for (let i = 0; i < existingBytes.length; i++) {
+            if (existingBytes[i] !== applicationServerKey[i]) {
+              matches = false;
+              break;
+            }
+          }
+        }
+        if (!matches) {
+          console.log("VAPID key changed, refreshing push subscription...");
+          await subscription.unsubscribe();
+          subscription = null;
+        }
+      }
+    } catch (keyErr) {
+      console.warn("Could not inspect existing subscription key:", keyErr);
+    }
+  }
+
   if (!subscription) {
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey,
+      applicationServerKey: applicationServerKey as BufferSource,
     });
   }
 

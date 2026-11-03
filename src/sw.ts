@@ -26,6 +26,7 @@ self.addEventListener("push", (event: PushEvent) => {
     body: "You have a new notification.",
     icon: "/favicon.png",
     badge: "/favicon.png",
+    tag: "attendance-notification",
     data: {
       url: "/",
     },
@@ -39,6 +40,7 @@ self.addEventListener("push", (event: PushEvent) => {
         body: json.body || payload.body,
         icon: json.icon || payload.icon,
         badge: json.badge || payload.badge,
+        tag: json.tag || payload.tag,
         data: {
           url: json.data?.url || payload.data.url,
           ...json.data,
@@ -57,7 +59,7 @@ self.addEventListener("push", (event: PushEvent) => {
     icon: payload.icon,
     badge: payload.badge,
     data: payload.data,
-    tag: "attendance-notification",
+    tag: payload.tag,
   };
 
   event.waitUntil(

@@ -1,15 +1,16 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createClient } from "@supabase/supabase-js";
 import webpush from "web-push";
+import {
+  getSupabaseClient,
+  getTodayIstDateString,
+  extractEntryDateString,
+  parseKietTimeMinutes,
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY,
+  VAPID_SUBJECT,
+} from "./_helpers";
 
-// Environment configuration & secrets
 const CRON_SECRET = process.env.CRON_SECRET || "";
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-
-const VAPID_PUBLIC_KEY = process.env.VITE_VAPID_PUBLIC_KEY || "";
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:support@kiet-bunk-helper.app";
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   try {
@@ -41,55 +42,6 @@ interface SnapshotScheduleEntry {
   classRoom: string | null;
 }
 
-/**
- * Returns today's date in IST (Asia/Kolkata) as YYYY-MM-DD.
- */
-function getTodayIstDateString(date: Date = new Date()): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-
-  const year = parts.find((p) => p.type === "year")?.value;
-  const month = parts.find((p) => p.type === "month")?.value;
-  const day = parts.find((p) => p.type === "day")?.value;
-  return `${year}-${month}-${day}`;
-}
-
-/**
- * Parses KIET date string formats safely into Date object.
- */
-function parseKietDateTime(value: string): Date {
-  if (!value || typeof value !== "string") {
-    return new Date();
-  }
-
-  if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
-    const [datePart, timePart] = value.split(/[T ]/);
-    const [year, month, day] = datePart.split("-").map(Number);
-    if (timePart && timePart.includes(":")) {
-      const [hours, minutes, seconds] = timePart.split(":").map(Number);
-      return new Date(year, month - 1, day, hours || 0, minutes || 0, seconds || 0);
-    }
-    return new Date(year, month - 1, day);
-  }
-
-  const [datePart, timePart] = value.split(" ");
-  if (datePart && datePart.includes("/")) {
-    const [day, month, year] = datePart.split("/").map(Number);
-    if (timePart && timePart.includes(":")) {
-      const [hours, minutes, seconds] = timePart.split(":").map(Number);
-      return new Date(year, month - 1, day, hours || 0, minutes || 0, seconds || 0);
-    }
-    return new Date(year, month - 1, day);
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-}
-
 function normalizeIdentifier(value: string | null | undefined): string {
   return (value ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
@@ -109,12 +61,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
     res.status(500).json({ error: "Supabase configuration missing." });
     return;
   }
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   const todayIstDate = getTodayIstDateString();
 
   // 2. Query enabled push subscriptions
@@ -210,19 +162,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const capturedAt = new Date(snapshot.captured_at);
       const ageHours = (Date.now() - capturedAt.getTime()) / (1000 * 60 * 60);
 
-      let notificationTitle = "KIET Bunk Helper";
+      let notificationTitle = "Safe75 Attendance";
       let notificationBody = "";
 
       // 6. Stale Snapshot Policy (> 72 hours)
       if (ageHours > 72) {
-        notificationBody = "Attendance data is over 3 days old. Refresh your attendance in KIET Bunk Helper.";
+        notificationBody = "Attendance data is over 3 days old. Refresh your attendance in Safe75.";
       } else {
-        // 7. Today's Classes Identification
+        // 7. Today's Classes Identification (exact calendar date match, no UTC timezone drift)
         const scheduleEntries = (snapshot.schedule_data || []) as SnapshotScheduleEntry[];
         const todayClasses = scheduleEntries.filter((entry) => {
           if (entry.type === "HOLIDAY") return false;
-          const entryDate = parseKietDateTime(entry.start);
-          return getTodayIstDateString(entryDate) === todayIstDate;
+          const entryDate = extractEntryDateString(entry.start);
+          return entryDate === todayIstDate;
         });
 
         if (todayClasses.length === 0) {
@@ -238,9 +190,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           continue;
         }
 
-        // Sort today's classes chronologically by start time so Lec 1, Lec 2, Lec 3 map to class order
+        // Sort today's classes chronologically by start time
         todayClasses.sort(
-          (a, b) => parseKietDateTime(a.start).getTime() - parseKietDateTime(b.start).getTime()
+          (a, b) => parseKietTimeMinutes(a.start) - parseKietTimeMinutes(b.start)
         );
 
         // 8. Attendance Recommendation Calculation
@@ -323,7 +275,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         if (classLines.length === 0) {
-          notificationBody = `You have ${todayClasses.length} class${todayClasses.length > 1 ? "es" : ""} scheduled today. Check KIET Bunk Helper.`;
+          notificationBody = `You have ${todayClasses.length} class${todayClasses.length > 1 ? "es" : ""} scheduled today. Check Safe75.`;
         } else {
           notificationBody = classLines.join("\n");
         }

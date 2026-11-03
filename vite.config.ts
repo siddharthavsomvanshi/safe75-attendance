@@ -5,6 +5,30 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig({
   plugins: [
     react(),
+    {
+      name: "dev-notifications-handler",
+      apply: "serve",
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url && req.url.startsWith("/api/notifications/")) {
+            res.setHeader("Content-Type", "application/json");
+            if (req.url.includes("/test")) {
+              res.end(
+                JSON.stringify({
+                  ok: true,
+                  sentCount: 1,
+                  message: "Local dev mode: test push handled.",
+                })
+              );
+              return;
+            }
+            res.end(JSON.stringify({ ok: true, enabled: true }));
+            return;
+          }
+          next();
+        });
+      },
+    },
     VitePWA({
       strategies: "injectManifest",
       srcDir: "src",

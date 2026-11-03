@@ -13,19 +13,11 @@
   ],
   "rewrites": [
     {
-      "source": "/api/notifications/:path*",
-      "destination": "/api/notifications/:path*"
-    },
-    {
       "source": "/api/cybervidya/:path*",
       "destination": "/api/proxy?path=:path*"
     },
     {
-      "source": "/api/:path*",
-      "destination": "/api/proxy?path=:path*"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]
