@@ -146,7 +146,7 @@ export function TodayStatus({ attendance, studentContext }: TodayStatusProps) {
          
          const lectures = buckets.flatMap((b: DatewiseAttendanceBucket) => b.lectureList || []).filter((l) => {
             if (!l.planLecDate) return false;
-            return l.planLecDate === targetDateIso;
+            return l.planLecDate.slice(0, 10) === targetDateIso;
          });
          
          let matchedLecture = null;
@@ -155,6 +155,9 @@ export function TodayStatus({ attendance, studentContext }: TodayStatusProps) {
                matchedLecture = l;
                break;
             }
+         }
+         if (!matchedLecture && lectures.length === 1) {
+            matchedLecture = lectures[0];
          }
          
          return {

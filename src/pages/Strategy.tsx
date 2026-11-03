@@ -632,7 +632,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
           title="Leave Rescue"
           subtitle="Find the best days to recover your attendance."
         >
-          {data.streakLoading ? (
+          {data.streakLoading && Object.keys(data.streakDayData).length === 0 ? (
             <EmptyMessage message="Loading recent attendance..." />
           ) : !data.streakIsReliable && Object.keys(data.streakDayData).length === 0 ? (
             <EmptyMessage message="Recent attendance is not available right now." />

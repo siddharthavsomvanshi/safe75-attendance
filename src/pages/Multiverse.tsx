@@ -662,7 +662,11 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
 
           <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>
             <span>ℹ️</span>
-            <span>Assumption: All other future classes up to {explanation.resultDateLabel} are treated as attended.</span>
+            <span>
+              {explanation.futureClassesAttendedCount > 0
+                ? `Assumption: All other ${explanation.futureClassesAttendedCount} future classes up to ${explanation.resultDateLabel} are treated as attended.`
+                : "Baseline view: Choose any hypothetical events above to simulate your attendance projection."}
+            </span>
           </div>
         </div>
       </section>

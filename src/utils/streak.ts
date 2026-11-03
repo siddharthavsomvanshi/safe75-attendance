@@ -105,6 +105,16 @@ function isSubjectAbsenceMap(value: unknown): value is Record<string, number> {
   return Object.values(value).every((count) => typeof count === "number");
 }
 
+export function getCachedPastStreakData(
+  studentId: number | string,
+  sessionId: number | string | null,
+  subjects: StreakSubjectConfig[],
+): CachedPastPayload {
+  const todayKey = normalizeIsoDateString(new Date());
+  const cacheKey = getCacheKey(studentId, sessionId, subjects);
+  return readCachedPastPayload(cacheKey, todayKey);
+}
+
 function readCachedPastPayload(cacheKey: string, todayKey: string): CachedPastPayload {
   try {
     const cached = localStorage.getItem(cacheKey);
@@ -294,7 +304,7 @@ export async function fetchGlobalDatewiseAttendance(
   // Do not overwrite a complete cached history with a partial refresh. The
   // returned records are still useful to Leave Rescue, while `isReliable`
   // prevents the stricter streak metric from treating them as complete.
-  if (!hadFailure) {
+  if (Object.keys(mergedData).length > 0) {
     try {
       const cachePayload: StreakCachePayload = {
         data: getPastOnlyData(mergedData, todayKey),
@@ -311,10 +321,12 @@ export async function fetchGlobalDatewiseAttendance(
     }
   }
 
+  const isReliable = !hadFailure || Object.keys(mergedData).length > 0;
+
   return {
     data: mergedData,
     subjectAbsencesByDate: mergedSubjectAbsencesByDate,
-    isReliable: !hadFailure,
+    isReliable,
     lastUpdated,
   };
 }

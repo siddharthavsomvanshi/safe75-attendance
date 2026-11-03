@@ -116,6 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const fetchOptions: RequestInit = {
     method: req.method,
     headers: forwardHeaders,
+    signal: AbortSignal.timeout(30000),
   };
 
   if (req.method !== "GET" && req.method !== "HEAD" && req.body) {

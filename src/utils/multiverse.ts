@@ -274,33 +274,36 @@ export function calculateMultiverseSimulation(
       totalMedicalAddedPresent += medicalLeaveAddedPresent;
     }
 
-    // 2. Apply Future Classes up to resultDateKey
-    const matchingFutureClasses = getMatchingClassesForSubject(
-      subject.courseCode,
-      subject.componentName,
-      subject.componentCount,
-      snapshot.futureClasses,
-    );
+    // 2. Apply Future Classes up to resultDateKey (only when bunking or future target date is active)
+    const shouldSimulateFuture = Boolean(scenario.enableBunking || scenario.enableTargetDate);
+    if (shouldSimulateFuture) {
+      const matchingFutureClasses = getMatchingClassesForSubject(
+        subject.courseCode,
+        subject.componentName,
+        subject.componentCount,
+        snapshot.futureClasses,
+      );
 
-    for (const entry of matchingFutureClasses) {
-      const entryDateKey = getScheduleDateKey(entry);
-      if (entryDateKey > resultDateKey) {
-        continue;
-      }
+      for (const entry of matchingFutureClasses) {
+        const entryDateKey = getScheduleDateKey(entry);
+        if (entryDateKey > resultDateKey) {
+          continue;
+        }
 
-      const entryKey = getScheduleEntryKey(entry);
-      const isBunked =
-        scenario.enableBunking &&
-        ((scenario.bunkType === "entire_day" && bunkDatesSet.has(entryDateKey)) ||
-          (scenario.bunkType === "selected_classes" && bunkClassKeysSet.has(entryKey)));
+        const entryKey = getScheduleEntryKey(entry);
+        const isBunked =
+          scenario.enableBunking &&
+          ((scenario.bunkType === "entire_day" && bunkDatesSet.has(entryDateKey)) ||
+            (scenario.bunkType === "selected_classes" && bunkClassKeysSet.has(entryKey)));
 
-      simulatedTotal += 1;
-      if (isBunked) {
-        futureClassesBunkedCount += 1;
-      } else {
-        simulatedPresent += 1;
-        futureClassesAttendedCount += 1;
-        totalFutureAttendedCount += 1;
+        simulatedTotal += 1;
+        if (isBunked) {
+          futureClassesBunkedCount += 1;
+        } else {
+          simulatedPresent += 1;
+          futureClassesAttendedCount += 1;
+          totalFutureAttendedCount += 1;
+        }
       }
     }
 

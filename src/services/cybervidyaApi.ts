@@ -157,6 +157,7 @@ async function requestApi<T>(
         method: options.method || "GET",
         headers,
         body: options.body ? JSON.stringify(options.body) : undefined,
+        signal: AbortSignal.timeout(25000),
       });
 
       lastResponse = response;
@@ -335,8 +336,29 @@ export async function fetchDatewiseAttendanceDirect(
   studentId: number | string,
   sessionId: number | string | null,
   courseId: number,
-  courseCompId: number
+  courseCompId: number,
+  forceRefresh = false
 ): Promise<DatewiseAttendanceBucket[]> {
+  const cacheKey = `kiet_datewise_${studentId}_${courseId}_${courseCompId}`;
+  if (!forceRefresh) {
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (
+          parsed &&
+          typeof parsed.timestamp === "number" &&
+          Date.now() - parsed.timestamp < 3 * 60 * 60 * 1000 &&
+          Array.isArray(parsed.data)
+        ) {
+          return parsed.data;
+        }
+      }
+    } catch {
+      // Ignore cache read failures
+    }
+  }
+
   const res = await requestApi<{ data: DatewiseAttendanceBucket[] }>(
     "/attendance/schedule/student/course/attendance/percentage",
     {
@@ -350,6 +372,18 @@ export async function fetchDatewiseAttendanceDirect(
       },
     }
   );
+
+  if (Array.isArray(res?.data)) {
+    try {
+      localStorage.setItem(
+        cacheKey,
+        JSON.stringify({ timestamp: Date.now(), data: res.data })
+      );
+    } catch {
+      // Ignore storage quota limits
+    }
+  }
+
   return res.data;
 }
 
@@ -483,10 +517,17 @@ export async function fetchDatewiseAttendanceUnified(params: {
   sessionId: number | string | null;
   courseId: number;
   courseCompId: number;
+  forceRefresh?: boolean;
 }): Promise<DatewiseAttendanceBucket[]> {
   const session = getStoredSession();
   if (session.hasToken) {
-    return fetchDatewiseAttendanceDirect(params.studentId, params.sessionId, params.courseId, params.courseCompId);
+    return fetchDatewiseAttendanceDirect(
+      params.studentId,
+      params.sessionId,
+      params.courseId,
+      params.courseCompId,
+      Boolean(params.forceRefresh)
+    );
   }
   return callExtension("FETCH_DATEWISE_ATTENDANCE", params);
 }

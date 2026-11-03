@@ -1,37 +1,47 @@
-import { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import type { StudentContext, SubjectSummary } from "../App";
 import { EmptyMessage, Panel } from "../components/UI";
-import type { DatewiseAttendanceBucket, DatewiseAttendanceLecture, ScheduleEntry } from "../types/kiet";
-import { fetchScheduleUnified, fetchDatewiseAttendanceUnified } from "../services/cybervidyaApi";
-import { formatIsoDate, getWeekRange, parseKietDateTime, matchesScheduleTimeSlot } from "../utils/date";
+import type { DatewiseAttendanceBucket, ScheduleEntry } from "../types/kiet";
+import { fetchDatewiseAttendanceUnified } from "../services/cybervidyaApi";
+import { formatIsoDate } from "../utils/date";
 
-type HistoryRow = {
+export type HistoryClassRecord = {
   key: string;
   subject: string;
+  courseCode: string;
   component: string;
-  status: string | null;
+  timeSlot: string;
+  status: string;
+  dayName?: string;
 };
 
 type AttendanceHistoryData = {
   selectedDate: string;
-  rows: HistoryRow[];
+  rows: HistoryClassRecord[];
 };
 
 function normalise(value: string | null | undefined): string {
   return (value ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
-function getDateKey(entry: ScheduleEntry): string {
-  return formatIsoDate(parseKietDateTime(entry.start));
-}
-
-function sameScheduleDate(entry: ScheduleEntry, dateKey: string): boolean {
-  return entry.type === "CLASS" && getDateKey(entry) === dateKey;
+function normalizeIsoDateString(rawDate: string | null | undefined): string | null {
+  if (!rawDate) return null;
+  const match = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) return `${match[1]}-${match[2]}-${match[3]}`;
+  const slashMatch = rawDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (slashMatch) {
+    const day = slashMatch[1].padStart(2, "0");
+    const month = slashMatch[2].padStart(2, "0");
+    const year = slashMatch[3];
+    return `${year}-${month}-${day}`;
+  }
+  return null;
 }
 
 function formatSelectedDate(dateKey: string): string {
   const [year, month, day] = dateKey.split("-").map(Number);
   return new Intl.DateTimeFormat("en-IN", {
+    weekday: "short",
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -51,53 +61,145 @@ function getStatusStyle(status: string | null) {
   }
 }
 
-function getScheduleSubject(entry: ScheduleEntry, subjects: SubjectSummary[]): SubjectSummary | null {
-  const courseCode = normalise(entry.courseCode);
-  const matchingCourse = subjects.filter((subject) => normalise(subject.courseCode) === courseCode);
-
-  if (matchingCourse.length === 1) {
-    return matchingCourse[0];
-  }
-
-  const componentName = normalise(entry.courseCompName);
-  return matchingCourse.find((subject) => normalise(subject.componentName) === componentName) ?? null;
-}
-
-function getLectureForClass(
-  lectures: DatewiseAttendanceLecture[],
-  entry: ScheduleEntry,
-  dateKey: string,
-): DatewiseAttendanceLecture | null {
-  const onDate = lectures.filter((lecture) => lecture.planLecDate?.slice(0, 10) === dateKey);
-  if (onDate.length === 0) {
-    return null;
-  }
-
-  return (
-    onDate.find((lecture) => matchesScheduleTimeSlot(entry.start, entry.end, lecture.timeSlot)) ??
-    null
-  );
-}
-
 export function AttendanceHistory({
   studentContext,
   subjects,
-  knownSchedule,
 }: {
   studentContext: StudentContext | null;
   subjects: SubjectSummary[];
-  knownSchedule: ScheduleEntry[];
+  knownSchedule?: ScheduleEntry[];
 }) {
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [history, setHistory] = useState<AttendanceHistoryData | null>(null);
-  const [loadingDate, setLoadingDate] = useState<string | null>(null);
-  const [error, setError] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [loadedCount, setLoadedCount] = useState(0);
+  const [lecturesByDate, setLecturesByDate] = useState<Record<string, HistoryClassRecord[]>>({});
+
   const todayKey = formatIsoDate(new Date());
 
-  const knownClassDates = useMemo(
-    () => new Set(knownSchedule.filter((entry) => entry.type === "CLASS").map(getDateKey)),
-    [knownSchedule],
+  // Load from local storage cache across all subjects
+  const loadFromCache = useCallback(() => {
+    if (!studentContext || subjects.length === 0) return 0;
+
+    const map: Record<string, HistoryClassRecord[]> = {};
+    let cachedSubjectsCount = 0;
+
+    for (const subject of subjects) {
+      const cacheKey = `kiet_datewise_${studentContext.studentId}_${subject.courseId}_${subject.courseComponentId}`;
+      try {
+        const cachedRaw = localStorage.getItem(cacheKey);
+        if (!cachedRaw) continue;
+
+        const parsed = JSON.parse(cachedRaw);
+        const buckets: DatewiseAttendanceBucket[] = Array.isArray(parsed?.data)
+          ? parsed.data
+          : Array.isArray(parsed)
+          ? parsed
+          : [];
+
+        if (buckets.length > 0) {
+          cachedSubjectsCount++;
+          for (const bucket of buckets) {
+            const lectureList = bucket.lectureList || [];
+            for (const lecture of lectureList) {
+              const dateKey = normalizeIsoDateString(lecture.planLecDate);
+              if (!dateKey) continue;
+
+              const status = (lecture.attendance ?? "").toUpperCase();
+              if (!status || status === "NULL" || status === "N/A") continue;
+
+              const record: HistoryClassRecord = {
+                key: `${subject.id}-${dateKey}-${lecture.timeSlot || Math.random()}`,
+                subject: subject.title || bucket.courseName || lecture.courseName || "Class",
+                courseCode: subject.courseCode || "",
+                component: subject.componentName || "Class",
+                timeSlot: lecture.timeSlot || "Class time",
+                status,
+                dayName: lecture.dayName || undefined,
+              };
+
+              if (!map[dateKey]) {
+                map[dateKey] = [];
+              }
+              // Deduplicate if identical class identity
+              const existingIndex = map[dateKey].findIndex(
+                (existing) =>
+                  existing.courseCode === record.courseCode &&
+                  existing.component === record.component &&
+                  existing.timeSlot === record.timeSlot
+              );
+              if (existingIndex === -1) {
+                map[dateKey].push(record);
+              }
+            }
+          }
+        }
+      } catch {
+        // Ignore cache parsing errors
+      }
+    }
+
+    setLecturesByDate(map);
+    setLoadedCount(cachedSubjectsCount);
+    return cachedSubjectsCount;
+  }, [studentContext, subjects]);
+
+  // Initial load from cache
+  useEffect(() => {
+    loadFromCache();
+  }, [loadFromCache]);
+
+  // Background sync uncached or stale subjects
+  const syncSubjects = useCallback(
+    async (force = false) => {
+      if (!studentContext || subjects.length === 0 || isSyncing) return;
+
+      setIsSyncing(true);
+      let loaded = 0;
+
+      try {
+        // Concurrency limit = 3 to avoid overwhelming proxy or CyberVidya
+        const CONCURRENCY = 3;
+        const queue = [...subjects];
+
+        async function worker() {
+          while (queue.length > 0) {
+            const subject = queue.shift();
+            if (!subject) break;
+
+            try {
+              await fetchDatewiseAttendanceUnified({
+                studentId: studentContext!.studentId,
+                sessionId: studentContext!.sessionId,
+                courseId: subject.courseId,
+                courseCompId: subject.courseComponentId,
+                forceRefresh: force,
+              });
+              loaded++;
+              setLoadedCount(loaded);
+            } catch (err) {
+              console.warn(`Failed loading subject ${subject.courseCode}:`, err);
+            }
+          }
+        }
+
+        const workers = Array.from({ length: Math.min(CONCURRENCY, subjects.length) }, () => worker());
+        await Promise.all(workers);
+      } finally {
+        loadFromCache();
+        setIsSyncing(false);
+      }
+    },
+    [studentContext, subjects, isSyncing, loadFromCache]
   );
+
+  // Trigger background sync on mount if not fully cached
+  useEffect(() => {
+    const cachedCount = loadFromCache();
+    if (cachedCount < subjects.length && subjects.length > 0 && !isSyncing) {
+      void syncSubjects(false);
+    }
+  }, [subjects.length]);
 
   const calendarDays = useMemo(() => {
     const year = month.getFullYear();
@@ -108,108 +210,292 @@ export function AttendanceHistory({
     return Array.from({ length: firstWeekday + count }, (_, index) => {
       if (index < firstWeekday) return null;
       const date = new Date(year, monthIndex, index - firstWeekday + 1);
-      return { day: date.getDate(), dateKey: formatIsoDate(date) };
-    });
-  }, [month]);
+      const dateKey = formatIsoDate(date);
+      const classesOnDay = lecturesByDate[dateKey] ?? [];
+      const hasClasses = classesOnDay.length > 0;
+      const hasAbsent = classesOnDay.some((c) => normalise(c.status) === "ABSENT");
+      const hasAdjusted = classesOnDay.some((c) => normalise(c.status) === "ADJUSTED");
 
-  async function selectDate(dateKey: string) {
-    if (!studentContext || dateKey > todayKey || loadingDate) return;
-
-    setLoadingDate(dateKey);
-    setError("");
-    setHistory(null);
-
-    try {
-      // Schedule is fetched only after a date is chosen. It determines exactly
-      // which course components need attendance records for that one date.
-      const schedule = await fetchScheduleUnified(getWeekRange(new Date(`${dateKey}T00:00:00`)));
-      const scheduledClasses = schedule.filter((entry) => sameScheduleDate(entry, dateKey));
-      const subjectsById = new Map<string, SubjectSummary>();
-
-      for (const entry of scheduledClasses) {
-        const subject = getScheduleSubject(entry, subjects);
-        if (subject) subjectsById.set(subject.id, subject);
+      let dotColor: string | null = null;
+      if (hasClasses) {
+        if (hasAbsent) {
+          dotColor = "var(--danger)";
+        } else if (hasAdjusted) {
+          dotColor = "var(--warning)";
+        } else {
+          dotColor = "var(--success)";
+        }
       }
 
-      const attendanceBySubject = new Map<string, DatewiseAttendanceLecture[]>();
-      await Promise.all(
-        Array.from(subjectsById.values()).map(async (subject) => {
-          const buckets = await fetchDatewiseAttendanceUnified({
-            studentId: studentContext.studentId,
-            sessionId: studentContext.sessionId,
-            courseId: subject.courseId,
-            courseCompId: subject.courseComponentId,
-          });
-          attendanceBySubject.set(
-            subject.id,
-            (buckets as DatewiseAttendanceBucket[]).flatMap((bucket) => bucket.lectureList ?? []),
-          );
-        }),
-      );
+      return {
+        day: date.getDate(),
+        dateKey,
+        hasClasses,
+        dotColor,
+        classesCount: classesOnDay.length,
+      };
+    });
+  }, [month, lecturesByDate]);
 
-      const rows = scheduledClasses.map((entry, index) => {
-        const subject = getScheduleSubject(entry, subjects);
-        const lecture = subject
-          ? getLectureForClass(attendanceBySubject.get(subject.id) ?? [], entry, dateKey)
-          : null;
-
-        return {
-          key: `${entry.courseCode ?? "class"}-${entry.start}-${index}`,
-          subject: subject?.title ?? entry.courseName ?? entry.title,
-          component: subject?.componentName ?? entry.courseCompName ?? "Class",
-          status: lecture?.attendance ?? null,
-        };
-      });
-
-      setHistory({ selectedDate: dateKey, rows });
-    } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : String(caughtError));
-    } finally {
-      setLoadingDate(null);
-    }
+  function selectDate(dateKey: string) {
+    if (dateKey > todayKey) return;
+    const classes = lecturesByDate[dateKey] ?? [];
+    setHistory({
+      selectedDate: dateKey,
+      rows: classes,
+    });
   }
 
   const presentCount = history?.rows.filter((row) => normalise(row.status) === "PRESENT").length ?? 0;
   const absentCount = history?.rows.filter((row) => normalise(row.status) === "ABSENT").length ?? 0;
+  const adjustedCount = history?.rows.filter((row) => normalise(row.status) === "ADJUSTED").length ?? 0;
   const monthLabel = new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric" }).format(month);
 
   return (
     <section style={{ display: "grid", gap: 14 }}>
-      <Panel title="Attendance History" subtitle="Choose a past date to load attendance for that day.">
+      <Panel
+        title="Attendance History"
+        subtitle="Choose any past date to view full class-by-class attendance records."
+      >
         {!studentContext ? (
           <EmptyMessage message="Connect KIET on the dashboard first." />
         ) : (
           <div style={{ display: "grid", gap: 18 }}>
+            {/* Sync Status Banner */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 10,
+                padding: "8px 14px",
+                background: "var(--bg-card-subtle)",
+                borderRadius: 12,
+                fontSize: 13,
+                border: "1px solid var(--border)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: isSyncing
+                      ? "var(--warning)"
+                      : loadedCount >= subjects.length
+                      ? "var(--success)"
+                      : "var(--primary)",
+                  }}
+                />
+                <span>
+                  {isSyncing
+                    ? `Syncing subjects from CyberVidya (${loadedCount}/${subjects.length})...`
+                    : loadedCount >= subjects.length
+                    ? `All ${subjects.length} subjects fully indexed`
+                    : `Loaded ${loadedCount} of ${subjects.length} subjects`}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="action-button action-button--secondary"
+                disabled={isSyncing}
+                onClick={() => void syncSubjects(true)}
+                style={{ padding: "4px 12px", fontSize: 12, minHeight: 28 }}
+              >
+                {isSyncing ? "Syncing..." : "↻ Refresh All"}
+              </button>
+            </div>
+
+            {/* Month Header */}
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-              <button className="action-button action-button--secondary" type="button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>Previous</button>
+              <button
+                className="action-button action-button--secondary"
+                type="button"
+                onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+              >
+                Previous
+              </button>
               <strong style={{ fontSize: 17 }}>{monthLabel}</strong>
-              <button className="action-button action-button--secondary" type="button" disabled={month.getFullYear() === new Date().getFullYear() && month.getMonth() === new Date().getMonth()} onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>Next</button>
+              <button
+                className="action-button action-button--secondary"
+                type="button"
+                disabled={
+                  month.getFullYear() === new Date().getFullYear() &&
+                  month.getMonth() === new Date().getMonth()
+                }
+                onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+              >
+                Next
+              </button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 6, textAlign: "center", color: "var(--text-muted)", fontSize: 12, fontWeight: 700 }}>
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => <span key={day}>{day}</span>)}
+
+            {/* Calendar Weekday Names */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+                gap: 6,
+                textAlign: "center",
+                color: "var(--text-muted)",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                <span key={day}>{day}</span>
+              ))}
             </div>
+
+            {/* Calendar Days */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 6 }}>
               {calendarDays.map((calendarDay, index) => {
                 if (!calendarDay) return <span key={`blank-${index}`} />;
                 const isFuture = calendarDay.dateKey > todayKey;
                 const isSelected = history?.selectedDate === calendarDay.dateKey;
-                return <button key={calendarDay.dateKey} type="button" disabled={isFuture} onClick={() => void selectDate(calendarDay.dateKey)} aria-label={`Load attendance for ${calendarDay.dateKey}`} style={{ minHeight: 44, borderRadius: 12, border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`, background: isSelected ? 'var(--primary-soft)' : 'var(--bg-card-subtle)', color: isFuture ? 'var(--text-muted)' : 'var(--text-primary)', cursor: isFuture ? 'not-allowed' : 'pointer', font: 'inherit', fontWeight: 700, opacity: isFuture ? 0.45 : 1 }}>
-                  {calendarDay.day}{knownClassDates.has(calendarDay.dateKey) && <span aria-hidden="true" style={{ display: 'block', color: 'var(--primary)', lineHeight: 0.5 }}>•</span>}
-                </button>;
+
+                return (
+                  <button
+                    key={calendarDay.dateKey}
+                    type="button"
+                    disabled={isFuture}
+                    onClick={() => selectDate(calendarDay.dateKey)}
+                    aria-label={`Load attendance for ${calendarDay.dateKey}`}
+                    style={{
+                      minHeight: 48,
+                      borderRadius: 12,
+                      border: `1.5px solid ${isSelected ? "var(--primary)" : "var(--border)"}`,
+                      background: isSelected
+                        ? "var(--primary-soft)"
+                        : calendarDay.hasClasses
+                        ? "var(--bg-card)"
+                        : "var(--bg-card-subtle)",
+                      color: isFuture ? "var(--text-muted)" : "var(--text-primary)",
+                      cursor: isFuture ? "not-allowed" : "pointer",
+                      font: "inherit",
+                      fontWeight: 700,
+                      opacity: isFuture ? 0.45 : 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "4px",
+                      position: "relative",
+                    }}
+                  >
+                    <span>{calendarDay.day}</span>
+                    {calendarDay.dotColor && (
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          background: calendarDay.dotColor,
+                          marginTop: 3,
+                        }}
+                      />
+                    )}
+                  </button>
+                );
               })}
+            </div>
+
+            {/* Legend */}
+            <div
+              style={{
+                display: "flex",
+                gap: 16,
+                justifyContent: "center",
+                alignItems: "center",
+                fontSize: 12,
+                color: "var(--text-muted)",
+                flexWrap: "wrap",
+                paddingTop: 4,
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--success)" }} />
+                All Present
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--danger)" }} />
+                Absent Marked
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--warning)" }} />
+                Adjusted
+              </span>
             </div>
           </div>
         )}
       </Panel>
 
-      {loadingDate && <Panel title="Loading attendance" subtitle={`Getting classes and attendance for ${formatSelectedDate(loadingDate)}.`}><EmptyMessage message="Loading only the selected date..." /></Panel>}
-      {error && <Panel title="Attendance History" subtitle="The selected date could not be loaded."><EmptyMessage message={error} /></Panel>}
-      {history && !loadingDate && !error && (
-        <Panel title={formatSelectedDate(history.selectedDate)} subtitle="Attendance marked for your scheduled classes.">
-          {history.rows.length === 0 ? <EmptyMessage message="No scheduled classes were found for this date." /> : <div style={{ display: 'grid', gap: 12 }}>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', fontWeight: 700 }}><span style={{ color: 'var(--success)' }}>Present: {presentCount}</span><span style={{ color: 'var(--danger)' }}>Absent: {absentCount}</span></div>
-            {history.rows.map((row) => { const status = getStatusStyle(row.status); return <div key={row.key} className="standard-card" style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}><div style={{ minWidth: 0 }}><strong>{row.subject}</strong><div style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 3 }}>{row.component}</div></div><span style={{ flexShrink: 0, color: status.color, background: status.background, borderRadius: 999, padding: '6px 10px', fontWeight: 800, fontSize: 13 }}>{status.label}</span></div>; })}
-          </div>}
+      {/* Selected Day View */}
+      {history && (
+        <Panel
+          title={formatSelectedDate(history.selectedDate)}
+          subtitle={
+            history.rows.length === 0
+              ? "No recorded attendance for this date."
+              : `${history.rows.length} class${history.rows.length === 1 ? "" : "es"} recorded.`
+          }
+        >
+          {history.rows.length === 0 ? (
+            <EmptyMessage message="No classes were recorded on this date (holiday, weekend, or no classes taken)." />
+          ) : (
+            <div style={{ display: "grid", gap: 14 }}>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontWeight: 700, fontSize: 14 }}>
+                <span style={{ color: "var(--success)" }}>Present: {presentCount}</span>
+                <span style={{ color: "var(--danger)" }}>Absent: {absentCount}</span>
+                {adjustedCount > 0 && <span style={{ color: "var(--warning)" }}>Adjusted: {adjustedCount}</span>}
+              </div>
+
+              <div style={{ display: "grid", gap: 10 }}>
+                {history.rows.map((row) => {
+                  const status = getStatusStyle(row.status);
+                  return (
+                    <div
+                      key={row.key}
+                      className="standard-card"
+                      style={{
+                        padding: "14px 16px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 12,
+                        borderRadius: 14,
+                        border: "1px solid var(--border)",
+                        background: "var(--bg-card)",
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 15 }}>{row.subject}</div>
+                        <div style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 3 }}>
+                          {row.component} • {row.timeSlot}
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          flexShrink: 0,
+                          color: status.color,
+                          background: status.background,
+                          borderRadius: 999,
+                          padding: "6px 12px",
+                          fontWeight: 800,
+                          fontSize: 13,
+                        }}
+                      >
+                        {status.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </Panel>
       )}
     </section>

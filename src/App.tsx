@@ -19,6 +19,7 @@ import {
 import {
   calculateStrictStreak,
   fetchGlobalDatewiseAttendance,
+  getCachedPastStreakData,
 } from "./utils/streak";
 import type {
   DayStreakRecord,
@@ -386,6 +387,20 @@ function App() {
     }
 
     let isCancelled = false;
+
+    // Immediately pre-populate with cached records so Leave Rescue and UI do not wait
+    try {
+      const cached = getCachedPastStreakData(
+        studentContext.studentId,
+        studentContext.sessionId,
+        streakSubjects,
+      );
+      if (Object.keys(cached.data).length > 0) {
+        setStreakDayData(cached.data);
+        setStreakSubjectAbsencesByDate(cached.subjectAbsencesByDate);
+      }
+    } catch {}
+
     setStreakLoading(true);
 
     void (async () => {
@@ -402,16 +417,9 @@ function App() {
           setStreakSubjectAbsencesByDate(fetchResult.subjectAbsencesByDate);
           setStreakResult(nextResult);
         }
-      } catch {
-        if (!isCancelled) {
-          setStreakDayData({});
-          setStreakSubjectAbsencesByDate({});
-          setStreakResult({
-            streak: null,
-            isReliable: false,
-            lastUpdated: Date.now(),
-          });
-        }
+      } catch (err) {
+        console.warn("Global datewise attendance refresh notice:", err);
+        // Do not wipe out previously loaded cached past data on fetch error!
       } finally {
         if (!isCancelled) {
           setStreakLoading(false);
@@ -427,7 +435,6 @@ function App() {
   const syncDashboard = useCallback(async () => {
     setLoadState("loading");
     setError("");
-    setStreakLoading(true);
 
     try {
       const sessionStatus = await getSessionStatusUnified();
