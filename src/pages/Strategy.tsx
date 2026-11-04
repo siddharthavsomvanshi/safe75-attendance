@@ -7,12 +7,15 @@ import {
 } from "../App";
 import { Panel, EmptyMessage } from "../components/UI";
 import { RedemptionArc } from "../components/Attendance/RedemptionArc";
+import { MedicalLeaveOptimizer } from "../components/Attendance/MedicalLeaveOptimizer";
 import type {
   OverallSummary,
   BunkableDay,
   SubjectSummary,
   WholeDayPlanSummary,
+  StudentContext,
 } from "../App";
+import type { StudentDetails } from "../types/kiet";
 import type { DayStreakRecord, SubjectAbsencesByDate } from "../utils/streak";
 
 function formatDateKeyLabel(dateKey: string): string {
@@ -166,6 +169,8 @@ export interface StrategyData {
   streakLoading: boolean;
   streakIsReliable: boolean;
   isSyncingFuture?: boolean;
+  studentDetails?: StudentDetails | null;
+  studentContext?: StudentContext | null;
 }
 
 export interface StrategyHandlers {
@@ -176,6 +181,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
   const FUTURE_WEEKS_TO_FETCH = 12;
   const [medicalLeaveStartDate, setMedicalLeaveStartDate] = useState("");
   const [medicalLeaveEndDate, setMedicalLeaveEndDate] = useState("");
+  const [activeRescueTab, setActiveRescueTab] = useState<"smart" | "custom">("smart");
   const allLeaveRescueDays = useMemo<LeaveRescueDay[]>(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -627,10 +633,10 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
         </Panel>
       </section>
 
-      <section style={{ display: "grid", gap: 14 }}>
+      <section style={{ display: "grid", gap: 14 }} id="medical-optimizer">
         <Panel
-          title="Leave Rescue"
-          subtitle="Find the best days to recover your attendance."
+          title="Smart Medical Leave Optimizer"
+          subtitle="Find the best consecutive days in the last 30–50 days to apply for medical leave and reach your target attendance."
         >
           {data.streakLoading && Object.keys(data.streakDayData).length === 0 ? (
             <EmptyMessage message="Loading recent attendance..." />
@@ -639,252 +645,327 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
           ) : allLeaveRescueDays.length === 0 ? (
             <EmptyMessage message="No recorded absences are available for a medical-leave calculation." />
           ) : (
-            <div style={{ display: "grid", gap: 18 }}>
+            <div style={{ display: "grid", gap: 20 }}>
+              {/* Tab Selector */}
               <div
                 style={{
                   display: "flex",
-                  gap: 12,
-                  alignItems: "center",
+                  gap: 10,
+                  borderBottom: "1px solid var(--border)",
+                  paddingBottom: 12,
                   flexWrap: "wrap",
                 }}
               >
-                <div style={{ color: "var(--text-secondary)", fontSize: 14, maxWidth: "72ch" }}>
-                  Choose your medical leave period. For this preview only, recorded absences in that range are treated as present.
-                </div>
-                <div
-                  className="status-badge status-badge--neutral"
+                <button
+                  type="button"
+                  onClick={() => setActiveRescueTab("smart")}
                   style={{
-                    padding: "8px 12px",
-                    borderRadius: 999,
+                    padding: "8px 16px",
+                    borderRadius: 12,
                     fontSize: 13,
                     fontWeight: 700,
+                    cursor: "pointer",
+                    border: `1.5px solid ${activeRescueTab === "smart" ? "var(--primary)" : "var(--border)"}`,
+                    background: activeRescueTab === "smart" ? "var(--primary-soft)" : "var(--bg-card)",
+                    color: activeRescueTab === "smart" ? "var(--primary)" : "var(--text-secondary)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    transition: "all 0.15s ease",
                   }}
                 >
-                  {allLeaveRescueDays.length} missed day{allLeaveRescueDays.length === 1 ? "" : "s"} found
-                </div>
-                {selectedLeaveRescueDays.length > 0 && (
+                  ✨ Smart Consecutive Windows (AI)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveRescueTab("custom")}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 12,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    border: `1.5px solid ${activeRescueTab === "custom" ? "var(--primary)" : "var(--border)"}`,
+                    background: activeRescueTab === "custom" ? "var(--primary-soft)" : "var(--bg-card)",
+                    color: activeRescueTab === "custom" ? "var(--primary)" : "var(--text-secondary)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  📅 Custom Date Range & Daily Picker
+                </button>
+              </div>
+
+              {/* View 1: Smart Consecutive Windows */}
+              {activeRescueTab === "smart" && (
+                <MedicalLeaveOptimizer
+                  streakDayData={data.streakDayData}
+                  streakSubjectAbsencesByDate={data.streakSubjectAbsencesByDate}
+                  subjectSummaries={data.subjectSummaries}
+                  overallSummary={data.overallSummary}
+                  streakLoading={data.streakLoading}
+                  studentName={data.studentDetails?.fullName}
+                  registrationNumber={data.studentDetails?.registrationNumber}
+                  activeStartDate={medicalLeaveStartDate}
+                  activeEndDate={medicalLeaveEndDate}
+                  onApplyWindow={(start, end) => setMedicalLeaveRange(start, end)}
+                />
+              )}
+
+              {/* View 2: Custom Date Range & Daily Picker */}
+              {activeRescueTab === "custom" && (
+                <div style={{ display: "grid", gap: 18 }}>
                   <div
-                    className="status-badge status-badge--info"
                     style={{
-                      padding: "8px 12px",
-                      borderRadius: 999,
-                      fontSize: 13,
-                      fontWeight: 700,
+                      display: "flex",
+                      gap: 12,
+                      alignItems: "center",
+                      flexWrap: "wrap",
                     }}
                   >
-                    {selectedLeaveRescueDays.length} selected
-                  </div>
-                )}
-              </div>
-
-              <div
-                className="surface-card"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-                  gap: 14,
-                  padding: 16,
-                  borderRadius: 16,
-                  border: "1px solid var(--border)",
-                  background: "var(--bg-card-subtle)",
-                }}
-              >
-                <label style={{ display: "grid", gap: 7, fontWeight: 700 }}>
-                  Medical leave start
-                  <input
-                    type="date"
-                    value={medicalLeaveStartDate}
-                    min={medicalLeaveDateBounds.min || undefined}
-                    max={medicalLeaveEndDate || medicalLeaveDateBounds.max || undefined}
-                    onChange={(event) => {
-                      const startDate = event.target.value;
-                      setMedicalLeaveStartDate(startDate);
-                      if (medicalLeaveEndDate && startDate > medicalLeaveEndDate) {
-                        setMedicalLeaveEndDate(startDate);
-                      }
-                    }}
-                    style={{ font: "inherit", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)" }}
-                  />
-                </label>
-                <label style={{ display: "grid", gap: 7, fontWeight: 700 }}>
-                  Medical leave end
-                  <input
-                    type="date"
-                    value={medicalLeaveEndDate}
-                    min={medicalLeaveStartDate || medicalLeaveDateBounds.min || undefined}
-                    max={medicalLeaveDateBounds.max || undefined}
-                    onChange={(event) => {
-                      const endDate = event.target.value;
-                      setMedicalLeaveEndDate(endDate);
-                      if (medicalLeaveStartDate && endDate < medicalLeaveStartDate) {
-                        setMedicalLeaveStartDate(endDate);
-                      }
-                    }}
-                    style={{ font: "inherit", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)" }}
-                  />
-                </label>
-              </div>
-
-              {leaveRescueDays.length > 0 && <div
-                style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}
-              >
-                {featuredLeaveRescueDays.map((day) => {
-                  const theme = getLeaveRescueTheme(day.intensity);
-                  const isSelected = Boolean(medicalLeaveStartDate && medicalLeaveEndDate && day.dateKey >= medicalLeaveStartDate && day.dateKey <= medicalLeaveEndDate);
-
-                  return (
-                    <button
-                      type="button"
-                      className={`standard-card interactive-row rise-in ${theme.borderClass}`}
-                      key={`leave-rescue-featured-${day.dateKey}`}
-                      onClick={() => setMedicalLeaveRange(day.dateKey, day.dateKey)}
+                    <div style={{ color: "var(--text-secondary)", fontSize: 14, maxWidth: "72ch" }}>
+                      Choose your custom medical leave period. For this preview only, recorded absences in that range are treated as present.
+                    </div>
+                    <div
+                      className="status-badge status-badge--neutral"
                       style={{
-                        display: "grid",
-                        gap: 10,
-                        width: "100%",
-                        textAlign: "left",
-                        cursor: "pointer",
-                        font: "inherit",
-                        background: isSelected ? "var(--primary-soft)" : undefined,
-                        borderColor: isSelected ? "var(--primary)" : undefined,
+                        padding: "8px 12px",
+                        borderRadius: 999,
+                        fontSize: 13,
+                        fontWeight: 700,
                       }}
                     >
+                      {allLeaveRescueDays.length} missed day{allLeaveRescueDays.length === 1 ? "" : "s"} found
+                    </div>
+                    {selectedLeaveRescueDays.length > 0 && (
                       <div
+                        className="status-badge status-badge--info"
                         style={{
-                          display: "flex",
-                          gap: 12,
-                          alignItems: "start",
-                          flexWrap: "wrap",
+                          padding: "8px 12px",
+                          borderRadius: 999,
+                          fontSize: 13,
+                          fontWeight: 700,
                         }}
-                        >
-                        <div style={{ display: "grid", gap: 4 }}>
-                          <strong style={{ fontSize: 18 }}>{day.label}</strong>
-                          <span style={{ color: "var(--text-secondary)", fontSize: 13 }}>
-                            {day.dateKey}
-                          </span>
-                        </div>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginLeft: "auto" }}>
-                          {isSelected && (
-                            <span
-                              className="status-badge"
-                              style={{
-                                padding: "6px 10px",
-                                borderRadius: 999,
-                                background: "var(--primary)",
-                                color: "var(--text-on-primary)",
-                                fontSize: 12,
-                                fontWeight: 800,
-                              }}
-                            >
-                              Selected
-                            </span>
-                          )}
-                            <span
-                              className={`status-badge ${day.intensity === "high" ? "status-badge--danger" : day.intensity === "medium" ? "status-badge--warning" : "status-badge--success"}`}
-                              style={{
-                                padding: "6px 10px",
-                                borderRadius: 999,
-                                background: theme.badgeBackground,
-                                color: theme.color,
-                                fontSize: 12,
-                                fontWeight: 800,
-                              }}
-                            >
-                              {theme.label}
-                            </span>
-                        </div>
+                      >
+                        {selectedLeaveRescueDays.length} selected
                       </div>
+                    )}
+                  </div>
 
-                      <div style={{ color: "var(--text-primary)", fontSize: 24, fontWeight: 800 }}>
-                        Missed {day.missed} of {day.total}
-                      </div>
-                      <div style={{ color: "var(--text-secondary)", fontSize: 14 }}>
-                        Attended {day.attended} class{day.attended === 1 ? "" : "es"}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>}
+                  <div
+                    className="surface-card"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+                      gap: 14,
+                      padding: 16,
+                      borderRadius: 16,
+                      border: "1px solid var(--border)",
+                      background: "var(--bg-card-subtle)",
+                    }}
+                  >
+                    <label style={{ display: "grid", gap: 7, fontWeight: 700 }}>
+                      Medical leave start
+                      <input
+                        type="date"
+                        value={medicalLeaveStartDate}
+                        min={medicalLeaveDateBounds.min || undefined}
+                        max={medicalLeaveEndDate || medicalLeaveDateBounds.max || undefined}
+                        onChange={(event) => {
+                          const startDate = event.target.value;
+                          setMedicalLeaveStartDate(startDate);
+                          if (medicalLeaveEndDate && startDate > medicalLeaveEndDate) {
+                            setMedicalLeaveEndDate(startDate);
+                          }
+                        }}
+                        style={{ font: "inherit", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)" }}
+                      />
+                    </label>
+                    <label style={{ display: "grid", gap: 7, fontWeight: 700 }}>
+                      Medical leave end
+                      <input
+                        type="date"
+                        value={medicalLeaveEndDate}
+                        min={medicalLeaveStartDate || medicalLeaveDateBounds.min || undefined}
+                        max={medicalLeaveDateBounds.max || undefined}
+                        onChange={(event) => {
+                          const endDate = event.target.value;
+                          setMedicalLeaveEndDate(endDate);
+                          if (medicalLeaveStartDate && endDate < medicalLeaveStartDate) {
+                            setMedicalLeaveStartDate(endDate);
+                          }
+                        }}
+                        style={{ font: "inherit", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)" }}
+                      />
+                    </label>
+                  </div>
 
-              {extraLeaveRescueDays.length > 0 && (
-                <div style={{ display: "grid", gap: 10 }}>
-                  <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>More recovery days</div>
-                  <div style={{ display: "grid", gap: 8 }}>
-                    {extraLeaveRescueDays.map((day) => {
-                      const theme = getLeaveRescueTheme(day.intensity);
-                      const isSelected = Boolean(medicalLeaveStartDate && medicalLeaveEndDate && day.dateKey >= medicalLeaveStartDate && day.dateKey <= medicalLeaveEndDate);
+                  {leaveRescueDays.length > 0 && (
+                    <div
+                      style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}
+                    >
+                      {featuredLeaveRescueDays.map((day) => {
+                        const theme = getLeaveRescueTheme(day.intensity);
+                        const isSelected = Boolean(medicalLeaveStartDate && medicalLeaveEndDate && day.dateKey >= medicalLeaveStartDate && day.dateKey <= medicalLeaveEndDate);
 
-                      return (
-                        <button
-                          type="button"
-                          className={`standard-card interactive-row ${theme.borderClass}`}
-                          key={`leave-rescue-extra-${day.dateKey}`}
-                          onClick={() => setMedicalLeaveRange(day.dateKey, day.dateKey)}
-                          style={{
-                            display: "flex",
-                            gap: 12,
-                            alignItems: "center",
-                            width: "100%",
-                            textAlign: "left",
-                            cursor: "pointer",
-                            font: "inherit",
-                            background: isSelected ? "var(--primary-soft)" : undefined,
-                            borderColor: isSelected ? "var(--primary)" : undefined,
-                          }}
-                        >
-                          <div
+                        return (
+                          <button
+                            type="button"
+                            className={`standard-card interactive-row rise-in ${theme.borderClass}`}
+                            key={`leave-rescue-featured-${day.dateKey}`}
+                            onClick={() => setMedicalLeaveRange(day.dateKey, day.dateKey)}
                             style={{
                               display: "grid",
-                              gap: 4,
-                              flex: "0 0 auto",
-                              minWidth: "fit-content",
+                              gap: 10,
+                              width: "100%",
+                              textAlign: "left",
+                              cursor: "pointer",
+                              font: "inherit",
+                              background: isSelected ? "var(--primary-soft)" : undefined,
+                              borderColor: isSelected ? "var(--primary)" : undefined,
                             }}
                           >
-                            <strong style={{ whiteSpace: "nowrap", wordBreak: "normal" }}>
-                              {day.label}
-                            </strong>
-                            <span
+                            <div
                               style={{
-                                color: "var(--text-muted)",
-                                fontSize: 13,
-                                whiteSpace: "nowrap",
-                                wordBreak: "normal",
+                                display: "flex",
+                                gap: 12,
+                                alignItems: "start",
+                                flexWrap: "wrap",
                               }}
                             >
-                              {day.dateKey}
-                            </span>
-                          </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: 10,
-                              alignItems: "center",
-                              justifyContent: "flex-end",
-                              color: "var(--text-secondary)",
-                              fontWeight: 700,
-                              flexWrap: "wrap",
-                              marginLeft: "auto",
-                            }}
-                          >
-                            {isSelected && (
-                              <span className="status-badge status-badge--info">
-                                Selected
-                              </span>
-                            )}
-                            <span
-                              className={`status-badge ${day.intensity === "high" ? "status-badge--danger" : day.intensity === "medium" ? "status-badge--warning" : "status-badge--success"}`}
-                              style={{ color: theme.color }}
-                            >
-                              {theme.label}
-                            </span>
-                            <span>
+                              <div style={{ display: "grid", gap: 4 }}>
+                                <strong style={{ fontSize: 18 }}>{day.label}</strong>
+                                <span style={{ color: "var(--text-secondary)", fontSize: 13 }}>
+                                  {day.dateKey}
+                                </span>
+                              </div>
+                              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginLeft: "auto" }}>
+                                {isSelected && (
+                                  <span
+                                    className="status-badge"
+                                    style={{
+                                      padding: "6px 10px",
+                                      borderRadius: 999,
+                                      background: "var(--primary)",
+                                      color: "var(--text-on-primary)",
+                                      fontSize: 12,
+                                      fontWeight: 800,
+                                    }}
+                                  >
+                                    Selected
+                                  </span>
+                                )}
+                                <span
+                                  className={`status-badge ${day.intensity === "high" ? "status-badge--danger" : day.intensity === "medium" ? "status-badge--warning" : "status-badge--success"}`}
+                                  style={{
+                                    padding: "6px 10px",
+                                    borderRadius: 999,
+                                    background: theme.badgeBackground,
+                                    color: theme.color,
+                                    fontSize: 12,
+                                    fontWeight: 800,
+                                  }}
+                                >
+                                  {theme.label}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div style={{ color: "var(--text-primary)", fontSize: 24, fontWeight: 800 }}>
                               Missed {day.missed} of {day.total}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                            </div>
+                            <div style={{ color: "var(--text-secondary)", fontSize: 14 }}>
+                              Attended {day.attended} class{day.attended === 1 ? "" : "es"}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {extraLeaveRescueDays.length > 0 && (
+                    <div style={{ display: "grid", gap: 10 }}>
+                      <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>More recovery days</div>
+                      <div style={{ display: "grid", gap: 8 }}>
+                        {extraLeaveRescueDays.map((day) => {
+                          const theme = getLeaveRescueTheme(day.intensity);
+                          const isSelected = Boolean(medicalLeaveStartDate && medicalLeaveEndDate && day.dateKey >= medicalLeaveStartDate && day.dateKey <= medicalLeaveEndDate);
+
+                          return (
+                            <button
+                              type="button"
+                              className={`standard-card interactive-row ${theme.borderClass}`}
+                              key={`leave-rescue-extra-${day.dateKey}`}
+                              onClick={() => setMedicalLeaveRange(day.dateKey, day.dateKey)}
+                              style={{
+                                display: "flex",
+                                gap: 12,
+                                alignItems: "center",
+                                width: "100%",
+                                textAlign: "left",
+                                cursor: "pointer",
+                                font: "inherit",
+                                background: isSelected ? "var(--primary-soft)" : undefined,
+                                borderColor: isSelected ? "var(--primary)" : undefined,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: "grid",
+                                  gap: 4,
+                                  flex: "0 0 auto",
+                                  minWidth: "fit-content",
+                                }}
+                              >
+                                <strong style={{ whiteSpace: "nowrap", wordBreak: "normal" }}>
+                                  {day.label}
+                                </strong>
+                                <span
+                                  style={{
+                                    color: "var(--text-muted)",
+                                    fontSize: 13,
+                                    whiteSpace: "nowrap",
+                                    wordBreak: "normal",
+                                  }}
+                                >
+                                  {day.dateKey}
+                                </span>
+                              </div>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: 10,
+                                  alignItems: "center",
+                                  justifyContent: "flex-end",
+                                  color: "var(--text-secondary)",
+                                  fontWeight: 700,
+                                  flexWrap: "wrap",
+                                  marginLeft: "auto",
+                                }}
+                              >
+                                {isSelected && (
+                                  <span className="status-badge status-badge--info">
+                                    Selected
+                                  </span>
+                                )}
+                                <span
+                                  className={`status-badge ${day.intensity === "high" ? "status-badge--danger" : day.intensity === "medium" ? "status-badge--warning" : "status-badge--success"}`}
+                                  style={{ color: theme.color }}
+                                >
+                                  {theme.label}
+                                </span>
+                                <span>
+                                  Missed {day.missed} of {day.total}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

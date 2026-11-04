@@ -294,6 +294,53 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
             </section>
           )}
 
+          {data.overallSummary && data.overallSummary.percentage < 75 && (
+            <div
+              className="surface-card rise-in"
+              style={{
+                padding: "16px 20px",
+                borderRadius: 20,
+                border: "1.5px solid var(--warning)",
+                background: "var(--warning-soft)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 14,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 26 }}>🏥</span>
+                <div style={{ display: "grid", gap: 3 }}>
+                  <strong style={{ color: "var(--text-primary)", fontSize: 15 }}>
+                    Need medical leave to cross the 75% safe mark?
+                  </strong>
+                  <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
+                    Discover the highest-impact consecutive absence windows from the last 30–50 days with overall attendance projections.
+                  </div>
+                </div>
+              </div>
+              <Link
+                to="/strategy"
+                style={{
+                  padding: "9px 18px",
+                  borderRadius: 12,
+                  background: "var(--primary)",
+                  color: "var(--text-on-primary)",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  boxShadow: "var(--shadow-xs)",
+                }}
+              >
+                ✨ Open Medical Optimizer →
+              </Link>
+            </div>
+          )}
+
           <section style={{ display: "grid", gap: 20 }}>
             <Panel
               title="Subject attendance overview"

@@ -788,6 +788,8 @@ function App() {
     streakSubjectAbsencesByDate,
     streakLoading,
     streakIsReliable: streakResult?.isReliable ?? false,
+    studentDetails: attendance,
+    studentContext,
   };
 
   const strategyHandlers = {
