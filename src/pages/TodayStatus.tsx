@@ -313,9 +313,6 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
                     </div>
                   </div>
                 ))}
-                <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", marginTop: 4 }}>
-                  Regular classes are suspended during MSE 2 examination slots.
-                </div>
               </div>
             </Panel>
           );

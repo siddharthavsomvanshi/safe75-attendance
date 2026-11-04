@@ -313,9 +313,6 @@ export function ExamMode({ attendance, subjects, overallSummary, studentExamInfo
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 6, textAlign: "center" }}>
-              💡 Regular class lectures during your MSE 2 examination slots are automatically excluded from attendance targets and bunk plans. (6 November is also excluded as an off-day).
-            </div>
           </div>
         </Panel>
       )}

@@ -152,7 +152,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
     CSE: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "MA105L", subjectName: "Probability and Statistics", mode: "Pen-Paper" },
       { date: "2026-11-19", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "CS336B", subjectName: "Object Oriented Programming with Java", mode: "Activity Based" },
-      { date: "2026-11-19", day: "Thursday", time: "2:00 PM - 4:00 PM", subjectCode: "MS201L", subjectName: "Financial Accounting & Analysis", mode: "Pen-Paper" },
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "IT301L", subjectName: "Database Systems", mode: "Pen-Paper" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "CS205B", subjectName: "Artificial Intelligence and It's Applications", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS302B", subjectName: "Advance Data Structure", mode: "Activity Based" },
@@ -161,7 +160,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
     CS: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "MA105L", subjectName: "Probability and Statistics", mode: "Pen-Paper" },
       { date: "2026-11-19", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "CS336B", subjectName: "Object Oriented Programming with Java", mode: "Activity Based" },
-      { date: "2026-11-19", day: "Thursday", time: "2:00 PM - 4:00 PM", subjectCode: "MS201L", subjectName: "Financial Accounting & Analysis", mode: "Pen-Paper" },
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "IT301L", subjectName: "Database Systems", mode: "Pen-Paper" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "CS205B", subjectName: "Artificial Intelligence and It's Applications", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS302B", subjectName: "Advance Data Structure", mode: "Activity Based" },
@@ -170,7 +168,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
     CSEDS: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "MA105L", subjectName: "Probability and Statistics", mode: "Pen-Paper" },
       { date: "2026-11-19", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "CS336B", subjectName: "Object Oriented Programming with Java", mode: "Activity Based" },
-      { date: "2026-11-19", day: "Thursday", time: "2:00 PM - 4:00 PM", subjectCode: "MS201L", subjectName: "Financial Accounting & Analysis", mode: "Pen-Paper" },
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "IT301L", subjectName: "Database Systems", mode: "Pen-Paper" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "CS205B", subjectName: "Artificial Intelligence and It's Applications", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS302B", subjectName: "Advance Data Structure", mode: "Activity Based" },
@@ -179,7 +176,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
     IT: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "MA105L", subjectName: "Probability and Statistics", mode: "Pen-Paper" },
       { date: "2026-11-19", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "CS336B", subjectName: "Object Oriented Programming with Java", mode: "Activity Based" },
-      { date: "2026-11-19", day: "Thursday", time: "2:00 PM - 4:00 PM", subjectCode: "MS201L", subjectName: "Financial Accounting & Analysis", mode: "Pen-Paper" },
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "IT301L", subjectName: "Database Systems", mode: "Pen-Paper" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "IT107B", subjectName: "Artificial Intelligence Essentials", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS302B", subjectName: "Advance Data Structure", mode: "Activity Based" },
@@ -188,7 +184,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
     CSECS: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "MA105L", subjectName: "Probability and Statistics", mode: "Pen-Paper" },
       { date: "2026-11-19", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "CS336B", subjectName: "Object Oriented Programming with Java", mode: "Activity Based" },
-      { date: "2026-11-19", day: "Thursday", time: "2:00 PM - 4:00 PM", subjectCode: "MS201L", subjectName: "Financial Accounting & Analysis", mode: "Pen-Paper" },
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "IT301L", subjectName: "Database Systems", mode: "Pen-Paper" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "IT209B", subjectName: "Cyber Security Techniques & Tools", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS302B", subjectName: "Advance Data Structure", mode: "Activity Based" },
@@ -197,7 +192,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
     CSIT: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "HS112L", subjectName: "Universal Human Values", mode: "Pen-Paper" },
       { date: "2026-11-19", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "CS336B", subjectName: "Object Oriented Programming with Java", mode: "Activity Based" },
-      { date: "2026-11-19", day: "Thursday", time: "2:00 PM - 4:00 PM", subjectCode: "MS201L", subjectName: "Financial Accounting & Analysis", mode: "Pen-Paper" },
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "IT301L", subjectName: "Database Systems", mode: "Pen-Paper" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "CS205B", subjectName: "Artificial Intelligence and It's Applications", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS302B", subjectName: "Advance Data Structure", mode: "Activity Based" },
@@ -206,7 +200,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
     CSAI: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "MA105L", subjectName: "Probability and Statistics", mode: "Pen-Paper" },
       { date: "2026-11-19", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "CS336B", subjectName: "Object Oriented Programming with Java", mode: "Activity Based" },
-      { date: "2026-11-19", day: "Thursday", time: "2:00 PM - 4:00 PM", subjectCode: "MS201L", subjectName: "Financial Accounting & Analysis", mode: "Pen-Paper" },
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "IT301L", subjectName: "Database Systems", mode: "Pen-Paper" },
       { date: "2026-11-23", day: "Monday", time: "2:00 PM - 4:00 PM", subjectCode: "AI201B", subjectName: "Machine Learning Essentials", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS302B", subjectName: "Advance Data Structure", mode: "Activity Based" },
@@ -215,7 +208,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
     CSAIML: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "MA105L", subjectName: "Probability and Statistics", mode: "Pen-Paper" },
       { date: "2026-11-19", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "CS336B", subjectName: "Object Oriented Programming with Java", mode: "Activity Based" },
-      { date: "2026-11-19", day: "Thursday", time: "2:00 PM - 4:00 PM", subjectCode: "MS201L", subjectName: "Financial Accounting & Analysis", mode: "Pen-Paper" },
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "IT301L", subjectName: "Database Systems", mode: "Pen-Paper" },
       { date: "2026-11-23", day: "Monday", time: "2:00 PM - 4:00 PM", subjectCode: "AI201B", subjectName: "Machine Learning Essentials", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS302B", subjectName: "Advance Data Structure", mode: "Activity Based" },
@@ -224,7 +216,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
     ECE: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "EC203B", subjectName: "Basics of Signals and Systems", mode: "Pen-Paper" },
       { date: "2026-11-19", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "AI101B", subjectName: "Introduction to AI", mode: "Activity Based" },
-      { date: "2026-11-19", day: "Thursday", time: "2:00 PM - 4:00 PM", subjectCode: "MS201L", subjectName: "Financial Accounting & Analysis", mode: "Pen-Paper" },
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "IT301L", subjectName: "Database Systems", mode: "Pen-Paper" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "EC205L", subjectName: "Analog Communication", mode: "Pen-Paper" },
       { date: "2026-11-23", day: "Monday", time: "2:00 PM - 4:00 PM", subjectCode: "AI201B", subjectName: "Machine Learning Essentials", mode: "Activity Based" },
@@ -289,7 +280,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "CS312B", subjectName: "Deep Learning & Gen AI", mode: "Activity Based" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "IT401B", subjectName: "Advance Databases", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS310L", subjectName: "Theory of Computation", mode: "Pen-Paper" },
-      { date: "2026-11-26", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "MS301L", subjectName: "Securities Market Primer", mode: "Pen-Paper" },
     ],
     CS: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS319E", subjectName: "Backend Servers & API Development with Databases", mode: "Activity Based" },
@@ -297,7 +287,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "CS312B", subjectName: "Deep Learning & Gen AI", mode: "Activity Based" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "IT401B", subjectName: "Advance Databases", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS310L", subjectName: "Theory of Computation", mode: "Pen-Paper" },
-      { date: "2026-11-26", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "MS301L", subjectName: "Securities Market Primer", mode: "Pen-Paper" },
     ],
     IT: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "IT206E", subjectName: "ML Essentials using Python", mode: "Activity Based" },
@@ -305,7 +294,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "IT208B", subjectName: "Computer Vision & Digital Image Processing", mode: "Activity Based" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "IT207B", subjectName: "Principles of Quantum Computing", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS310L", subjectName: "Theory of Computation", mode: "Pen-Paper" },
-      { date: "2026-11-26", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "MS301L", subjectName: "Securities Market Primer", mode: "Pen-Paper" },
     ],
     CSIT: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS319E", subjectName: "Backend Servers & API Development", mode: "Activity Based" },
@@ -313,7 +301,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "CS312B", subjectName: "Deep Learning & Gen AI", mode: "Activity Based" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "IT401B", subjectName: "Advance Databases", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "CS310L", subjectName: "Theory of Computation", mode: "Pen-Paper" },
-      { date: "2026-11-26", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "MS301L", subjectName: "Securities Market Primer", mode: "Pen-Paper" },
     ],
     CSAI: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "AI405E", subjectName: "Agentic AI / Cloud Security", mode: "Pen-Paper" },
@@ -321,7 +308,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "AI316B", subjectName: "Software System Engineering and DevOps", mode: "Activity Based" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "IT401B", subjectName: "Advance Databases", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "IT302L", subjectName: "Computer Networks", mode: "Pen-Paper" },
-      { date: "2026-11-26", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "MS301L", subjectName: "Securities Market Primer", mode: "Pen-Paper" },
     ],
     CSAIML: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "AI405E", subjectName: "Agentic AI / Cloud Security", mode: "Pen-Paper" },
@@ -329,7 +315,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "AI316B", subjectName: "Software System Engineering and DevOps", mode: "Activity Based" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "IT401B", subjectName: "Advance Databases", mode: "Activity Based" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "IT302L", subjectName: "Computer Networks", mode: "Pen-Paper" },
-      { date: "2026-11-26", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "MS301L", subjectName: "Securities Market Primer", mode: "Pen-Paper" },
     ],
     ECE: [
       { date: "2026-11-18", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "EE305E", subjectName: "Communication Protocols in IIoT Gateways", mode: "Pen-Paper" },
@@ -363,7 +348,6 @@ export const MSE2_SCHEDULE_BY_DEGREE_SEM_BRANCH: Record<
       { date: "2026-11-20", day: "Friday", time: "10:00 AM - 12:00 PM", subjectCode: "ME221B", subjectName: "AI in Manufacturing Systems", mode: "Pen-Paper" },
       { date: "2026-11-23", day: "Monday", time: "10:00 AM - 12:00 PM", subjectCode: "ME220L", subjectName: "Industrial Engineering & Operation Research", mode: "Pen-Paper" },
       { date: "2026-11-25", day: "Wednesday", time: "10:00 AM - 12:00 PM", subjectCode: "ME305L", subjectName: "Heat & Mass Transfer", mode: "Pen-Paper" },
-      { date: "2026-11-26", day: "Thursday", time: "10:00 AM - 12:00 PM", subjectCode: "MS301L", subjectName: "Securities Market Primer", mode: "Pen-Paper" },
       { date: "2026-11-26", day: "Thursday", time: "2:00 PM - 4:00 PM", subjectCode: "ME306L", subjectName: "Mechanics of Machines", mode: "Pen-Paper" },
     ],
   },

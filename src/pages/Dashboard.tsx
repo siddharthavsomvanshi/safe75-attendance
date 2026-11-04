@@ -183,10 +183,10 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                   <span style={{ fontSize: 22 }}>📋</span>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text-primary)" }}>
-                      MSE 2 & PUE Datesheet Active ({data.studentExamInfo.degree} Sem {data.studentExamInfo.semester} • {data.studentExamInfo.branch})
+                      MSE 2 & PUE Datesheet ({data.studentExamInfo.degree} Sem {data.studentExamInfo.semester} • {data.studentExamInfo.branch})
                     </div>
                     <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                      Exams from Nov 18–26. Lectures during exams & 6 Nov off-day are excluded from attendance targets.
+                      Exams scheduled from Nov 18–26.
                     </div>
                   </div>
                 </div>

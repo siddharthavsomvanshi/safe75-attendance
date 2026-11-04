@@ -25,16 +25,6 @@ export function CalendarPage({ data }: { data: CalendarData }) {
 
   return (
     <section style={{ display: "grid", gap: 14 }}>
-      {data.studentExamInfo && data.studentExamInfo.examSlots.length > 0 && (
-        <div
-          className="standard-card border-l-primary"
-          style={{ padding: "12px 16px", borderRadius: 14, fontSize: 13.5, color: "var(--text-secondary)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}
-        >
-          <span>
-            📋 <strong>MSE 2 & PUE:</strong> Lectures during your exam slots (Nov 18–26) & 6 Nov off-day are automatically excluded.
-          </span>
-        </div>
-      )}
       <Panel
         title="Weekly Timetable"
         subtitle="Your complete schedule for the current week."
