@@ -109,15 +109,15 @@ async function requestApi<T>(
   options: { method?: string; body?: unknown; headers?: Record<string, string>; _isInternalLookup?: boolean } = {}
 ): Promise<T> {
   let session = getStoredSession();
+  const isAuthRoute = pathname.startsWith("/auth/");
 
   // Automatic UID resolution if session token exists but studentId is not yet in storage
   if (
     session.token &&
     !session.studentId &&
     !options._isInternalLookup &&
-    pathname !== "/student/dashboard/registered-courses" &&
-    pathname !== "/auth/encrypt/login" &&
-    pathname !== "/auth/verify/otp"
+    !isAuthRoute &&
+    pathname !== "/student/dashboard/registered-courses"
   ) {
     try {
       const infoRes = await requestApi<{ data: Array<{ studentId?: number | string; sessionId?: number | string }> }>(
@@ -140,11 +140,14 @@ async function requestApi<T>(
     ...(options.headers || {}),
   };
 
-  if (session.token) {
-    headers["Authorization"] = session.token;
-  }
-  if (session.studentId && !headers["UID"]) {
-    headers["UID"] = String(session.studentId);
+  // NEVER attach Authorization or UID headers to unauthenticated /auth/ endpoints
+  if (!isAuthRoute) {
+    if (session.token) {
+      headers["Authorization"] = session.token;
+    }
+    if (session.studentId && !headers["UID"]) {
+      headers["UID"] = String(session.studentId);
+    }
   }
 
   let lastResponse: Response | null = null;
@@ -162,9 +165,9 @@ async function requestApi<T>(
 
       lastResponse = response;
 
-      // If the first endpoint (e.g. Vercel proxy) is blocked with 403, immediately try the direct proxy
-      if (response.status === 403 && i < API_BASES.length - 1) {
-        console.warn(`Endpoint ${base} returned 403 Forbidden, falling back to ${API_BASES[i + 1]}...`);
+      // If the first endpoint returns 403 or server gateway errors, fall back to next base
+      if ((response.status === 403 || response.status >= 502) && i < API_BASES.length - 1) {
+        console.warn(`Endpoint ${base} returned ${response.status}, falling back to ${API_BASES[i + 1]}...`);
         continue;
       }
 
@@ -174,6 +177,11 @@ async function requestApi<T>(
       }
 
       if (response.status === 500) {
+        // If an authenticated endpoint rejected with 500, clear the expired/stale session
+        if (!isAuthRoute && session.token) {
+          clearStoredSession();
+          throw new Error("Your KIET session expired or is invalid. Please log in again.");
+        }
         throw new Error(
           "CyberVidya server error (500). CyberVidya's servers are temporarily experiencing issues. Please try again in a few moments."
         );
@@ -227,6 +235,9 @@ export interface LoginResult {
 
 export async function loginDirect(username: string, pass: string): Promise<LoginResult> {
   try {
+    // Clear any previous stale session credentials first
+    clearStoredSession();
+
     const encryptedUserName = await encryptAES128CBC(username.trim());
     const encryptedPassword = await encryptAES128CBC(pass.trim());
 
@@ -264,8 +275,19 @@ export async function loginDirect(username: string, pass: string): Promise<Login
       res?.id_token ||
       (typeof dataObj === "string" && dataObj.length > 20 ? dataObj : null);
 
+    const studentId =
+      dataObj?.studentId ||
+      dataObj?.userId ||
+      dataObj?.id ||
+      res?.studentId ||
+      res?.userId;
+
+    const sessionId =
+      dataObj?.sessionId ||
+      res?.sessionId;
+
     if (token) {
-      saveStoredToken(token);
+      saveStoredToken(token, studentId, sessionId);
       return { ok: true };
     }
 
@@ -295,8 +317,19 @@ export async function verifyOtpDirect(transactionId: string, otp: string): Promi
       res?.id_token ||
       (typeof dataObj === "string" && dataObj.length > 20 ? dataObj : null);
 
+    const studentId =
+      dataObj?.studentId ||
+      dataObj?.userId ||
+      dataObj?.id ||
+      res?.studentId ||
+      res?.userId;
+
+    const sessionId =
+      dataObj?.sessionId ||
+      res?.sessionId;
+
     if (token) {
-      saveStoredToken(token);
+      saveStoredToken(token, studentId, sessionId);
       return { ok: true };
     }
 

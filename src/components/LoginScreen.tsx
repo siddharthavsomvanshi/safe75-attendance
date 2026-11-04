@@ -1,11 +1,13 @@
-import React, { useState } from "react";
-import { loginDirect, verifyOtpDirect } from "../services/cybervidyaApi";
+import React, { useState, useEffect } from "react";
+import { loginDirect, verifyOtpDirect, clearStoredSession } from "../services/cybervidyaApi";
 
 interface LoginScreenProps {
+  initialError?: string | null;
   onSuccess: () => void;
+  onClearSession?: () => void;
 }
 
-export function LoginScreen({ onSuccess }: LoginScreenProps) {
+export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginScreenProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -13,7 +15,13 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [otpMessage, setOtpMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError || null);
+
+  useEffect(() => {
+    if (initialError) {
+      setError(initialError);
+    }
+  }, [initialError]);
 
   async function handleLoginSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -144,9 +152,30 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
           >
             <div style={{ fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
               <span>⚠️</span>
-              <span>{error.includes("403") || error.includes("firewall") ? "CyberVidya Cloud Firewall (403)" : "Authentication Error"}</span>
+              <span>{error.includes("403") || error.includes("firewall") ? "CyberVidya Cloud Firewall (403)" : "Authentication Notice"}</span>
             </div>
             <div>{error}</div>
+            <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  clearStoredSession();
+                  setError(null);
+                  if (onClearSession) onClearSession();
+                }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--text-muted)",
+                  fontSize: 12,
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                Clear saved session & reset
+              </button>
+            </div>
             {(error.includes("403") || error.includes("firewall")) && (
               <div
                 style={{

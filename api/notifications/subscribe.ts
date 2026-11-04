@@ -39,8 +39,8 @@ async function verifyCyberVidyaSession(
 
   const upstreamCandidates = [
     process.env.CYBERVIDYA_UPSTREAM_URL,
-    "https://cybervidya.amanpal.tech/api",
     "https://kiet.cybervidya.net/api",
+    "https://cybervidya.amanpal.tech/api",
   ].filter(Boolean) as string[];
 
   for (const base of upstreamCandidates) {

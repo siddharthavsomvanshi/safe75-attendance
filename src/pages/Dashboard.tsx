@@ -118,7 +118,11 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
   return (
     <>
       {!data.attendance ? (
-        <LoginScreen onSuccess={handlers.syncDashboard} />
+        <LoginScreen
+          initialError={data.error}
+          onSuccess={handlers.syncDashboard}
+          onClearSession={handlers.handleClearSession}
+        />
       ) : (
         <>
           {/* COMPACT STUDENT IDENTITY HEADER */}

@@ -463,7 +463,12 @@ function App() {
       }
 
       const now = new Date();
-      const fetchedStudentInfo = await fetchStudentIdUnified();
+      let fetchedStudentInfo = { studentId: null as number | string | null, sessionId: null as number | string | null };
+      try {
+        fetchedStudentInfo = await fetchStudentIdUnified();
+      } catch (idErr) {
+        console.warn("Could not fetch student ID info (non-fatal):", idErr);
+      }
       setStudentContextOverride(
         fetchedStudentInfo.studentId === null
           ? null
@@ -475,7 +480,10 @@ function App() {
 
       const [attendanceData, currentWeekScheduleUnfiltered] = await Promise.all([
         fetchAttendanceUnified(),
-        fetchScheduleUnified(getWeekRange(now, 0)),
+        fetchScheduleUnified(getWeekRange(now, 0)).catch((schedErr) => {
+          console.warn("Could not fetch current week schedule (non-fatal):", schedErr);
+          return [] as ScheduleEntry[];
+        }),
       ]);
 
       const examInfo = getStudentExamSchedule(attendanceData);

@@ -42,8 +42,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const queryString = searchParams.toString();
   const upstreamCandidates = [
     process.env.CYBERVIDYA_UPSTREAM_URL,
-    "https://cybervidya.amanpal.tech/api",
     "https://kiet.cybervidya.net/api",
+    "https://cybervidya.amanpal.tech/api",
   ].filter(Boolean) as string[];
 
   // Extract client IP address - take only the first client IP and ensure no proxy/AWS IPs are attached
@@ -95,13 +95,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : req.headers.accept;
   }
 
-  if (req.headers.authorization) {
+  const isAuthRoute = targetPath.startsWith("auth/");
+
+  if (req.headers.authorization && !isAuthRoute) {
     forwardHeaders["Authorization"] = Array.isArray(req.headers.authorization)
       ? req.headers.authorization[0]
       : req.headers.authorization;
   }
 
-  if (req.headers.uid) {
+  if (req.headers.uid && !isAuthRoute) {
     forwardHeaders["UID"] = Array.isArray(req.headers.uid)
       ? req.headers.uid[0]
       : req.headers.uid;
@@ -116,7 +118,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const fetchOptions: RequestInit = {
     method: req.method,
     headers: forwardHeaders,
-    signal: AbortSignal.timeout(30000),
+    signal: AbortSignal.timeout(12000),
   };
 
   if (req.method !== "GET" && req.method !== "HEAD" && req.body) {
@@ -126,7 +128,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let lastResponse: Response | null = null;
   let lastError: Error | null = null;
 
-  for (const base of upstreamCandidates) {
+  for (let i = 0; i < upstreamCandidates.length; i++) {
+    const base = upstreamCandidates[i];
     const cleanBase = base.replace(/\/$/, "");
     const upstreamUrl = cleanBase.endsWith("/api") ? cleanBase : `${cleanBase}/api`;
     const targetUrl = `${upstreamUrl}/${targetPath}${queryString ? `?${queryString}` : ""}`;
@@ -135,9 +138,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const response = await fetch(targetUrl, fetchOptions);
       lastResponse = response;
 
-      // If this upstream returns 403 Forbidden ("Blocked"), try the next candidate
-      if (response.status === 403 && upstreamCandidates.indexOf(base) < upstreamCandidates.length - 1) {
-        console.warn(`Upstream ${upstreamUrl} returned 403, falling back to next upstream...`);
+      // If this upstream returns 403 Forbidden or 5xx Server Error, try the next candidate
+      if ((response.status === 403 || response.status >= 500) && i < upstreamCandidates.length - 1) {
+        console.warn(`Upstream ${upstreamUrl} returned status ${response.status}, falling back to next upstream...`);
         continue;
       }
 
