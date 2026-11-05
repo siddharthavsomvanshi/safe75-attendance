@@ -15,6 +15,7 @@ import {
   getWeeklyClasses,
   getWeekRange,
   parseKietDateTime,
+  normalizeIsoDateString,
 } from "./utils/date";
 import {
   calculateStrictStreak,
@@ -469,12 +470,17 @@ function App() {
       } catch (idErr) {
         console.warn("Could not fetch student ID info (non-fatal):", idErr);
       }
+
+      const storedSession = getStoredSession();
+      const effectiveStudentId = fetchedStudentInfo.studentId ?? storedSession.studentId ?? null;
+      const effectiveSessionId = fetchedStudentInfo.sessionId ?? storedSession.sessionId ?? null;
+
       setStudentContextOverride(
-        fetchedStudentInfo.studentId === null
+        effectiveStudentId === null
           ? null
           : {
-              studentId: fetchedStudentInfo.studentId,
-              sessionId: fetchedStudentInfo.sessionId,
+              studentId: effectiveStudentId,
+              sessionId: effectiveSessionId,
             },
       );
 
@@ -1618,11 +1624,8 @@ export function formatStreakMetricValue(result: StreakResult | null, isLoading: 
 }
 
 function getStudentContext(attendance: StudentDetails | null): StudentContext | null {
-  if (!attendance) {
-    return null;
-  }
-
-  const studentId = attendance.studentId;
+  const stored = getStoredSession();
+  const studentId = attendance?.studentId || stored.studentId;
 
   if (studentId === null || studentId === undefined || studentId === "") {
     return null;
@@ -1630,14 +1633,22 @@ function getStudentContext(attendance: StudentDetails | null): StudentContext | 
 
   return {
     studentId,
-    sessionId: attendance.sessionId ?? null,
+    sessionId: attendance?.sessionId ?? stored.sessionId ?? null,
   };
 }
 
 function normalizeDatewiseAttendance(
-  buckets: DatewiseAttendanceBucket[],
+  rawBuckets: DatewiseAttendanceBucket[] | unknown,
   fallbackExtraAttendance: number,
 ): DatewiseAttendanceState {
+  const buckets: DatewiseAttendanceBucket[] = Array.isArray(rawBuckets)
+    ? rawBuckets
+    : Array.isArray((rawBuckets as any)?.data)
+    ? (rawBuckets as any).data
+    : Array.isArray((rawBuckets as any)?.payload)
+    ? (rawBuckets as any).payload
+    : [];
+
   const lectures = buckets
     .flatMap((bucket) => bucket.lectureList ?? [])
     .filter((lecture) => Boolean(lecture.planLecDate || lecture.timeSlot || lecture.attendance));
@@ -1656,6 +1667,7 @@ function normalizeDatewiseAttendance(
     }
   }
 
+  const sortedLectures = Array.from(dedupedLectures.values()).sort(compareDatewiseLectures);
   const lectureCount = buckets.reduce((sum, bucket) => sum + (bucket.lectureCount ?? 0), 0);
   const presentCount = buckets.reduce((sum, bucket) => sum + (bucket.presentCount ?? 0), 0);
   const extraAttendanceFromApi = buckets.reduce(
@@ -1670,11 +1682,11 @@ function normalizeDatewiseAttendance(
     (lectureCount > 0 ? ((presentCount + extraAttendance) / lectureCount) * 100 : 0);
 
   return {
-    lectureCount,
-    presentCount,
+    lectureCount: lectureCount > 0 ? lectureCount : sortedLectures.length,
+    presentCount: presentCount > 0 ? presentCount : sortedLectures.filter(l => (l.attendance || '').toUpperCase() === 'PRESENT').length,
     extraAttendance,
     percent: effectivePercent,
-    lectures: Array.from(dedupedLectures.values()).sort(compareDatewiseLectures),
+    lectures: sortedLectures,
   };
 }
 
@@ -1682,11 +1694,11 @@ function compareDatewiseLectures(
   left: DatewiseAttendanceLecture,
   right: DatewiseAttendanceLecture,
 ): number {
-  const leftDate = left.planLecDate ? new Date(left.planLecDate).getTime() : 0;
-  const rightDate = right.planLecDate ? new Date(right.planLecDate).getTime() : 0;
+  const leftIso = normalizeIsoDateString(left.planLecDate);
+  const rightIso = normalizeIsoDateString(right.planLecDate);
 
-  if (leftDate !== rightDate) {
-    return rightDate - leftDate;
+  if (leftIso && rightIso && leftIso !== rightIso) {
+    return rightIso.localeCompare(leftIso);
   }
 
   return getTimeSlotSortValue(right.timeSlot) - getTimeSlotSortValue(left.timeSlot);
@@ -1727,14 +1739,23 @@ export function formatDatewiseLectureDate(planLecDate: string | null, dayName: s
     return dayName ?? "Date unavailable";
   }
 
-  const [year, month, day] = planLecDate.split("-").map(Number);
+  const iso = normalizeIsoDateString(planLecDate);
+  if (!iso) {
+    return planLecDate;
+  }
+
+  const [year, month, day] = iso.split("-").map(Number);
+  const dt = new Date(year, month - 1, day);
+  if (isNaN(dt.getTime())) {
+    return planLecDate;
+  }
 
   return new Intl.DateTimeFormat("en-IN", {
     weekday: "short",
     day: "numeric",
     month: "short",
     year: "numeric",
-  }).format(new Date(year, month - 1, day));
+  }).format(dt);
 }
 
 export function getAttendanceStatusTheme(status: string | null): { background: string; color: string } {

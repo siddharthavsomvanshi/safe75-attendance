@@ -3,7 +3,7 @@ import type { StudentContext, SubjectSummary } from "../App";
 import { EmptyMessage, Panel } from "../components/UI";
 import type { DatewiseAttendanceBucket, ScheduleEntry } from "../types/kiet";
 import { fetchDatewiseAttendanceUnified } from "../services/cybervidyaApi";
-import { formatIsoDate } from "../utils/date";
+import { formatIsoDate, normalizeIsoDateString } from "../utils/date";
 
 export type HistoryClassRecord = {
   key: string;
@@ -24,28 +24,18 @@ function normalise(value: string | null | undefined): string {
   return (value ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
-function normalizeIsoDateString(rawDate: string | null | undefined): string | null {
-  if (!rawDate) return null;
-  const match = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (match) return `${match[1]}-${match[2]}-${match[3]}`;
-  const slashMatch = rawDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (slashMatch) {
-    const day = slashMatch[1].padStart(2, "0");
-    const month = slashMatch[2].padStart(2, "0");
-    const year = slashMatch[3];
-    return `${year}-${month}-${day}`;
-  }
-  return null;
-}
-
 function formatSelectedDate(dateKey: string): string {
-  const [year, month, day] = dateKey.split("-").map(Number);
+  const iso = normalizeIsoDateString(dateKey);
+  if (!iso) return dateKey;
+  const [year, month, day] = iso.split("-").map(Number);
+  const dt = new Date(year, month - 1, day);
+  if (isNaN(dt.getTime())) return dateKey;
   return new Intl.DateTimeFormat("en-IN", {
     weekday: "short",
     day: "numeric",
     month: "short",
     year: "numeric",
-  }).format(new Date(year, month - 1, day));
+  }).format(dt);
 }
 
 function getStatusStyle(status: string | null) {
@@ -95,10 +85,15 @@ export function AttendanceHistory({
           ? parsed.data
           : Array.isArray(parsed)
           ? parsed
+          : Array.isArray(parsed?.payload)
+          ? parsed.payload
           : [];
 
-        if (buckets.length > 0) {
+        if (parsed && typeof parsed.timestamp === "number") {
           cachedSubjectsCount++;
+        }
+
+        if (buckets.length > 0) {
           for (const bucket of buckets) {
             const lectureList = bucket.lectureList || [];
             for (const lecture of lectureList) {
@@ -175,10 +170,11 @@ export function AttendanceHistory({
                 courseCompId: subject.courseComponentId,
                 forceRefresh: force,
               });
-              loaded++;
-              setLoadedCount(loaded);
             } catch (err) {
               console.warn(`Failed loading subject ${subject.courseCode}:`, err);
+            } finally {
+              loaded++;
+              setLoadedCount(loaded);
             }
           }
         }

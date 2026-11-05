@@ -37,31 +37,67 @@ export function getWeekRange(baseDate: Date, weekOffset = 0) {
   };
 }
 
+export function normalizeIsoDateString(dateInput: string | Date | null | undefined): string | null {
+  if (!dateInput) return null;
+  if (dateInput instanceof Date) {
+    if (isNaN(dateInput.getTime())) return null;
+    return formatIsoDate(dateInput);
+  }
+
+  const str = String(dateInput).trim();
+  // 1. ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss
+  const isoMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (isoMatch) {
+    const year = isoMatch[1];
+    const month = isoMatch[2].padStart(2, "0");
+    const day = isoMatch[3].padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  // 2. Indian format: DD/MM/YYYY or DD-MM-YYYY
+  const dmyMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (dmyMatch) {
+    const day = dmyMatch[1].padStart(2, "0");
+    const month = dmyMatch[2].padStart(2, "0");
+    const year = dmyMatch[3];
+    return `${year}-${month}-${day}`;
+  }
+
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    return formatIsoDate(parsed);
+  }
+
+  return null;
+}
+
 export function parseKietDateTime(value: string): Date {
   if (!value || typeof value !== "string") {
     return new Date();
   }
 
   // ISO date format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS
-  if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
-    const [datePart, timePart] = value.split(/[T ]/);
-    const [year, month, day] = datePart.split("-").map(Number);
-    if (timePart && timePart.includes(":")) {
-      const [hours, minutes, seconds] = timePart.split(":").map(Number);
-      return new Date(year, month - 1, day, hours || 0, minutes || 0, seconds || 0);
-    }
-    return new Date(year, month - 1, day);
+  const isoMatch = value.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if (isoMatch) {
+    const year = Number(isoMatch[1]);
+    const month = Number(isoMatch[2]);
+    const day = Number(isoMatch[3]);
+    const hours = isoMatch[4] ? Number(isoMatch[4]) : 0;
+    const minutes = isoMatch[5] ? Number(isoMatch[5]) : 0;
+    const seconds = isoMatch[6] ? Number(isoMatch[6]) : 0;
+    return new Date(year, month - 1, day, hours, minutes, seconds);
   }
 
-  // KIET date format: DD/MM/YYYY HH:MM:SS
-  const [datePart, timePart] = value.split(" ");
-  if (datePart && datePart.includes("/")) {
-    const [day, month, year] = datePart.split("/").map(Number);
-    if (timePart && timePart.includes(":")) {
-      const [hours, minutes, seconds] = timePart.split(":").map(Number);
-      return new Date(year, month - 1, day, hours || 0, minutes || 0, seconds || 0);
-    }
-    return new Date(year, month - 1, day);
+  // Indian date format: DD/MM/YYYY or DD-MM-YYYY HH:MM:SS
+  const dmyMatch = value.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if (dmyMatch) {
+    const day = Number(dmyMatch[1]);
+    const month = Number(dmyMatch[2]);
+    const year = Number(dmyMatch[3]);
+    const hours = dmyMatch[4] ? Number(dmyMatch[4]) : 0;
+    const minutes = dmyMatch[5] ? Number(dmyMatch[5]) : 0;
+    const seconds = dmyMatch[6] ? Number(dmyMatch[6]) : 0;
+    return new Date(year, month - 1, day, hours, minutes, seconds);
   }
 
   const parsed = new Date(value);

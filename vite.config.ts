@@ -65,6 +65,13 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
         rewrite: (path) => path.replace(/^\/api\/cybervidya/, ""),
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq) => {
+            proxyReq.setHeader("Origin", "https://kiet.cybervidya.net");
+            proxyReq.setHeader("Referer", "https://kiet.cybervidya.net/main/dashboard");
+            proxyReq.setHeader("Sec-Fetch-Site", "same-origin");
+          });
+        },
       },
     },
   },

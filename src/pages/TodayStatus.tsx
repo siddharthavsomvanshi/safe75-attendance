@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { fetchScheduleUnified, fetchDatewiseAttendanceUnified } from "../services/cybervidyaApi";
-import { getWeekRange, parseKietDateTime, formatIsoDate, getPreviousWorkingDay, formatDisplayDate, matchesScheduleTimeSlot } from "../utils/date";
+import { getWeekRange, parseKietDateTime, formatIsoDate, getPreviousWorkingDay, formatDisplayDate, matchesScheduleTimeSlot, normalizeIsoDateString } from "../utils/date";
 import type { StudentContext } from "../App";
 import type { StudentDetails, ScheduleEntry, DatewiseAttendanceBucket } from "../types/kiet";
 import { GLOBAL_HOLIDAYS } from "../data/mse2Datesheet";
@@ -69,8 +69,6 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
       const entriesForDay = (schedule || []).filter((entry: ScheduleEntry) => {
          if (entry.type !== "CLASS") return false;
          const entryDate = formatIsoDate(parseKietDateTime(entry.start));
-         if (GLOBAL_HOLIDAYS[entryDate]) return false;
-         if (studentExamInfo?.examDates?.has(entryDate)) return false;
          return entryDate === targetDateIso;
       }).sort((a: ScheduleEntry, b: ScheduleEntry) => parseKietDateTime(a.start).getTime() - parseKietDateTime(b.start).getTime());
 
@@ -79,15 +77,32 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
         let courseId: number | null = null;
         let courseComponentId: number | null = null;
         
+        const normEntryCode = (entry.courseCode || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+        const normEntryComp = (entry.courseCompName || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+
         if (attendance.attendanceCourseComponentInfoList) {
            for (const course of attendance.attendanceCourseComponentInfoList) {
-             if (course.courseCode.toUpperCase() === (entry.courseCode || "").toUpperCase()) {
+             const normCourseCode = (course.courseCode || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+             if (normCourseCode === normEntryCode) {
                courseId = course.courseId;
-               for (const comp of course.attendanceCourseComponentNameInfoList) {
-                 if ((comp.componentName || "").toUpperCase() === (entry.courseCompName || "").toUpperCase()) {
+               const comps = course.attendanceCourseComponentNameInfoList || [];
+               if (comps.length === 1) {
+                 courseComponentId = comps[0].courseComponentId;
+                 break;
+               }
+               for (const comp of comps) {
+                 const normComp = (comp.componentName || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+                 if (normComp === normEntryComp) {
                    courseComponentId = comp.courseComponentId;
                    break;
                  }
+               }
+               if (!courseComponentId && comps.length > 0) {
+                 const partialMatch = comps.find((comp) => {
+                   const normComp = (comp.componentName || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+                   return normComp.includes(normEntryComp) || normEntryComp.includes(normComp);
+                 });
+                 courseComponentId = partialMatch ? partialMatch.courseComponentId : comps[0].courseComponentId;
                }
                break;
              }
@@ -132,7 +147,7 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
                   courseId: cId,
                   courseCompId: ccId,
                });
-               moduleAttendanceCache[compKey] = res;
+               moduleAttendanceCache[compKey] = Array.isArray(res) ? res : (res as any)?.data || [];
             } catch (err) {
                const errorMsg = err instanceof Error ? err.message : String(err);
                setTargetClasses(prev => prev.map(tc => 
@@ -146,12 +161,18 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
       setTargetClasses(prev => prev.map(tc => {
          if (!tc.courseId || !tc.courseComponentId) return tc;
          const compKey = `${tc.courseId}-${tc.courseComponentId}`;
-         const buckets = moduleAttendanceCache[compKey];
-         if (!buckets) return tc;
+         const rawBuckets = moduleAttendanceCache[compKey];
+         if (!rawBuckets) return tc;
+         
+         const buckets = Array.isArray(rawBuckets)
+           ? rawBuckets
+           : Array.isArray((rawBuckets as any)?.data)
+           ? (rawBuckets as any).data
+           : [];
          
          const lectures = buckets.flatMap((b: DatewiseAttendanceBucket) => b.lectureList || []).filter((l) => {
-            if (!l.planLecDate) return false;
-            return l.planLecDate.slice(0, 10) === targetDateIso;
+            const lectureDateIso = normalizeIsoDateString(l.planLecDate);
+            return lectureDateIso === targetDateIso;
          });
          
          let matchedLecture = null;

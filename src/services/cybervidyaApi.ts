@@ -70,6 +70,26 @@ export function sanitizeToken(token: string): string {
   return `GlobalEducation ${cleaned}`;
 }
 
+export function extractClaimsFromToken(token: string): { studentId?: string | number; sessionId?: string | number } | null {
+  try {
+    const raw = token.replace(/^GlobalEducation\s+/i, "").replace(/^Bearer\s+/i, "").trim();
+    const parts = raw.split(".");
+    if (parts.length === 3) {
+      const payloadBase64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+      const json = JSON.parse(atob(payloadBase64));
+      const studentId = json.studentId || json.userId || json.uid || json.id || json.sub;
+      const sessionId = json.sessionId;
+      return {
+        studentId: studentId && !isNaN(Number(studentId)) ? Number(studentId) : studentId,
+        sessionId: sessionId && !isNaN(Number(sessionId)) ? Number(sessionId) : sessionId,
+      };
+    }
+  } catch {
+    // Ignore JWT decode failure
+  }
+  return null;
+}
+
 export function getStoredSession() {
   const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
   const capturedAt = localStorage.getItem(STORAGE_KEYS.CAPTURED_AT);
@@ -124,7 +144,14 @@ async function requestApi<T>(
         "/student/dashboard/registered-courses",
         { _isInternalLookup: true }
       );
-      const first = Array.isArray(infoRes?.data) ? infoRes.data[0] : null;
+      const courseList = Array.isArray(infoRes?.data)
+        ? infoRes.data
+        : Array.isArray(infoRes)
+        ? (infoRes as unknown as Array<{ studentId?: number | string; sessionId?: number | string }>)
+        : Array.isArray((infoRes as any)?.payload)
+        ? (infoRes as any).payload
+        : [];
+      const first = courseList[0] || null;
       if (first?.studentId) {
         saveStoredToken(session.token, first.studentId, first.sessionId);
         session = getStoredSession();
@@ -177,11 +204,6 @@ async function requestApi<T>(
       }
 
       if (response.status === 500) {
-        // If an authenticated endpoint rejected with 500, clear the expired/stale session
-        if (!isAuthRoute && session.token) {
-          clearStoredSession();
-          throw new Error("Your KIET session expired or is invalid. Please log in again.");
-        }
         throw new Error(
           "CyberVidya server error (500). CyberVidya's servers are temporarily experiencing issues. Please try again in a few moments."
         );
@@ -275,16 +297,22 @@ export async function loginDirect(username: string, pass: string): Promise<Login
       res?.id_token ||
       (typeof dataObj === "string" && dataObj.length > 20 ? dataObj : null);
 
+    const claims = token ? extractClaimsFromToken(token) : null;
+
     const studentId =
       dataObj?.studentId ||
       dataObj?.userId ||
       dataObj?.id ||
       res?.studentId ||
-      res?.userId;
+      res?.userId ||
+      claims?.studentId ||
+      null;
 
     const sessionId =
       dataObj?.sessionId ||
-      res?.sessionId;
+      res?.sessionId ||
+      claims?.sessionId ||
+      null;
 
     if (token) {
       saveStoredToken(token, studentId, sessionId);
@@ -317,16 +345,22 @@ export async function verifyOtpDirect(transactionId: string, otp: string): Promi
       res?.id_token ||
       (typeof dataObj === "string" && dataObj.length > 20 ? dataObj : null);
 
+    const claims = token ? extractClaimsFromToken(token) : null;
+
     const studentId =
       dataObj?.studentId ||
       dataObj?.userId ||
       dataObj?.id ||
       res?.studentId ||
-      res?.userId;
+      res?.userId ||
+      claims?.studentId ||
+      null;
 
     const sessionId =
       dataObj?.sessionId ||
-      res?.sessionId;
+      res?.sessionId ||
+      claims?.sessionId ||
+      null;
 
     if (token) {
       saveStoredToken(token, studentId, sessionId);
@@ -345,24 +379,43 @@ export async function fetchAttendanceDirect(): Promise<StudentDetails> {
 }
 
 export async function fetchStudentIdDirect(): Promise<{ studentId: number | string | null; sessionId: number | string | null }> {
-  const res = await requestApi<{ data: Array<{ studentId?: number | string; sessionId?: number | string }> }>(
-    "/student/dashboard/registered-courses"
-  );
-  const first = Array.isArray(res.data) ? res.data[0] : null;
-  const studentId = first?.studentId ?? null;
-  const sessionId = first?.sessionId ?? null;
+  try {
+    const res = await requestApi<{ data: Array<{ studentId?: number | string; sessionId?: number | string }> }>(
+      "/student/dashboard/registered-courses"
+    );
+    const rawList = Array.isArray(res?.data)
+      ? res.data
+      : Array.isArray(res)
+      ? (res as unknown as Array<{ studentId?: number | string; sessionId?: number | string }>)
+      : Array.isArray((res as any)?.payload)
+      ? (res as any).payload
+      : [];
+    const first = rawList[0] || null;
+    const studentId = first?.studentId ?? null;
+    const sessionId = first?.sessionId ?? null;
 
-  if (studentId || sessionId) {
-    saveStoredToken(localStorage.getItem(STORAGE_KEYS.TOKEN) || "", studentId, sessionId);
+    const stored = getStoredSession();
+    const effectiveStudentId = studentId ?? stored.studentId ?? null;
+    const effectiveSessionId = sessionId ?? stored.sessionId ?? null;
+
+    if (effectiveStudentId || effectiveSessionId) {
+      saveStoredToken(localStorage.getItem(STORAGE_KEYS.TOKEN) || "", effectiveStudentId, effectiveSessionId);
+    }
+
+    return { studentId: effectiveStudentId, sessionId: effectiveSessionId };
+  } catch (err) {
+    const stored = getStoredSession();
+    if (stored.studentId) {
+      return { studentId: stored.studentId, sessionId: stored.sessionId };
+    }
+    throw err;
   }
-
-  return { studentId, sessionId };
 }
 
 export async function fetchScheduleDirect(weekStartDate: string, weekEndDate: string): Promise<ScheduleEntry[]> {
   const params = new URLSearchParams({ weekStartDate, weekEndDate });
   const res = await requestApi<{ data: ScheduleEntry[] }>(`/student/schedule/class?${params.toString()}`);
-  return res.data;
+  return Array.isArray(res?.data) ? res.data : Array.isArray(res) ? (res as unknown as ScheduleEntry[]) : [];
 }
 
 export async function fetchDatewiseAttendanceDirect(
@@ -372,19 +425,27 @@ export async function fetchDatewiseAttendanceDirect(
   courseCompId: number,
   forceRefresh = false
 ): Promise<DatewiseAttendanceBucket[]> {
-  const cacheKey = `kiet_datewise_${studentId}_${courseId}_${courseCompId}`;
+  const session = getStoredSession();
+  const effectiveStudentId = studentId || session.studentId;
+  const effectiveSessionId = sessionId ?? session.sessionId ?? null;
+
+  const cacheKey = `kiet_datewise_${effectiveStudentId}_${courseId}_${courseCompId}`;
   if (!forceRefresh) {
     try {
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         const parsed = JSON.parse(cached);
+        const cachedList: DatewiseAttendanceBucket[] = Array.isArray(parsed?.data)
+          ? parsed.data
+          : Array.isArray(parsed)
+          ? parsed
+          : [];
         if (
           parsed &&
           typeof parsed.timestamp === "number" &&
-          Date.now() - parsed.timestamp < 3 * 60 * 60 * 1000 &&
-          Array.isArray(parsed.data)
+          Date.now() - parsed.timestamp < 3 * 60 * 60 * 1000
         ) {
-          return parsed.data;
+          return cachedList;
         }
       }
     } catch {
@@ -396,28 +457,38 @@ export async function fetchDatewiseAttendanceDirect(
     "/attendance/schedule/student/course/attendance/percentage",
     {
       method: "POST",
-      headers: { UID: String(studentId) },
+      headers: effectiveStudentId ? { UID: String(effectiveStudentId) } : {},
       body: {
-        studentId,
-        sessionId,
-        courseId,
-        courseCompId,
+        studentId: effectiveStudentId !== null && effectiveStudentId !== undefined && !isNaN(Number(effectiveStudentId))
+          ? Number(effectiveStudentId)
+          : effectiveStudentId,
+        sessionId: effectiveSessionId !== null && effectiveSessionId !== undefined && !isNaN(Number(effectiveSessionId))
+          ? Number(effectiveSessionId)
+          : effectiveSessionId,
+        courseId: Number(courseId) || courseId,
+        courseCompId: Number(courseCompId) || courseCompId,
       },
     }
   );
 
-  if (Array.isArray(res?.data)) {
-    try {
-      localStorage.setItem(
-        cacheKey,
-        JSON.stringify({ timestamp: Date.now(), data: res.data })
-      );
-    } catch {
-      // Ignore storage quota limits
-    }
+  const dataList: DatewiseAttendanceBucket[] = Array.isArray(res?.data)
+    ? res.data
+    : Array.isArray(res)
+    ? (res as unknown as DatewiseAttendanceBucket[])
+    : Array.isArray((res as any)?.payload)
+    ? (res as any).payload
+    : [];
+
+  try {
+    localStorage.setItem(
+      cacheKey,
+      JSON.stringify({ timestamp: Date.now(), data: dataList })
+    );
+  } catch {
+    // Ignore storage quota limits
   }
 
-  return res.data;
+  return dataList;
 }
 
 export async function fetchExamSessionsDirect(studentId: number | string): Promise<ExamSession[]> {

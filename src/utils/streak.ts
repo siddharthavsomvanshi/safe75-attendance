@@ -1,5 +1,6 @@
 import { fetchDatewiseAttendanceUnified } from "../services/cybervidyaApi";
 import type { DatewiseAttendanceBucket } from "../types/kiet";
+import { normalizeIsoDateString } from "./date";
 
 export interface StreakSubjectConfig {
   courseId: number;
@@ -39,36 +40,6 @@ type CachedPastPayload = {
 };
 
 const CACHE_KEY_PREFIX = "kiet_streak_cache";
-
-function formatIsoDateParts(year: number, month: number, day: number): string {
-  return [
-    String(year).padStart(4, "0"),
-    String(month).padStart(2, "0"),
-    String(day).padStart(2, "0"),
-  ].join("-");
-}
-
-function normalizeIsoDateString(dateInput: string | Date): string {
-  if (dateInput instanceof Date) {
-    return formatIsoDateParts(
-      dateInput.getFullYear(),
-      dateInput.getMonth() + 1,
-      dateInput.getDate(),
-    );
-  }
-
-  const isoMatch = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) {
-    return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
-  }
-
-  const parsedDate = new Date(dateInput);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return dateInput.slice(0, 10);
-  }
-
-  return normalizeIsoDateString(parsedDate);
-}
 
 function getCacheKey(
   studentId: number | string,

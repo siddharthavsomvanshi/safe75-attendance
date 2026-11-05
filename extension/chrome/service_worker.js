@@ -187,13 +187,14 @@ async function handleMessage(message) {
       const response = await fetchKietJson("/attendance/course/component/student");
       return {
         ok: true,
-        payload: response.data,
+        payload: response.data || response,
       };
     }
 
     case "FETCH_STUDENT_ID": {
       const response = await fetchKietJson("/student/dashboard/registered-courses");
-      const firstCourse = Array.isArray(response.data) ? response.data[0] : null;
+      const list = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      const firstCourse = list[0] ?? null;
       const studentId = firstCourse?.studentId ?? null;
       const sessionId = firstCourse?.sessionId ?? null;
 
@@ -227,7 +228,7 @@ async function handleMessage(message) {
       const response = await fetchKietJson(`/student/schedule/class?${searchParams.toString()}`);
       return {
         ok: true,
-        payload: response.data,
+        payload: Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : (response?.data || []),
       };
     }
 
