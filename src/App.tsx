@@ -825,47 +825,77 @@ function App() {
   }, [location.pathname]);
 
   return (
-    <main className="app-shell" style={{ minHeight: "100vh", padding: "32px 18px 48px" }}>
+    <main className="app-shell" style={{ minHeight: "100vh" }}>
       <div className="app-wrap" style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gap: 20 }}>
         <nav className="app-nav rise-in flex-between">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-            <div className="app-nav-links">
-              <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>Dashboard</Link>
-              <Link to="/today" className={`nav-link ${location.pathname === '/today' ? 'active' : ''}`}>Today</Link>
-              <Link to="/strategy" className={`nav-link ${location.pathname === '/strategy' ? 'active' : ''}`}>Planner</Link>
-              <Link to="/multiverse" className={`nav-link ${location.pathname === '/multiverse' ? 'active' : ''}`}>What If?</Link>
-              <Link to="/calendar" className={`nav-link ${location.pathname === '/calendar' ? 'active' : ''}`}>Schedule</Link>
-              <Link to="/history" className={`nav-link ${location.pathname === '/history' ? 'active' : ''}`}>Attendance History</Link>
-              <Link to="/exam" className={`nav-link ${location.pathname === '/exam' ? 'active' : ''}`}>Exam</Link>
-              <Link to="/feedback" className={`nav-link ${location.pathname === '/feedback' ? 'active' : ''}`}>Report</Link>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+              <Link to="/" className="app-nav-brand">
+                <img
+                  src="/favicon.png"
+                  alt="Safe75"
+                  style={{ width: 28, height: 28, borderRadius: 8, objectFit: "contain" }}
+                />
+                <span className="app-nav-brand-title">
+                  Safe75 <span className="brand-badge">ERP</span>
+                </span>
+              </Link>
+
+              <div className="app-nav-links">
+                <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
+                  <span>📊</span> Dashboard
+                </Link>
+                <Link to="/today" className={`nav-link ${location.pathname === '/today' ? 'active' : ''}`}>
+                  <span>📌</span> Today
+                </Link>
+                <Link to="/strategy" className={`nav-link ${location.pathname === '/strategy' ? 'active' : ''}`}>
+                  <span>🎯</span> Planner
+                </Link>
+                <Link to="/multiverse" className={`nav-link ${location.pathname === '/multiverse' ? 'active' : ''}`}>
+                  <span>🌀</span> What If?
+                </Link>
+                <Link to="/calendar" className={`nav-link ${location.pathname === '/calendar' ? 'active' : ''}`}>
+                  <span>📅</span> Schedule
+                </Link>
+                <Link to="/history" className={`nav-link ${location.pathname === '/history' ? 'active' : ''}`}>
+                  <span>📜</span> History
+                </Link>
+                <Link to="/exam" className={`nav-link ${location.pathname === '/exam' ? 'active' : ''}`}>
+                  <span>📚</span> Exam
+                </Link>
+                <Link to="/feedback" className={`nav-link ${location.pathname === '/feedback' ? 'active' : ''}`}>
+                  <span>💬</span> Report
+                </Link>
+              </div>
             </div>
             
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               <button 
+                type="button"
+                className="theme-toggle-btn"
                 onClick={() => setTheme(prev => prev === "light" ? "amoled" : "light")}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: 20,
-                  padding: "0 8px",
-                  color: "var(--text-primary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0
-                }}
                 title={theme === "light" ? "Switch to AMOLED Theme" : "Switch to Light Theme"}
+                aria-label="Toggle visual theme"
               >
-                {theme === "light" ? "🌙" : "☀️"}
+                {theme === "light" ? (
+                  <>
+                    <span>🌙</span>
+                    <span style={{ fontSize: 12, fontWeight: 700 }}>Dark</span>
+                  </>
+                ) : (
+                  <>
+                    <span>☀️</span>
+                    <span style={{ fontSize: 12, fontWeight: 700 }}>Light</span>
+                  </>
+                )}
               </button>
               
               <button
                 className="mobile-menu-toggle action-button action-button--secondary"
                 onClick={() => setMobileMenuOpen(prev => !prev)}
                 style={{
-                  padding: "6px 12px",
-                  fontSize: 14,
+                  padding: "7px 12px",
+                  fontSize: 13,
                   fontWeight: 700,
                   alignItems: "center",
                   gap: 4
@@ -1383,25 +1413,35 @@ export function Metric({ label, value }: { label: string; value: string }) {
 export function primaryButtonStyle(disabled: boolean): CSSProperties {
   return {
     border: "none",
-    borderRadius: 999,
-    padding: "12px 20px",
+    borderRadius: 12,
+    padding: "10px 20px",
     background: disabled ? "var(--border-strong)" : "var(--primary)",
     color: "var(--text-on-primary)",
     cursor: disabled ? "not-allowed" : "pointer",
-    fontWeight: 700,
+    fontWeight: 600,
+    fontFamily: "inherit",
     boxShadow: disabled ? "none" : "var(--shadow-button)",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
   };
 }
 
 export const secondaryButtonStyle: CSSProperties = {
   border: "1px solid var(--border)",
-  borderRadius: 999,
-  padding: "12px 20px",
+  borderRadius: 12,
+  padding: "9px 18px",
   background: "var(--bg-card)",
   color: "var(--text-primary)",
   cursor: "pointer",
   fontWeight: 600,
+  fontFamily: "inherit",
   boxShadow: "var(--shadow-xs)",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
 };
 
 export function AttendanceSniper({ data, schedule }: { data: OverallSummary | null; schedule: BunkableDay[] }) {

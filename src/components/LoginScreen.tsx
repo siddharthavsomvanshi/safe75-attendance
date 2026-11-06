@@ -233,13 +233,13 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
                   width: "100%",
                   padding: "14px 16px",
                   borderRadius: 14,
-                  border: "1px solid var(--border-strong)",
-                  backgroundColor: "var(--bg-card-subtle)",
-                  color: "var(--text-main)",
+                  border: "1px solid var(--border)",
+                  backgroundColor: "var(--bg-card)",
+                  color: "var(--text-primary)",
                   fontSize: 15,
                   outline: "none",
                   boxSizing: "border-box",
-                  transition: "border-color 0.2s",
+                  transition: "all 0.2s",
                 }}
               />
             </div>
@@ -270,13 +270,13 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
                     width: "100%",
                     padding: "14px 46px 14px 16px",
                     borderRadius: 14,
-                    border: "1px solid var(--border-strong)",
-                    backgroundColor: "var(--bg-card-subtle)",
-                    color: "var(--text-main)",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--bg-card)",
+                    color: "var(--text-primary)",
                     fontSize: 15,
                     outline: "none",
                     boxSizing: "border-box",
-                    transition: "border-color 0.2s",
+                    transition: "all 0.2s",
                   }}
                 />
                 <button
@@ -368,9 +368,9 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
                   width: "100%",
                   padding: "14px 16px",
                   borderRadius: 14,
-                  border: "1px solid var(--border-strong)",
-                  backgroundColor: "var(--bg-card-subtle)",
-                  color: "var(--text-main)",
+                  border: "1px solid var(--border)",
+                  backgroundColor: "var(--bg-card)",
+                  color: "var(--text-primary)",
                   fontSize: 20,
                   letterSpacing: 6,
                   textAlign: "center",

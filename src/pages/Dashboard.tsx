@@ -134,15 +134,46 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
               alignItems: "center",
               flexWrap: "wrap",
               gap: 16,
-              padding: "16px 20px",
+              padding: "16px 22px",
             }}
           >
-            <div style={{ display: "grid", gap: 4 }}>
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "var(--text-primary)" }}>
-                {data.attendance.fullName}
-              </h1>
-              <div style={{ color: "var(--text-secondary)", fontSize: 14, fontWeight: 600 }}>
-                {data.attendance.registrationNumber} • {data.attendance.branchShortName}-{data.attendance.sectionName} • {data.attendance.semesterName}
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 14,
+                  background: "var(--primary-gradient)",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 800,
+                  fontSize: 18,
+                  fontFamily: "'Outfit', sans-serif",
+                  boxShadow: "var(--shadow-sm)",
+                  flexShrink: 0,
+                }}
+              >
+                {data.attendance.fullName ? data.attendance.fullName.charAt(0).toUpperCase() : "S"}
+              </div>
+              <div style={{ display: "grid", gap: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>
+                    {data.attendance.fullName}
+                  </h1>
+                  <span className="status-badge status-badge--success" style={{ fontSize: 11, padding: "3px 8px" }}>
+                    ● Synced
+                  </span>
+                </div>
+                <div style={{ color: "var(--text-secondary)", fontSize: 13.5, fontWeight: 600, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                  <span style={{ color: "var(--text-muted)" }}>ID:</span>
+                  <strong style={{ color: "var(--text-primary)" }}>{data.attendance.registrationNumber}</strong>
+                  <span style={{ color: "var(--border-strong)" }}>•</span>
+                  <span>{data.attendance.branchShortName}-{data.attendance.sectionName}</span>
+                  <span style={{ color: "var(--border-strong)" }}>•</span>
+                  <span>{data.attendance.semesterName}</span>
+                </div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -153,7 +184,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                 style={{ ...secondaryButtonStyle, padding: "8px 16px", fontSize: 13 }}
                 title="Refresh attendance"
               >
-                Refresh
+                <span>🔄</span> Refresh
               </button>
               <button
                 className="action-button action-button--secondary"
@@ -161,7 +192,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                 onClick={handlers.handleClearSession}
                 style={{ ...secondaryButtonStyle, padding: "8px 16px", fontSize: 13 }}
               >
-                Log out
+                <span>🚪</span> Log out
               </button>
             </div>
           </section>
@@ -208,60 +239,122 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
           {/* PROMINENT OVERALL ATTENDANCE CARD */}
           {data.overallSummary && (
             <section
-              className="standard-card rise-in border-l-primary"
+              className={`standard-card rise-in ${
+                data.overallSummary.percentage >= 75 ? "border-l-success" : "border-l-danger"
+              }`}
               style={{
                 display: "grid",
-                gap: 16,
+                gap: 18,
                 textAlign: "center",
-                padding: "26px 22px",
+                padding: "26px 24px",
               }}
             >
               <div
                 style={{
-                  fontSize: 12,
-                  fontWeight: 800,
-                  color: "var(--text-muted)",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 10,
                 }}
               >
-                ATTENDANCE
+                <span
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 800,
+                    color: "var(--text-muted)",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  ACADEMIC ATTENDANCE STANDING
+                </span>
+                <span
+                  className={`status-badge ${
+                    data.overallSummary.percentage >= 75
+                      ? "status-badge--success"
+                      : "status-badge--danger"
+                  }`}
+                  style={{ fontSize: 12.5, padding: "5px 12px" }}
+                >
+                  {data.overallSummary.percentage >= 75
+                    ? "✓ Safe Zone (75%+)"
+                    : "⚠️ Below 75% Threshold"}
+                </span>
               </div>
+
               <div>
                 <div
                   style={{
-                    fontSize: "clamp(3.2rem, 7vw, 4.8rem)",
-                    fontWeight: 800,
+                    fontSize: "clamp(3.4rem, 8vw, 5rem)",
+                    fontWeight: 900,
                     lineHeight: 1,
                     letterSpacing: "-0.04em",
-                    color: data.overallSummary.percentage >= 75 ? "var(--success)" : "var(--danger)",
+                    fontFamily: "'Outfit', sans-serif",
+                    color:
+                      data.overallSummary.percentage >= 75
+                        ? "var(--success)"
+                        : "var(--danger)",
                   }}
                 >
                   {data.overallSummary.percentage.toFixed(1)}%
                 </div>
-                <div style={{ color: "var(--text-muted)", fontSize: 15, fontWeight: 600, marginTop: 6 }}>
-                  Overall attendance
+                <div
+                  style={{
+                    color: "var(--text-muted)",
+                    fontSize: 14.5,
+                    fontWeight: 600,
+                    marginTop: 8,
+                  }}
+                >
+                  Overall Cumulative Attendance
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 12, justifyContent: "center", alignItems: "center", flexWrap: "wrap", fontSize: 15, color: "var(--text-secondary)", fontWeight: 600 }}>
-                <span>Current: <strong style={{ color: "var(--text-primary)" }}>{data.overallSummary.percentage.toFixed(1)}%</strong></span>
-                <span style={{ opacity: 0.5 }}>|</span>
-                <span>If you attend all: <strong style={{ color: "var(--text-primary)" }}>{data.overallSummary.projectedPercentage.toFixed(1)}%</strong></span>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 14,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  fontSize: 14,
+                  color: "var(--text-secondary)",
+                  fontWeight: 600,
+                }}
+              >
+                <span>
+                  Current:{" "}
+                  <strong style={{ color: "var(--text-primary)" }}>
+                    {data.overallSummary.percentage.toFixed(1)}%
+                  </strong>
+                </span>
+                <span style={{ opacity: 0.35 }}>•</span>
+                <span>
+                  If you attend all:{" "}
+                  <strong style={{ color: "var(--text-primary)" }}>
+                    {data.overallSummary.projectedPercentage.toFixed(1)}%
+                  </strong>
+                </span>
               </div>
 
               <div style={{ justifySelf: "center" }}>
                 <span
                   className="status-badge status-badge--info"
-                  style={{ padding: "8px 16px", borderRadius: 999, fontSize: 14, fontWeight: 700 }}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: 999,
+                    fontSize: 13,
+                    fontWeight: 700,
+                  }}
                 >
-                  {data.overallSummary.upcomingCount} classes remaining
+                  ⏳ {data.overallSummary.upcomingCount} classes remaining in schedule
                 </span>
               </div>
 
-              <div style={{ marginTop: 6, textAlign: "left" }}>
+              <div style={{ marginTop: 2, textAlign: "left" }}>
                 <ProgressBar
-                  label="Attendance Progress (Target 75%)"
+                  label="Progress to 75% Minimum Criteria"
                   percentage={data.overallSummary.percentage}
                   healthy={data.overallSummary.percentage >= 75}
                   showThreshold={true}
@@ -271,23 +364,21 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
                   gap: 10,
-                  color: "var(--text-secondary)",
-                  fontSize: 14,
                   marginTop: 6,
                 }}
               >
-                <Metric label="Present" value={String(data.overallSummary.present)} />
-                <Metric label="Total" value={String(data.overallSummary.total)} />
+                <Metric label="Attended" value={String(data.overallSummary.present)} />
+                <Metric label="Total Classes" value={String(data.overallSummary.total)} />
                 <Metric
-                  label="If attended"
+                  label="If Attended"
                   value={`${data.overallSummary.projectedPresent}/${data.overallSummary.projectedTotal}`}
                 />
-                <Metric label="Selected" value={String(data.overallSummary.plannedBunkCount)} />
-                <Metric label="Remaining" value={String(data.overallSummary.upcomingCount)} />
+                <Metric label="Planned Bunks" value={String(data.overallSummary.plannedBunkCount)} />
+                <Metric label="Upcoming" value={String(data.overallSummary.upcomingCount)} />
                 <Metric
-                  label="Streak"
+                  label="Streak 🔥"
                   value={formatStreakMetricValue(data.streakResult, data.streakLoading)}
                 />
               </div>
@@ -370,7 +461,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                         key={subject.id}
                         style={{
                           display: "grid",
-                          gap: 6,
+                          gap: 10,
                         }}
                       >
                         <div
@@ -378,24 +469,53 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                             display: "flex",
                             justifyContent: "space-between",
                             gap: 12,
-                            alignItems: "baseline",
-                            flexWrap: "wrap",
+                            alignItems: "flex-start",
                           }}
                         >
-                          <div style={{ flex: 1, minWidth: 120 }}>
-                            <div style={{ fontWeight: 700 }}>{subject.title}</div>
-                            <div style={{ color: "var(--text-muted)", fontSize: 12.5 }}>
-                              {subject.courseCode} - {subject.componentName}
+                          <div style={{ flex: 1, minWidth: 140 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  padding: "2px 7px",
+                                  borderRadius: 6,
+                                  background: "var(--bg-section)",
+                                  color: "var(--text-muted)",
+                                }}
+                              >
+                                {subject.courseCode}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  color: "var(--text-muted)",
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                {subject.componentName}
+                              </span>
+                            </div>
+                            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", lineHeight: 1.3 }}>
+                              {subject.title}
                             </div>
                           </div>
-                          <div style={{ display: "grid", gap: 4, justifyItems: "end" }}>
+                          <div style={{ display: "grid", gap: 2, justifyItems: "end" }}>
                             <strong
                               style={{
+                                fontFamily: "'Outfit', sans-serif",
+                                fontWeight: 800,
+                                fontSize: 20,
+                                lineHeight: 1,
                                 color: subject.percentage >= 75 ? "var(--success)" : "var(--danger)",
                               }}
                             >
-                              Current: {subject.percentage.toFixed(1)}%
+                              {subject.percentage.toFixed(1)}%
                             </strong>
+                            <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600 }}>
+                              {subject.present}/{subject.total} classes
+                            </span>
                           </div>
                         </div>
 
@@ -408,16 +528,21 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
 
                         <div
                           style={{
-                            color: attendanceGuidance.tone,
-                            fontSize: 13,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 12px",
+                            borderRadius: 8,
+                            fontSize: 12.5,
                             fontWeight: 600,
-                            margin: "1px 0",
+                            background: isDanger ? "var(--danger-soft)" : isWarning ? "var(--warning-soft)" : "var(--success-soft)",
+                            color: attendanceGuidance.tone,
                           }}
                         >
                           {attendanceGuidance.text}
                         </div>
 
-                        <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
+                        <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                           {subject.upcomingCount > 0 && (
                             <button
                               className="action-button action-button--secondary"
@@ -426,13 +551,13 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                               style={{
                                 ...secondaryButtonStyle,
                                 flex: 1,
-                                padding: "6px 10px",
+                                padding: "7px 12px",
                                 fontSize: 12.5,
                                 textAlign: "center",
                                 justifyContent: "center",
                               }}
                             >
-                              Plan bunks
+                              <span>🎯</span> Plan bunks
                             </button>
                           )}
                           <button
@@ -442,13 +567,13 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                             style={{
                               ...secondaryButtonStyle,
                               flex: 1,
-                              padding: "6px 10px",
+                              padding: "7px 12px",
                               fontSize: 12.5,
                               textAlign: "center",
                               justifyContent: "center",
                             }}
                           >
-                            View attendance log
+                            <span>📜</span> Log
                           </button>
                         </div>
                       </div>

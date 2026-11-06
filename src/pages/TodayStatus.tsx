@@ -253,19 +253,19 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
         </button>
       </div>
 
-      <div style={{ display: "flex", gap: 8, padding: 4, background: "var(--bg-secondary)", borderRadius: 12, width: "fit-content" }}>
+      <div style={{ display: "flex", gap: 6, padding: 4, background: "var(--bg-secondary)", borderRadius: 12, width: "fit-content", border: "1px solid var(--border)" }}>
         <button
           onClick={() => handleModeChange("today")}
           style={{
-             padding: "8px 16px",
+             padding: "8px 18px",
              borderRadius: 8,
-             border: "none",
-             fontWeight: 600,
-             fontSize: 14,
+             border: mode === "today" ? "1px solid var(--border-strong)" : "1px solid transparent",
+             fontWeight: 700,
+             fontSize: 13.5,
              cursor: "pointer",
              background: mode === "today" ? "var(--bg-primary)" : "transparent",
              color: mode === "today" ? "var(--text-primary)" : "var(--text-muted)",
-             boxShadow: mode === "today" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+             boxShadow: mode === "today" ? "var(--shadow-xs)" : "none",
              transition: "all 0.2s ease"
           }}
         >
@@ -274,15 +274,15 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
         <button
           onClick={() => handleModeChange("yesterday")}
           style={{
-             padding: "8px 16px",
+             padding: "8px 18px",
              borderRadius: 8,
-             border: "none",
-             fontWeight: 600,
-             fontSize: 14,
+             border: mode === "yesterday" ? "1px solid var(--border-strong)" : "1px solid transparent",
+             fontWeight: 700,
+             fontSize: 13.5,
              cursor: "pointer",
              background: mode === "yesterday" ? "var(--bg-primary)" : "transparent",
              color: mode === "yesterday" ? "var(--text-primary)" : "var(--text-muted)",
-             boxShadow: mode === "yesterday" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+             boxShadow: mode === "yesterday" ? "var(--shadow-xs)" : "none",
              transition: "all 0.2s ease"
           }}
         >

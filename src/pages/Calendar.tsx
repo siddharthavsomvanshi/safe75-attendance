@@ -38,17 +38,17 @@ export function CalendarPage({ data }: { data: CalendarData }) {
                 <div key={dayLabel} className="schedule-day-column" style={{ width: 280, display: "flex", flexDirection: "column", gap: 12 }}>
                   <div style={{ 
                     fontWeight: 700, 
-                    fontSize: 16, 
+                    fontSize: 15, 
                     color: "var(--text-primary)",
-                    borderBottom: "2px solid var(--border-strong)", 
+                    borderBottom: "2px solid var(--primary)", 
                     paddingBottom: 8, 
                     marginBottom: 4,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between"
                   }}>
-                    <span>{dayLabel.split(',')[0]}</span>
-                    <span style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>{dayLabel.split(',')[1]}</span>
+                    <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 16 }}>{dayLabel.split(',')[0]}</span>
+                    <span className="status-badge status-badge--neutral" style={{ fontSize: 11, padding: "3px 8px" }}>{dayLabel.split(',')[1]}</span>
                   </div>
                   
                   {groupedClasses[dayLabel].map((entry) => (
