@@ -138,7 +138,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const userHash = getUserHash(verifiedStudentId);
 
     const body = req.body || {};
-    const { attendance, schedule, capturedAt, studentName } = body;
+    const {
+      attendance,
+      schedule,
+      capturedAt,
+      studentName,
+      rollNumber,
+      registrationNumber,
+      branch,
+      studentBranch,
+    } = body;
 
     if (!Array.isArray(attendance) || !Array.isArray(schedule)) {
       res.status(400).json({ error: "Invalid snapshot body. Required arrays: attendance, schedule." });
@@ -148,17 +157,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 3. Save snapshot to Supabase
     const supabase = getSupabase();
     const snapshotDate = capturedAt || new Date().toISOString();
+    const studentRollNumber = rollNumber || registrationNumber || null;
+    const branchName = branch || studentBranch || null;
 
-    const { data, error } = await supabase
+    let insertPayload: Record<string, any> = {
+      user_hash: userHash,
+      student_name: studentName || null,
+      roll_number: studentRollNumber,
+      branch: branchName,
+      captured_at: snapshotDate,
+      attendance_data: attendance,
+      schedule_data: schedule,
+    };
+
+    let { data, error } = await supabase
       .from("daily_attendance_snapshots")
-      .insert({
-        user_hash: userHash,
-        student_name: studentName || null,
-        captured_at: snapshotDate,
-        attendance_data: attendance,
-        schedule_data: schedule,
-      })
+      .insert(insertPayload)
       .select("id, captured_at");
+
+    // Graceful fallback if columns have not yet been migrated in Supabase
+    if (
+      error &&
+      (error.message?.includes("column") ||
+        error.code === "42703" ||
+        error.code === "PGRST204")
+    ) {
+      console.warn(
+        "Retrying snapshot insert without roll_number/branch (run migration in Supabase):",
+        error.message
+      );
+      delete insertPayload.roll_number;
+      delete insertPayload.branch;
+
+      const retryResult = await supabase
+        .from("daily_attendance_snapshots")
+        .insert(insertPayload)
+        .select("id, captured_at");
+      data = retryResult.data;
+      error = retryResult.error;
+    }
 
     if (error) {
       console.error("Failed to insert snapshot into Supabase:", error);

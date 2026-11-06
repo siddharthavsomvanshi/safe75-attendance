@@ -25,6 +25,8 @@ export interface SnapshotScheduleEntry {
 
 export interface UnifiedSnapshotPayload {
   studentName: string;
+  rollNumber?: string;
+  branch?: string;
   capturedAt: string;
   attendance: SnapshotCourseComponent[];
   schedule: SnapshotScheduleEntry[];
@@ -79,6 +81,8 @@ export function createUnifiedSnapshotPayload(
 
   return {
     studentName: attendance.fullName || "Student",
+    rollNumber: attendance.registrationNumber || "",
+    branch: attendance.branchShortName || "",
     capturedAt: timestamp.toISOString(),
     attendance: courses,
     schedule: scheduleEntries,

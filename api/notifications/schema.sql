@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS daily_attendance_snapshots (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_hash TEXT NOT NULL,
     student_name TEXT, -- Student full name
+    roll_number TEXT, -- Student roll number / registration number
+    branch TEXT, -- Student academic branch (e.g. CSE, IT, CS, AIML)
     captured_at TIMESTAMPTZ NOT NULL, -- Client-side timestamp when attendance was checked
     attendance_data JSONB NOT NULL, -- Array of course components with present/total counts
     schedule_data JSONB NOT NULL, -- Weekly class timetable
@@ -63,6 +65,8 @@ CREATE TABLE IF NOT EXISTS daily_attendance_snapshots (
 
 -- Migration for existing database instances:
 -- ALTER TABLE daily_attendance_snapshots ADD COLUMN IF NOT EXISTS student_name TEXT;
+-- ALTER TABLE daily_attendance_snapshots ADD COLUMN IF NOT EXISTS roll_number TEXT;
+-- ALTER TABLE daily_attendance_snapshots ADD COLUMN IF NOT EXISTS branch TEXT;
 
 -- Composite index for fast retrieval of the latest snapshot for a user
 CREATE INDEX IF NOT EXISTS idx_snapshots_user_captured ON daily_attendance_snapshots(user_hash, captured_at DESC);
