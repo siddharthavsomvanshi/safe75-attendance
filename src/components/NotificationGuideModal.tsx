@@ -1,4 +1,5 @@
 import React from "react";
+import { Bell, Info, X, Target, Clock, Sparkles } from "./Icons";
 
 interface NotificationGuideModalProps {
   isOpen: boolean;
@@ -35,12 +36,12 @@ export function NotificationGuideModal({
         style={{
           background: "var(--bg-card)",
           border: "1px solid var(--border)",
-          borderRadius: 24,
+          borderRadius: 14,
           width: "95%",
-          maxWidth: 580,
+          maxWidth: 540,
           maxHeight: "90vh",
           overflowY: "auto",
-          boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
+          boxShadow: "var(--shadow-md)",
           display: "flex",
           flexDirection: "column",
         }}
@@ -48,7 +49,7 @@ export function NotificationGuideModal({
         {/* Modal Header */}
         <div
           style={{
-            padding: "20px 24px",
+            padding: "16px 20px",
             borderBottom: "1px solid var(--border)",
             display: "flex",
             alignItems: "center",
@@ -57,13 +58,26 @@ export function NotificationGuideModal({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 24 }}>💡</span>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                background: "var(--primary-soft)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--primary)",
+              }}
+            >
+              <Info size={16} />
+            </div>
             <div>
-              <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: "var(--text-primary)" }}>
-                How Smart Notifications Work
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>
+                How Morning Briefings Work
               </h3>
               <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: 0 }}>
-                Get accurate daily morning attendance recommendations
+                Automated daily recommendations delivered straight to your device
               </p>
             </div>
           </div>
@@ -72,96 +86,96 @@ export function NotificationGuideModal({
             type="button"
             onClick={onClose}
             className="action-button action-button--secondary"
-            style={{ padding: "6px 12px", fontSize: 12 }}
+            style={{ padding: "4px 8px", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 4 }}
           >
-            ✕ Close
+            <X size={12} />
+            <span>Close</span>
           </button>
         </div>
 
         {/* Modal Body */}
-        <div style={{ padding: "20px 24px", display: "grid", gap: 20 }}>
+        <div style={{ padding: "18px 20px", display: "grid", gap: 16 }}>
           {/* Live Lock Screen Notification Preview Mockup */}
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 8 }}>
-              📲 What your 8:00 AM Notification looks like
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 6 }}>
+              Sample 8:00 AM Morning Briefing
             </div>
 
             <div
               style={{
-                background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-                borderRadius: 18,
-                padding: "16px 18px",
-                color: "#fff",
-                boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+                background: "#0f172a",
+                borderRadius: 12,
+                padding: "14px 16px",
+                color: "#f8fafc",
+                boxShadow: "var(--shadow-sm)",
                 border: "1px solid rgba(255,255,255,0.1)",
               }}
             >
               {/* Notification Header */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <div
                     style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: 6,
-                      background: "#6366f1",
+                      width: 18,
+                      height: 18,
+                      borderRadius: 4,
+                      background: "var(--primary)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: 12,
                     }}
                   >
-                    🎯
+                    <Target size={11} style={{ color: "#fff" }} />
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#f8fafc" }}>Safe75 Attendance</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#f8fafc" }}>Safe75 Briefing</span>
                 </div>
-                <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>8:00 AM IST</span>
+                <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>8:00 AM IST</span>
               </div>
 
               {/* Notification Body Content */}
-              <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.5, display: "grid", gap: 4 }}>
+              <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5, display: "grid", gap: 3 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ color: "#34d399", fontWeight: 700 }}>🟢 Lec 1 (DBMS):</span>
-                  <span>Can miss</span>
+                  <span style={{ color: "#34d399", fontWeight: 600 }}>Period 1 (DBMS):</span>
+                  <span>Safe to miss</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ color: "#f87171", fontWeight: 700 }}>🚨 Lec 2 (Operating Systems):</span>
-                  <span>Attend (72%)</span>
+                  <span style={{ color: "#f87171", fontWeight: 600 }}>Period 2 (OS):</span>
+                  <span>Must attend (72.0%)</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ color: "#fbbf24", fontWeight: 700 }}>⚠️ Lec 3 (Computer Networks):</span>
-                  <span>Try not to miss</span>
+                  <span style={{ color: "#fbbf24", fontWeight: 600 }}>Period 3 (CN):</span>
+                  <span>Caution (1 bunk left)</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* 3-Step Process Explanation */}
-          <div style={{ display: "grid", gap: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
-              ⚡ 3 Simple Steps for Best Results
+          <div style={{ display: "grid", gap: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
+              How the System Operates
             </div>
 
             {/* Step 1 */}
             <div
               style={{
                 display: "flex",
-                gap: 14,
-                padding: 14,
-                borderRadius: 14,
+                gap: 12,
+                padding: "10px 12px",
+                borderRadius: 10,
                 background: "var(--bg-card-subtle)",
                 border: "1px solid var(--border)",
               }}
             >
               <div
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 999,
+                  width: 24,
+                  height: 24,
+                  borderRadius: 6,
                   background: "var(--primary)",
                   color: "#fff",
-                  fontWeight: 800,
-                  fontSize: 14,
+                  fontWeight: 700,
+                  fontSize: 12,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -171,11 +185,11 @@ export function NotificationGuideModal({
                 1
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
-                  Check the app at least once daily (After Classes)
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                  Daily Sync After College
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2, lineHeight: 1.4 }}>
-                  Whenever you open Safe75 Attendance after class, it automatically captures your latest attendance numbers so the system knows your exact counts.
+                  Opening Safe75 refreshes your latest attendance numbers from CyberVidya and stores them securely.
                 </div>
               </div>
             </div>
@@ -184,22 +198,22 @@ export function NotificationGuideModal({
             <div
               style={{
                 display: "flex",
-                gap: 14,
-                padding: 14,
-                borderRadius: 14,
+                gap: 12,
+                padding: "10px 12px",
+                borderRadius: 10,
                 background: "var(--bg-card-subtle)",
                 border: "1px solid var(--border)",
               }}
             >
               <div
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 999,
+                  width: 24,
+                  height: 24,
+                  borderRadius: 6,
                   background: "var(--primary)",
                   color: "#fff",
-                  fontWeight: 800,
-                  fontSize: 14,
+                  fontWeight: 700,
+                  fontSize: 12,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -209,11 +223,11 @@ export function NotificationGuideModal({
                 2
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
-                  Automated 8:00 AM Cron Calculation
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                  Automated 8:00 AM Calculation
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2, lineHeight: 1.4 }}>
-                  Every morning at 8:00 AM IST, our cloud engine matches today's timetable with your subject attendance percentages and safe bunk counts.
+                  The engine matches today's timetable periods against your subject margins and computes whether you can bunk safely.
                 </div>
               </div>
             </div>
@@ -222,22 +236,22 @@ export function NotificationGuideModal({
             <div
               style={{
                 display: "flex",
-                gap: 14,
-                padding: 14,
-                borderRadius: 14,
+                gap: 12,
+                padding: "10px 12px",
+                borderRadius: 10,
                 background: "var(--bg-card-subtle)",
                 border: "1px solid var(--border)",
               }}
             >
               <div
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 999,
+                  width: 24,
+                  height: 24,
+                  borderRadius: 6,
                   background: "var(--primary)",
                   color: "#fff",
-                  fontWeight: 800,
-                  fontSize: 14,
+                  fontWeight: 700,
+                  fontSize: 12,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -247,11 +261,11 @@ export function NotificationGuideModal({
                 3
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
-                  Receive Morning Advice On Your Lock Screen
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                  Morning Device Push
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2, lineHeight: 1.4 }}>
-                  Before leaving for campus, your phone notifies you which lectures you can safely skip or must attend to stay above 75%.
+                  Before leaving for campus, your lock screen tells you exactly which lectures need your presence.
                 </div>
               </div>
             </div>
@@ -261,7 +275,7 @@ export function NotificationGuideModal({
         {/* Modal Footer Actions */}
         <div
           style={{
-            padding: "16px 24px",
+            padding: "12px 20px",
             borderTop: "1px solid var(--border)",
             background: "var(--bg-card-subtle)",
             display: "flex",
@@ -274,9 +288,9 @@ export function NotificationGuideModal({
             type="button"
             onClick={onClose}
             className="action-button action-button--secondary"
-            style={{ padding: "8px 16px", fontSize: 13 }}
+            style={{ padding: "6px 14px", fontSize: 12 }}
           >
-            Got It
+            Got it
           </button>
 
           {!isEnabled && onEnable && (
@@ -287,9 +301,10 @@ export function NotificationGuideModal({
                 onEnable();
               }}
               className="action-button action-button--primary"
-              style={{ padding: "8px 18px", fontSize: 13, fontWeight: 700 }}
+              style={{ padding: "7px 16px", fontSize: 12, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 5 }}
             >
-              🔔 Enable Notifications Now
+              <Bell size={13} />
+              <span>Enable Notifications</span>
             </button>
           )}
         </div>

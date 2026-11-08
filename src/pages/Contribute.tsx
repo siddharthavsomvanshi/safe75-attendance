@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Panel } from '../components/UI';
+import { ArrowLeft, Upload } from '../components/Icons';
 
 export function Contribute() {
   const navigate = useNavigate();
@@ -85,8 +86,6 @@ export function Contribute() {
       setTitle('');
       setYear('');
       setFile(null);
-      // Reset file input is handled by React state unbinding in standard form resets, 
-      // but to be perfectly safe, we would use a ref. Here resetting state is fine.
     } catch (err: any) {
       setError(err.message || 'Couldn\'t upload the file. Please try again.');
     } finally {
@@ -95,38 +94,54 @@ export function Contribute() {
   };
 
   const inputStyle = {
-    padding: '10px 14px',
-    borderRadius: '10px',
+    padding: '8px 12px',
+    borderRadius: '8px',
     border: '1px solid var(--border)',
-    fontSize: '14px',
+    fontSize: '13px',
     width: '100%',
     boxSizing: 'border-box' as const,
     outline: 'none',
+    background: 'var(--bg-card)',
+    color: 'var(--text-primary)',
+    fontFamily: 'inherit',
   };
 
   return (
-    <section style={{ display: 'grid', gap: 14, maxWidth: '800px', margin: '0 auto' }}>
+    <section style={{ display: 'grid', gap: 14, maxWidth: '720px', margin: '0 auto' }}>
       <button 
         onClick={() => navigate('/exam')}
         className="page-back-link"
-        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', textAlign: 'left', padding: 0, fontWeight: 600 }}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: 'var(--text-secondary)',
+          cursor: 'pointer',
+          textAlign: 'left',
+          padding: 0,
+          fontWeight: 500,
+          fontSize: '13px',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+        }}
       >
-        Back to exam resources
+        <ArrowLeft size={13} />
+        <span>Back to exam resources</span>
       </button>
 
       <Panel title="Share a resource" subtitle="Upload notes, PYQs, or useful revision material.">
-        <form onSubmit={handleUpload} style={{ display: 'grid', gap: '20px', padding: '10px 0' }}>
+        <form onSubmit={handleUpload} style={{ display: 'grid', gap: '16px', padding: '6px 0' }}>
           
-          {error && <div className="notice-banner" style={{ padding: '12px', background: 'var(--danger-soft)', color: 'var(--danger)', borderRadius: '10px', fontSize: '14px' }}>{error}</div>}
-          {success && <div className="notice-banner" style={{ padding: '12px', background: 'var(--success-soft)', color: 'var(--success)', borderRadius: '10px', fontSize: '14px' }}>{success}</div>}
+          {error && <div className="notice-banner" style={{ padding: '10px 14px', background: 'var(--danger-soft)', color: 'var(--danger)', borderRadius: '8px', fontSize: '13px' }}>{error}</div>}
+          {success && <div className="notice-banner" style={{ padding: '10px 14px', background: 'var(--success-soft)', color: 'var(--success)', borderRadius: '8px', fontSize: '13px' }}>{success}</div>}
 
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 200px', display: 'grid', gap: '6px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Subject *</label>
-              <input className="standard-input" type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. CO or Compiler Design" style={inputStyle} required />
+          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 200px', display: 'grid', gap: '5px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Subject *</label>
+              <input className="standard-input" type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Operating Systems" style={inputStyle} required />
             </div>
-            <div style={{ flex: '1 1 200px', display: 'grid', gap: '6px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Type *</label>
+            <div style={{ flex: '1 1 200px', display: 'grid', gap: '5px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Type *</label>
               <select className="standard-input" value={type} onChange={e => setType(e.target.value)} style={inputStyle}>
                 <option value="notes">Notes</option>
                 <option value="pyq">PYQs</option>
@@ -136,41 +151,44 @@ export function Contribute() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <div style={{ flex: '2 1 300px', display: 'grid', gap: '6px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Title *</label>
+          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+            <div style={{ flex: '2 1 300px', display: 'grid', gap: '5px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Title *</label>
               <input className="standard-input" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Unit 2 Full Notes" style={inputStyle} required />
             </div>
-            <div style={{ flex: '1 1 100px', display: 'grid', gap: '6px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Year (optional)</label>
-              <input className="standard-input" type="number" value={year} onChange={e => setYear(e.target.value)} placeholder="e.g. 2023" style={inputStyle} />
+            <div style={{ flex: '1 1 100px', display: 'grid', gap: '5px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Year (optional)</label>
+              <input className="standard-input" type="number" value={year} onChange={e => setYear(e.target.value)} placeholder="e.g. 2024" style={inputStyle} />
             </div>
           </div>
 
-          <div className="standard-card" style={{ display: 'grid', gap: '6px', padding: '16px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>PDF file *</label>
+          <div className="standard-card" style={{ display: 'grid', gap: '6px', padding: '14px', borderRadius: '10px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>PDF file *</label>
             <input 
               type="file" 
               accept=".pdf"
               onChange={handleFileChange} 
-              style={{ fontSize: '14px' }} 
+              style={{ fontSize: '13px' }} 
             />
             {file && file.size > 15 * 1024 * 1024 && (
-              <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: 'var(--warning)', fontWeight: 600 }}>
-                Large files ({'>'}15MB) may upload slowly. Compress it if you can.
+              <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: 'var(--warning)', fontWeight: 600 }}>
+                Large file ({'>'}15MB). Compress it if possible.
               </p>
             )}
-            <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>PDF only, up to 40 MB.</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>PDF only, up to 40 MB.</p>
           </div>
 
-          <button 
-            type="submit" 
-            disabled={loading || !file}
-            className="action-button action-button--primary"
-            style={{ marginTop: '10px' }}
-          >
-            {loading ? 'Uploading...' : 'Send for review'}
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: 4 }}>
+            <button 
+              type="submit" 
+              disabled={loading || !file}
+              className="action-button action-button--primary"
+              style={{ padding: '8px 18px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <Upload size={13} />
+              <span>{loading ? 'Uploading...' : 'Send for review'}</span>
+            </button>
+          </div>
 
         </form>
       </Panel>

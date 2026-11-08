@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NotificationGuideModal } from "./NotificationGuideModal";
+import { Bell, Info, Sparkles } from "./Icons";
 import {
   isPushSupported,
   getNotificationPermissionState,
@@ -136,31 +137,44 @@ export function NotificationBanner({ studentName }: { studentName?: string }) {
       <section
         className="standard-card rise-in"
         style={{
-          padding: "14px 18px",
+          padding: "12px 16px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           flexWrap: "wrap",
           gap: 12,
-          background: "var(--surface)",
+          background: "var(--bg-card)",
           border: "1px solid var(--border)",
-          borderRadius: 12,
-          marginTop: 12,
-          marginBottom: 12,
+          borderRadius: 10,
+          marginTop: 10,
+          marginBottom: 10,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 20 }}>🔔</span>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: "var(--primary-soft)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--primary)",
+            }}
+          >
+            <Bell size={16} />
+          </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
-              Smart Daily Notifications (8:00 AM IST)
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+              Daily Morning Attendance Briefing (8:00 AM IST)
             </div>
             <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
               {permission === "denied"
                 ? "Notifications blocked in browser settings"
                 : isEnabled
-                ? "Daily morning attendance recommendations are ON"
-                : "Get personalized attendance advice every morning"}
+                ? "Daily morning attendance recommendations are active"
+                : "Receive personalized morning guidance before classes start"}
             </div>
           </div>
         </div>
@@ -169,36 +183,33 @@ export function NotificationBanner({ studentName }: { studentName?: string }) {
           <button
             type="button"
             onClick={() => setShowGuideModal(true)}
+            className="action-button action-button--secondary"
             style={{
-              padding: "6px 12px",
+              padding: "5px 10px",
               fontSize: 12,
-              fontWeight: 600,
-              borderRadius: 6,
-              border: "1px solid var(--border)",
-              background: "var(--bg-card-subtle)",
-              color: "var(--text-primary)",
-              cursor: "pointer",
+              fontWeight: 500,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
             }}
           >
-            💡 How it Works
+            <Info size={12} />
+            <span>How it works</span>
           </button>
 
           {permission === "denied" ? (
-            <span style={{ fontSize: 12, color: "var(--danger)", fontWeight: 600 }}>Blocked</span>
+            <span className="status-badge status-badge--danger" style={{ fontSize: 11, padding: "3px 8px" }}>Blocked</span>
           ) : isEnabled ? (
             <>
               <button
                 type="button"
                 onClick={handleTestPush}
                 disabled={loading}
+                className="action-button action-button--secondary"
                 style={{
-                  padding: "6px 12px",
+                  padding: "5px 10px",
                   fontSize: 12,
-                  fontWeight: 600,
-                  borderRadius: 6,
-                  border: "1px solid var(--border)",
-                  background: "transparent",
-                  color: "var(--text-secondary)",
+                  fontWeight: 500,
                   cursor: loading ? "wait" : "pointer",
                 }}
               >
@@ -208,14 +219,11 @@ export function NotificationBanner({ studentName }: { studentName?: string }) {
                 type="button"
                 onClick={handleDisable}
                 disabled={loading}
+                className="action-button action-button--secondary"
                 style={{
-                  padding: "6px 14px",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  borderRadius: 6,
-                  border: "1px solid var(--border)",
-                  background: "transparent",
-                  color: "var(--text-secondary)",
+                  padding: "5px 12px",
+                  fontSize: 12,
+                  fontWeight: 500,
                   cursor: loading ? "wait" : "pointer",
                 }}
               >
@@ -227,14 +235,11 @@ export function NotificationBanner({ studentName }: { studentName?: string }) {
               type="button"
               onClick={handleEnable}
               disabled={loading}
+              className="action-button action-button--primary"
               style={{
                 padding: "6px 14px",
-                fontSize: 13,
-                fontWeight: 700,
-                borderRadius: 6,
-                border: "none",
-                background: "var(--primary)",
-                color: "#fff",
+                fontSize: 12,
+                fontWeight: 600,
                 cursor: loading ? "wait" : "pointer",
               }}
             >

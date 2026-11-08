@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import type { StudentContext, SubjectSummary } from "../App";
 import { EmptyMessage, Panel } from "../components/UI";
+import { RefreshCw, ArrowLeft, ArrowRight, Calendar, CheckCircle, AlertTriangle } from "../components/Icons";
 import type { DatewiseAttendanceBucket, ScheduleEntry } from "../types/kiet";
 import { fetchDatewiseAttendanceUnified } from "../services/cybervidyaApi";
 import { formatIsoDate, normalizeIsoDateString } from "../utils/date";
@@ -265,10 +266,10 @@ export function AttendanceHistory({
                 alignItems: "center",
                 flexWrap: "wrap",
                 gap: 10,
-                padding: "8px 14px",
+                padding: "8px 12px",
                 background: "var(--bg-card-subtle)",
-                borderRadius: 12,
-                fontSize: 13,
+                borderRadius: 8,
+                fontSize: 12,
                 border: "1px solid var(--border)",
               }}
             >
@@ -276,8 +277,8 @@ export function AttendanceHistory({
                 <span
                   style={{
                     display: "inline-block",
-                    width: 8,
-                    height: 8,
+                    width: 7,
+                    height: 7,
                     borderRadius: "50%",
                     background: isSyncing
                       ? "var(--warning)"
@@ -286,11 +287,11 @@ export function AttendanceHistory({
                       : "var(--primary)",
                   }}
                 />
-                <span>
+                <span style={{ color: "var(--text-secondary)" }}>
                   {isSyncing
-                    ? `Syncing subjects from CyberVidya (${loadedCount}/${subjects.length})...`
+                    ? `Syncing from CyberVidya (${loadedCount}/${subjects.length})...`
                     : loadedCount >= subjects.length
-                    ? `All ${subjects.length} subjects fully indexed`
+                    ? `All ${subjects.length} subjects indexed`
                     : `Loaded ${loadedCount} of ${subjects.length} subjects`}
                 </span>
               </div>
@@ -299,9 +300,17 @@ export function AttendanceHistory({
                 className="action-button action-button--secondary"
                 disabled={isSyncing}
                 onClick={() => void syncSubjects(true)}
-                style={{ padding: "4px 12px", fontSize: 12, minHeight: 28 }}
+                style={{
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  minHeight: 28,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
               >
-                {isSyncing ? "Syncing..." : "↻ Refresh All"}
+                <RefreshCw size={12} className={isSyncing ? "spin-clockwise" : ""} />
+                <span>{isSyncing ? "Syncing..." : "Sync All"}</span>
               </button>
             </div>
 
@@ -311,10 +320,12 @@ export function AttendanceHistory({
                 className="action-button action-button--secondary"
                 type="button"
                 onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+                style={{ padding: "6px 12px", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
               >
-                Previous
+                <ArrowLeft size={13} />
+                <span>Prev</span>
               </button>
-              <strong style={{ fontSize: 17 }}>{monthLabel}</strong>
+              <strong style={{ fontSize: 15, color: "var(--text-primary)" }}>{monthLabel}</strong>
               <button
                 className="action-button action-button--secondary"
                 type="button"
@@ -323,8 +334,10 @@ export function AttendanceHistory({
                   month.getMonth() === new Date().getMonth()
                 }
                 onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+                style={{ padding: "6px 12px", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
               >
-                Next
+                <span>Next</span>
+                <ArrowRight size={13} />
               </button>
             </div>
 
@@ -333,11 +346,12 @@ export function AttendanceHistory({
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-                gap: 6,
+                gap: 4,
                 textAlign: "center",
                 color: "var(--text-muted)",
-                fontSize: 12,
-                fontWeight: 700,
+                fontSize: 11,
+                fontWeight: 600,
+                textTransform: "uppercase",
               }}
             >
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
@@ -346,7 +360,7 @@ export function AttendanceHistory({
             </div>
 
             {/* Calendar Days */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 6 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 4 }}>
               {calendarDays.map((calendarDay, index) => {
                 if (!calendarDay) return <span key={`blank-${index}`} />;
                 const isFuture = calendarDay.dateKey > todayKey;
@@ -360,9 +374,9 @@ export function AttendanceHistory({
                     onClick={() => selectDate(calendarDay.dateKey)}
                     aria-label={`Load attendance for ${calendarDay.dateKey}`}
                     style={{
-                      minHeight: 48,
-                      borderRadius: 12,
-                      border: `1.5px solid ${isSelected ? "var(--primary)" : "var(--border)"}`,
+                      minHeight: 44,
+                      borderRadius: 8,
+                      border: `1px solid ${isSelected ? "var(--primary)" : "var(--border)"}`,
                       background: isSelected
                         ? "var(--primary-soft)"
                         : calendarDay.hasClasses
@@ -371,14 +385,16 @@ export function AttendanceHistory({
                       color: isFuture ? "var(--text-muted)" : "var(--text-primary)",
                       cursor: isFuture ? "not-allowed" : "pointer",
                       font: "inherit",
-                      fontWeight: 700,
-                      opacity: isFuture ? 0.45 : 1,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      opacity: isFuture ? 0.4 : 1,
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "center",
                       justifyContent: "center",
                       padding: "4px",
                       position: "relative",
+                      transition: "all 0.12s ease",
                     }}
                   >
                     <span>{calendarDay.day}</span>
@@ -386,11 +402,11 @@ export function AttendanceHistory({
                       <span
                         aria-hidden="true"
                         style={{
-                          width: 6,
-                          height: 6,
+                          width: 5,
+                          height: 5,
                           borderRadius: "50%",
                           background: calendarDay.dotColor,
-                          marginTop: 3,
+                          marginTop: 2,
                         }}
                       />
                     )}
@@ -403,26 +419,26 @@ export function AttendanceHistory({
             <div
               style={{
                 display: "flex",
-                gap: 16,
+                gap: 14,
                 justifyContent: "center",
                 alignItems: "center",
                 fontSize: 12,
                 color: "var(--text-muted)",
                 flexWrap: "wrap",
-                paddingTop: 4,
+                paddingTop: 2,
               }}
             >
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--success)" }} />
-                All Present
+              <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--success)" }} />
+                <span>Present</span>
               </span>
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--danger)" }} />
-                Absent Marked
+              <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--danger)" }} />
+                <span>Absent</span>
               </span>
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--warning)" }} />
-                Adjusted
+              <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--warning)" }} />
+                <span>Adjusted</span>
               </span>
             </div>
           </div>
@@ -442,14 +458,22 @@ export function AttendanceHistory({
           {history.rows.length === 0 ? (
             <EmptyMessage message="No classes were recorded on this date (holiday, weekend, or no classes taken)." />
           ) : (
-            <div style={{ display: "grid", gap: 14 }}>
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontWeight: 700, fontSize: 14 }}>
-                <span style={{ color: "var(--success)" }}>Present: {presentCount}</span>
-                <span style={{ color: "var(--danger)" }}>Absent: {absentCount}</span>
-                {adjustedCount > 0 && <span style={{ color: "var(--warning)" }}>Adjusted: {adjustedCount}</span>}
+            <div style={{ display: "grid", gap: 12 }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", fontWeight: 600, fontSize: 13 }}>
+                <span className="status-badge status-badge--success" style={{ padding: "4px 10px" }}>
+                  Present: {presentCount}
+                </span>
+                <span className="status-badge status-badge--danger" style={{ padding: "4px 10px" }}>
+                  Absent: {absentCount}
+                </span>
+                {adjustedCount > 0 && (
+                  <span className="status-badge status-badge--warning" style={{ padding: "4px 10px" }}>
+                    Adjusted: {adjustedCount}
+                  </span>
+                )}
               </div>
 
-              <div style={{ display: "grid", gap: 10 }}>
+              <div style={{ display: "grid", gap: 8 }}>
                 {history.rows.map((row) => {
                   const status = getStatusStyle(row.status);
                   return (
@@ -457,19 +481,19 @@ export function AttendanceHistory({
                       key={row.key}
                       className="standard-card"
                       style={{
-                        padding: "14px 16px",
+                        padding: "12px 14px",
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
                         gap: 12,
-                        borderRadius: 14,
+                        borderRadius: 10,
                         border: "1px solid var(--border)",
                         background: "var(--bg-card)",
                       }}
                     >
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 15 }}>{row.subject}</div>
-                        <div style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 3 }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text-primary)" }}>{row.subject}</div>
+                        <div style={{ color: "var(--text-secondary)", fontSize: 12, marginTop: 2 }}>
                           {row.component} • {row.timeSlot}
                         </div>
                       </div>
@@ -478,10 +502,10 @@ export function AttendanceHistory({
                           flexShrink: 0,
                           color: status.color,
                           background: status.background,
-                          borderRadius: 999,
-                          padding: "6px 12px",
-                          fontWeight: 800,
-                          fontSize: 13,
+                          borderRadius: 6,
+                          padding: "4px 9px",
+                          fontWeight: 600,
+                          fontSize: 12,
                         }}
                       >
                         {status.label}

@@ -3,6 +3,18 @@ import type { StudentDetails } from '../../types/kiet';
 import type { SubjectSummary } from '../../utils/attendanceCalculations';
 import type { ExamSession, HallTicketOption } from '../../types/bridge';
 import {
+  Ticket,
+  Lock,
+  RefreshCw,
+  AlertTriangle,
+  FileText,
+  Eye,
+  Download,
+  ExternalLink,
+  X,
+  CheckCircle,
+} from '../Icons';
+import {
   fetchStudentIdUnified,
   fetchExamSessionsUnified,
   fetchHallTicketOptionsUnified,
@@ -191,11 +203,10 @@ export function HallTicketCard({ attendance, overallSummary }: HallTicketCardPro
       style={{
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
-        borderRadius: 20,
-        padding: '20px 24px',
+        borderRadius: 14,
+        padding: '18px 20px',
         display: 'grid',
-        gap: 20,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+        gap: 16,
       }}
     >
       {/* Header Bar */}
@@ -207,17 +218,30 @@ export function HallTicketCard({ attendance, overallSummary }: HallTicketCardPro
           flexWrap: 'wrap',
           gap: 12,
           borderBottom: '1px solid var(--border)',
-          paddingBottom: 16,
+          paddingBottom: 14,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 28 }}>🎫</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              background: 'var(--primary-soft)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--primary)',
+            }}
+          >
+            <Ticket size={18} />
+          </div>
           <div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
               Official Examination Hall Ticket
             </h2>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '3px 0 0 0' }}>
-              Fetch and download your official admit card directly from KIET CyberVidya.
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
+              Download official admit cards directly from KIET CyberVidya ERP.
             </p>
           </div>
         </div>
@@ -225,7 +249,7 @@ export function HallTicketCard({ attendance, overallSummary }: HallTicketCardPro
         {/* Exam Session Dropdown */}
         {sessions.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Session:
             </label>
             <select
@@ -233,9 +257,9 @@ export function HallTicketCard({ attendance, overallSummary }: HallTicketCardPro
               onChange={(e) => setSelectedSessionId(e.target.value)}
               className="standard-input"
               style={{
-                padding: '8px 12px',
-                borderRadius: 12,
-                fontSize: 13,
+                padding: '6px 10px',
+                borderRadius: 8,
+                fontSize: 12,
                 fontWeight: 600,
                 background: 'var(--bg-card-subtle)',
                 border: '1px solid var(--border)',
@@ -260,34 +284,34 @@ export function HallTicketCard({ attendance, overallSummary }: HallTicketCardPro
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 12,
-            padding: 16,
-            borderRadius: 14,
+            gap: 10,
+            padding: 12,
+            borderRadius: 10,
             background: 'var(--bg-card-subtle)',
             border: '1px solid var(--border)',
           }}
         >
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Student Name</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginTop: 2 }}>
               {attendance.fullName || 'N/A'}
             </div>
           </div>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Roll / Reg. No</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginTop: 2 }}>
               {attendance.registrationNumber || 'N/A'}
             </div>
           </div>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Branch & Semester</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginTop: 2 }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginTop: 2 }}>
               {attendance.branchShortName || 'N/A'} — {attendance.semesterName || 'N/A'}
             </div>
           </div>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Exam Eligibility</div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: isEligible ? 'var(--success)' : isConditional ? 'var(--warning)' : 'var(--danger)', marginTop: 2 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: isEligible ? 'var(--success)' : isConditional ? 'var(--warning)' : 'var(--danger)', marginTop: 2 }}>
               {overallPct.toFixed(1)}% ({isEligible ? 'Eligible' : isConditional ? 'Conditional' : 'Shortage'})
             </div>
           </div>
@@ -298,30 +322,34 @@ export function HallTicketCard({ attendance, overallSummary }: HallTicketCardPro
       {!attendance && !getStoredSession().hasToken ? (
         <div
           style={{
-            padding: '32px 24px',
+            padding: '24px 20px',
             textAlign: 'center',
             background: 'var(--bg-card-subtle)',
-            borderRadius: 16,
+            borderRadius: 12,
             border: '1px dashed var(--border)',
+            display: 'grid',
+            gap: 6,
+            justifyItems: 'center',
           }}
         >
-          <div style={{ fontSize: 32, marginBottom: 8 }}>🔐</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
+          <Lock size={24} style={{ color: 'var(--text-muted)' }} />
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
             CyberVidya Session Required
           </div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
             Log in to CyberVidya ERP via Bunk Helper to fetch and download your official exam Hall Tickets directly.
           </div>
         </div>
       ) : loadingSessions ? (
-        <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
-          🔄 Loading academic exam sessions...
+        <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          <RefreshCw size={14} className="spin-clockwise" />
+          <span>Loading academic exam sessions...</span>
         </div>
       ) : error ? (
         <div
           style={{
-            padding: 16,
-            borderRadius: 12,
+            padding: 12,
+            borderRadius: 8,
             background: 'var(--danger-soft)',
             border: '1px solid var(--danger)',
             color: 'var(--text-primary)',
@@ -331,7 +359,10 @@ export function HallTicketCard({ attendance, overallSummary }: HallTicketCardPro
             justifyContent: 'space-between',
           }}
         >
-          <span>⚠️ {error}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <AlertTriangle size={14} style={{ color: 'var(--danger)' }} />
+            <span>{error}</span>
+          </span>
           {resolvedStudentId && (
             <button
               onClick={() => {
@@ -341,30 +372,33 @@ export function HallTicketCard({ attendance, overallSummary }: HallTicketCardPro
                 setTimeout(() => setResolvedStudentId(currentId), 10);
               }}
               className="action-button action-button--secondary"
-              style={{ padding: '6px 12px', fontSize: 12 }}
+              style={{ padding: '4px 10px', fontSize: 12 }}
             >
               Retry
             </button>
           )}
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: 14 }}>
+        <div style={{ display: 'grid', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-              Available Admit Cards / Hall Tickets
+            <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
+              Available Hall Tickets
             </h3>
             {loadingOptions && (
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>🔄 Fetching options...</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <RefreshCw size={11} className="spin-clockwise" />
+                <span>Checking options...</span>
+              </span>
             )}
           </div>
 
           {hallTicketOptions.length === 0 ? (
             <div
               style={{
-                padding: '24px',
+                padding: '20px',
                 textAlign: 'center',
                 background: 'var(--bg-card-subtle)',
-                borderRadius: 14,
+                borderRadius: 10,
                 color: 'var(--text-muted)',
                 fontSize: 13,
               }}
@@ -374,7 +408,7 @@ export function HallTicketCard({ attendance, overallSummary }: HallTicketCardPro
                 : 'No hall tickets have been issued yet for this examination session.'}
             </div>
           ) : (
-            <div style={{ display: 'grid', gap: 12 }}>
+            <div style={{ display: 'grid', gap: 10 }}>
               {hallTicketOptions.map((opt) => (
                 <div
                   key={opt.id}
@@ -384,40 +418,42 @@ export function HallTicketCard({ attendance, overallSummary }: HallTicketCardPro
                     justifyContent: 'space-between',
                     flexWrap: 'wrap',
                     gap: 12,
-                    padding: '16px 20px',
-                    borderRadius: 14,
+                    padding: '12px 16px',
+                    borderRadius: 10,
                     background: 'var(--bg-card-subtle)',
                     border: '1px solid var(--border)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '1 1 240px' }}>
-                    <span style={{ fontSize: 24 }}>📄</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '1 1 240px' }}>
+                    <FileText size={18} style={{ color: 'var(--primary)' }} />
                     <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {opt.title}
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 1 }}>
                         Official CyberVidya Hall Ticket • ID #{opt.id}
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <button
                       onClick={() => handlePreviewPdf(opt)}
                       disabled={previewingId === opt.id}
                       className="action-button action-button--secondary"
-                      style={{ padding: '8px 16px', fontSize: 13, fontWeight: 600 }}
+                      style={{ padding: '6px 12px', fontSize: 12, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5 }}
                     >
-                      {previewingId === opt.id ? '⌛ Loading...' : '👁️ View PDF'}
+                      <Eye size={13} />
+                      <span>{previewingId === opt.id ? 'Loading...' : 'View PDF'}</span>
                     </button>
                     <button
                       onClick={() => handleDownloadPdf(opt)}
                       disabled={downloadingId === opt.id}
                       className="action-button action-button--primary"
-                      style={{ padding: '8px 18px', fontSize: 13, fontWeight: 700 }}
+                      style={{ padding: '6px 14px', fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}
                     >
-                      {downloadingId === opt.id ? '⌛ Downloading...' : '⬇️ Download PDF'}
+                      <Download size={13} />
+                      <span>{downloadingId === opt.id ? 'Downloading...' : 'Download PDF'}</span>
                     </button>
                   </div>
                 </div>
@@ -446,20 +482,20 @@ export function HallTicketCard({ attendance, overallSummary }: HallTicketCardPro
             style={{
               background: 'var(--bg-card)',
               border: '1px solid var(--border)',
-              borderRadius: 20,
+              borderRadius: 14,
               width: '95%',
               maxWidth: 900,
               height: '90vh',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+              boxShadow: 'var(--shadow-md)',
             }}
           >
             {/* Modal Header */}
             <div
               style={{
-                padding: '14px 20px',
+                padding: '12px 18px',
                 borderBottom: '1px solid var(--border)',
                 display: 'flex',
                 alignItems: 'center',
@@ -467,42 +503,45 @@ export function HallTicketCard({ attendance, overallSummary }: HallTicketCardPro
                 background: 'var(--bg-card-subtle)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 20 }}>📜</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FileText size={16} style={{ color: 'var(--primary)' }} />
                 <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
                     {previewTitle}
                   </h3>
-                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>
+                  <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: 0 }}>
                     Official Hall Ticket Document Preview
                   </p>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <a
                   href={previewPdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="action-button action-button--secondary"
-                  style={{ padding: '6px 14px', fontSize: 12, textDecoration: 'none' }}
+                  style={{ padding: '5px 12px', fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
                 >
-                  ↗ Open Fullscreen
+                  <ExternalLink size={12} />
+                  <span>Open Fullscreen</span>
                 </a>
                 <a
                   href={previewPdfUrl}
                   download={`${previewTitle.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`}
                   className="action-button action-button--primary"
-                  style={{ padding: '6px 14px', fontSize: 12, textDecoration: 'none' }}
+                  style={{ padding: '5px 12px', fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
                 >
-                  ⬇️ Download
+                  <Download size={12} />
+                  <span>Download</span>
                 </a>
                 <button
                   onClick={closePreviewModal}
                   className="action-button action-button--secondary"
-                  style={{ padding: '6px 14px', fontSize: 12 }}
+                  style={{ padding: '5px 10px', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                 >
-                  ✕ Close
+                  <X size={12} />
+                  <span>Close</span>
                 </button>
               </div>
             </div>

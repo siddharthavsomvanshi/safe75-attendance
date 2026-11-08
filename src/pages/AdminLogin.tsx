@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Panel } from '../components/UI';
+import { Eye, EyeOff, Lock } from '../components/Icons';
 
 export function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -39,27 +40,31 @@ export function AdminLogin() {
   };
 
   const inputStyle = {
-    padding: '12px 16px',
+    padding: '9px 12px',
+    borderRadius: '8px',
     border: '1px solid var(--border)',
-    fontSize: '15px',
+    fontSize: '14px',
     width: '100%',
     boxSizing: 'border-box' as const,
     fontFamily: 'inherit',
+    background: 'var(--bg-card)',
+    color: 'var(--text-primary)',
+    outline: 'none',
   };
 
   return (
     <section style={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}>
-      <div style={{ width: '100%', maxWidth: '400px' }}>
-        <Panel title="Admin access" subtitle="Sign in to manage exam resources.">
-          <form onSubmit={handleLogin} style={{ display: 'grid', gap: '16px', padding: '16px' }}>
+      <div style={{ width: '100%', maxWidth: '380px' }}>
+        <Panel title="Admin Access" subtitle="Sign in to manage Safe75 exam resources.">
+          <form onSubmit={handleLogin} style={{ display: 'grid', gap: '14px', padding: '14px 16px' }}>
             {error && (
-              <div className="notice-banner" style={{ padding: '12px', borderRadius: '12px', background: 'var(--danger-soft)', color: 'var(--danger)', fontSize: '14px' }}>
+              <div className="notice-banner" style={{ padding: '10px 14px', borderRadius: '8px', background: 'var(--danger-soft)', color: 'var(--danger)', fontSize: '13px' }}>
                 {error}
               </div>
             )}
             
-            <div style={{ display: 'grid', gap: '6px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)' }}>Email</label>
+            <div style={{ display: 'grid', gap: '5px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Email</label>
               <input
                 className="standard-input"
                 type="email"
@@ -70,15 +75,15 @@ export function AdminLogin() {
               />
             </div>
 
-            <div style={{ display: 'grid', gap: '6px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)' }}>Password</label>
+            <div style={{ display: 'grid', gap: '5px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Password</label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <input
                   className="standard-input"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  style={{ ...inputStyle, paddingRight: '44px' }}
+                  style={{ ...inputStyle, paddingRight: '40px' }}
                   required
                 />
                 <button
@@ -89,31 +94,19 @@ export function AdminLogin() {
                   tabIndex={-1}
                   style={{
                     position: "absolute",
-                    right: 12,
+                    right: 8,
                     background: "none",
                     border: "none",
-                    padding: 6,
+                    padding: 4,
                     cursor: "pointer",
                     color: "var(--text-muted)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    borderRadius: 8,
+                    borderRadius: 6,
                   }}
                 >
-                  {showPassword ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-                      <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-                      <line x1="2" y1="2" x2="22" y2="22" />
-                    </svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  )}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
@@ -122,7 +115,7 @@ export function AdminLogin() {
               type="submit"
               disabled={loading}
               className="action-button action-button--primary"
-              style={{ padding: '14px', marginTop: '8px', opacity: loading ? 0.7 : 1 }}
+              style={{ padding: '10px 18px', marginTop: '6px', fontSize: '13px', fontWeight: 600, opacity: loading ? 0.7 : 1 }}
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>

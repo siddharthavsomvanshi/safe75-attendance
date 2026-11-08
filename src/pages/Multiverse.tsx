@@ -1,5 +1,16 @@
 import React, { useMemo, useState } from "react";
 import { Panel, EmptyMessage } from "../components/UI";
+import {
+  Lock,
+  Calendar,
+  Stethoscope,
+  Clock,
+  Sparkles,
+  Info,
+  CheckCircle,
+  AlertTriangle,
+  X,
+} from "../components/Icons";
 import type {
   ReadOnlyAttendanceSnapshot,
   MultiverseScenario,
@@ -118,28 +129,27 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
       <section
         className="premium-panel rise-in"
         style={{
-          padding: "24px 28px",
-          borderRadius: 28,
+          padding: "18px 22px",
+          borderRadius: 14,
           background: "var(--bg-card)",
           border: "1px solid var(--border)",
           display: "grid",
-          gap: 16,
+          gap: 14,
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 14 }}>
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-              <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: "var(--text-primary)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>
                 Attendance Multiverse
               </h1>
               <span
+                className="status-badge status-badge--info"
                 style={{
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: 700,
-                  padding: "4px 10px",
-                  borderRadius: 20,
-                  background: "var(--primary-soft)",
-                  color: "var(--primary)",
+                  padding: "2px 8px",
+                  borderRadius: 6,
                   letterSpacing: "0.5px",
                   textTransform: "uppercase",
                 }}
@@ -147,8 +157,8 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
                 Sandbox
               </span>
             </div>
-            <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: 16 }}>
-              What if you did things differently?
+            <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: 14 }}>
+              Simulate hypothetical attendance scenarios without altering real data.
             </p>
           </div>
 
@@ -157,59 +167,56 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
             className="action-button action-button--secondary"
             onClick={handleResetScenario}
             style={{
-              padding: "10px 18px",
-              borderRadius: 14,
-              border: "1px solid var(--border)",
-              background: "var(--bg-card-subtle)",
-              color: "var(--text-primary)",
-              fontWeight: 600,
-              cursor: "pointer",
-              fontSize: 14,
+              padding: "7px 14px",
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 500,
             }}
           >
-            Clear scenario
+            Reset simulation
           </button>
         </div>
 
         {/* Disclaimer Banner */}
         <div
           style={{
-            padding: "12px 16px",
-            borderRadius: 16,
-            background: "var(--info-soft)",
-            border: "1px solid rgba(37, 99, 235, 0.2)",
-            color: "var(--info)",
-            fontSize: 14,
-            fontWeight: 600,
+            padding: "9px 13px",
+            borderRadius: 8,
+            background: "var(--bg-card-subtle)",
+            border: "1px solid var(--border)",
+            color: "var(--text-secondary)",
+            fontSize: 13,
+            fontWeight: 500,
             display: "flex",
             alignItems: "center",
             gap: 8,
           }}
         >
-          <span>🔒</span>
-          <span>Simulation only — your real attendance will not change.</span>
+          <Lock size={14} style={{ color: "var(--text-muted)" }} />
+          <span>Simulation only — your official CyberVidya attendance remains unaffected.</span>
         </div>
       </section>
 
       {/* Progressive Disclosure Selector */}
       <Panel
-        title="WHAT DO YOU WANT TO SIMULATE?"
+        title="Simulation Scenarios"
         subtitle="Select any combination of hypothetical events below."
       >
-        <div style={{ display: "grid", gap: 16 }}>
+        <div style={{ display: "grid", gap: 14 }}>
           {/* Checkboxes */}
-          <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
+          <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
             <label
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 12,
-                padding: "14px 18px",
-                borderRadius: 18,
+                gap: 10,
+                padding: "12px 14px",
+                borderRadius: 10,
                 background: scenario.enableBunking ? "var(--primary-soft)" : "var(--bg-card-subtle)",
-                border: `1.5px solid ${scenario.enableBunking ? "var(--primary)" : "var(--border)"}`,
+                border: `1px solid ${scenario.enableBunking ? "var(--primary)" : "var(--border)"}`,
                 cursor: "pointer",
                 fontWeight: 600,
+                fontSize: 13,
                 color: "var(--text-primary)",
                 userSelect: "none",
               }}
@@ -220,22 +227,24 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
                 onChange={(e) =>
                   setScenario((prev) => ({ ...prev, enableBunking: e.target.checked }))
                 }
-                style={{ width: 18, height: 18, accentColor: "var(--primary)" }}
+                style={{ width: 16, height: 16, accentColor: "var(--primary)" }}
               />
-              <span>🏖️ Bunk future classes</span>
+              <Calendar size={15} style={{ color: "var(--primary)" }} />
+              <span>Bunk future classes</span>
             </label>
 
             <label
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 12,
-                padding: "14px 18px",
-                borderRadius: 18,
+                gap: 10,
+                padding: "12px 14px",
+                borderRadius: 10,
                 background: scenario.enableMedicalLeave ? "var(--primary-soft)" : "var(--bg-card-subtle)",
-                border: `1.5px solid ${scenario.enableMedicalLeave ? "var(--primary)" : "var(--border)"}`,
+                border: `1px solid ${scenario.enableMedicalLeave ? "var(--primary)" : "var(--border)"}`,
                 cursor: "pointer",
                 fontWeight: 600,
+                fontSize: 13,
                 color: "var(--text-primary)",
                 userSelect: "none",
               }}
@@ -246,22 +255,24 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
                 onChange={(e) =>
                   setScenario((prev) => ({ ...prev, enableMedicalLeave: e.target.checked }))
                 }
-                style={{ width: 18, height: 18, accentColor: "var(--primary)" }}
+                style={{ width: 16, height: 16, accentColor: "var(--primary)" }}
               />
-              <span>🚑 Medical leave</span>
+              <Stethoscope size={15} style={{ color: "var(--primary)" }} />
+              <span>Medical leave credit</span>
             </label>
 
             <label
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 12,
-                padding: "14px 18px",
-                borderRadius: 18,
+                gap: 10,
+                padding: "12px 14px",
+                borderRadius: 10,
                 background: scenario.enableTargetDate ? "var(--primary-soft)" : "var(--bg-card-subtle)",
-                border: `1.5px solid ${scenario.enableTargetDate ? "var(--primary)" : "var(--border)"}`,
+                border: `1px solid ${scenario.enableTargetDate ? "var(--primary)" : "var(--border)"}`,
                 cursor: "pointer",
                 fontWeight: 600,
+                fontSize: 13,
                 color: "var(--text-primary)",
                 userSelect: "none",
               }}
@@ -272,9 +283,10 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
                 onChange={(e) =>
                   setScenario((prev) => ({ ...prev, enableTargetDate: e.target.checked }))
                 }
-                style={{ width: 18, height: 18, accentColor: "var(--primary)" }}
+                style={{ width: 16, height: 16, accentColor: "var(--primary)" }}
               />
-              <span>📅 Check attendance after a specific date</span>
+              <Clock size={15} style={{ color: "var(--primary)" }} />
+              <span>Attendance cutoff date</span>
             </label>
           </div>
 
@@ -661,7 +673,7 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
           )}
 
           <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>
-            <span>ℹ️</span>
+            <Info size={14} />
             <span>
               {explanation.futureClassesAttendedCount > 0
                 ? `Assumption: All other ${explanation.futureClassesAttendedCount} future classes up to ${explanation.resultDateLabel} are treated as attended.`
@@ -675,35 +687,35 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
       <section
         className="premium-panel rise-in"
         style={{
-          padding: "24px 28px",
-          borderRadius: 28,
+          padding: "20px 22px",
+          borderRadius: 14,
           background: "var(--bg-card)",
           border: "1px solid var(--border)",
           display: "grid",
-          gap: 20,
+          gap: 16,
         }}
       >
-        <div style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
           Overall Simulation Summary
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
           {/* Current Overall */}
           <div
             style={{
-              padding: 18,
-              borderRadius: 20,
+              padding: 16,
+              borderRadius: 12,
               background: "var(--bg-card-subtle)",
               border: "1px solid var(--border)",
             }}
           >
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-muted)", marginBottom: 6, textTransform: "uppercase" }}>
-              CURRENT OVERALL
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", marginBottom: 4, textTransform: "uppercase" }}>
+              Current Overall
             </div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: "var(--text-primary)" }}>
+            <div style={{ fontSize: 26, fontWeight: 700, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
               {overall.realPercentage.toFixed(1)}%
             </div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
+            <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
               {overall.realPresent} / {overall.realTotal} periods
             </div>
           </div>
@@ -711,33 +723,34 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
           {/* Simulated Overall */}
           <div
             style={{
-              padding: 18,
-              borderRadius: 20,
+              padding: 16,
+              borderRadius: 12,
               background: overall.isOverallSafe ? "var(--success-soft)" : "var(--danger-soft)",
               border: `1px solid ${overall.isOverallSafe ? "var(--success)" : "var(--danger)"}`,
             }}
           >
             <div
               style={{
-                fontSize: 13,
+                fontSize: 11,
                 fontWeight: 700,
                 color: overall.isOverallSafe ? "var(--success)" : "var(--danger)",
-                marginBottom: 6,
+                marginBottom: 4,
                 textTransform: "uppercase",
               }}
             >
-              SIMULATED OVERALL
+              Simulated Overall
             </div>
             <div
               style={{
-                fontSize: 32,
-                fontWeight: 800,
+                fontSize: 26,
+                fontWeight: 700,
                 color: overall.isOverallSafe ? "var(--success)" : "var(--danger)",
+                fontVariantNumeric: "tabular-nums",
               }}
             >
               {overall.simulatedPercentage.toFixed(1)}%
             </div>
-            <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>
+            <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 4 }}>
               {overall.simulatedPresent} / {overall.simulatedTotal} periods
             </div>
           </div>
@@ -745,19 +758,20 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
           {/* Net Change */}
           <div
             style={{
-              padding: 18,
-              borderRadius: 20,
+              padding: 16,
+              borderRadius: 12,
               background: "var(--bg-card-subtle)",
               border: "1px solid var(--border)",
             }}
           >
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-muted)", marginBottom: 6, textTransform: "uppercase" }}>
-              NET CHANGE
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", marginBottom: 4, textTransform: "uppercase" }}>
+              Net Change
             </div>
             <div
               style={{
-                fontSize: 32,
-                fontWeight: 800,
+                fontSize: 26,
+                fontWeight: 700,
+                fontVariantNumeric: "tabular-nums",
                 color:
                   overall.deltaPercentagePoints > 0
                     ? "var(--success)"
@@ -769,7 +783,7 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
               {overall.deltaPercentagePoints > 0 ? "+" : ""}
               {overall.deltaPercentagePoints.toFixed(1)} pts
             </div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
+            <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
               Impact on overall %
             </div>
           </div>
@@ -778,23 +792,23 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
         {/* Interpretation sentence */}
         <div
           style={{
-            padding: "14px 18px",
-            borderRadius: 16,
+            padding: "12px 14px",
+            borderRadius: 10,
             background: "var(--bg-card-subtle)",
             border: "1px solid var(--border)",
-            fontSize: 15,
-            fontWeight: 600,
+            fontSize: 14,
+            fontWeight: 500,
             color: "var(--text-primary)",
             lineHeight: 1.5,
           }}
         >
-          Your simulated overall attendance would be <strong>{overall.simulatedPercentage.toFixed(1)}%</strong>.{" "}
+          Your simulated overall attendance would be <strong style={{ fontVariantNumeric: "tabular-nums" }}>{overall.simulatedPercentage.toFixed(1)}%</strong>.{" "}
           {overall.belowThresholdSubjectCount > 0 ? (
-            <span style={{ color: "var(--danger)" }}>
+            <span style={{ color: "var(--danger)", fontWeight: 600 }}>
               {overall.belowThresholdSubjectCount} subject{overall.belowThresholdSubjectCount === 1 ? "" : "s"} would remain below 75%.
             </span>
           ) : (
-            <span style={{ color: "var(--success)" }}>
+            <span style={{ color: "var(--success)", fontWeight: 600 }}>
               All {overall.totalSubjectCount} subjects would be safe at or above 75%!
             </span>
           )}
@@ -803,10 +817,10 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
 
       {/* Subject-Wise Results */}
       <Panel
-        title="SUBJECT-WISE SIMULATION RESULTS"
+        title="Subject-Wise Simulation Results"
         subtitle="Individual subject breakdown under the simulated scenario."
       >
-        <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
+        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
           {subjects.map((subject) => {
             const isGain = subject.deltaPercentage > 0;
             const isLoss = subject.deltaPercentage < 0;
@@ -814,56 +828,68 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
             return (
               <div
                 key={subject.id}
+                className="standard-card rise-in"
                 style={{
-                  padding: 20,
-                  borderRadius: 22,
+                  padding: 16,
+                  borderRadius: 12,
                   background: "var(--bg-card)",
-                  border: `1.5px solid ${subject.isSafe ? "var(--border)" : "var(--danger)"}`,
+                  border: `1px solid ${subject.isSafe ? "var(--border)" : "var(--danger)"}`,
                   display: "grid",
-                  gap: 14,
-                  boxShadow: "var(--shadow-sm)",
+                  gap: 12,
                 }}
               >
                 {/* Subject Header */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
                   <div>
-                    <h3 style={{ margin: "0 0 4px", fontSize: 17, fontWeight: 800, color: "var(--text-primary)" }}>
+                    <h3 style={{ margin: "0 0 2px", fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>
                       {subject.title}
                     </h3>
-                    <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
                       {subject.courseCode} • {subject.componentName}
                     </div>
                   </div>
 
                   {/* Status Badge */}
                   <span
+                    className={`status-badge ${subject.isSafe ? "status-badge--success" : "status-badge--danger"}`}
                     style={{
-                      padding: "4px 12px",
-                      borderRadius: 20,
-                      fontSize: 13,
-                      fontWeight: 700,
-                      background: subject.isSafe ? "var(--success-soft)" : "var(--danger-soft)",
-                      color: subject.isSafe ? "var(--success)" : "var(--danger)",
+                      padding: "3px 8px",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {subject.isSafe ? "🟢 Safe" : "🔴 Below 75%"}
+                    {subject.isSafe ? (
+                      <>
+                        <CheckCircle size={12} />
+                        <span>Safe</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle size={12} />
+                        <span>Below 75%</span>
+                      </>
+                    )}
                   </span>
                 </div>
 
                 {/* Percentage Transition */}
-                <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                  <span style={{ fontSize: 18, color: "var(--text-muted)", textDecoration: "line-through" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                  <span style={{ fontSize: 15, color: "var(--text-muted)", textDecoration: "line-through", fontVariantNumeric: "tabular-nums" }}>
                     {subject.realPercentage.toFixed(1)}%
                   </span>
-                  <span style={{ fontSize: 24, color: "var(--text-muted)" }}>→</span>
-                  <span style={{ fontSize: 26, fontWeight: 800, color: subject.isSafe ? "var(--text-primary)" : "var(--danger)" }}>
+                  <span style={{ fontSize: 16, color: "var(--text-muted)" }}>→</span>
+                  <span style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: subject.isSafe ? "var(--text-primary)" : "var(--danger)" }}>
                     {subject.simulatedPercentage.toFixed(1)}%
                   </span>
                   <span
                     style={{
-                      fontSize: 14,
-                      fontWeight: 700,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      fontVariantNumeric: "tabular-nums",
                       color: isGain ? "var(--success)" : isLoss ? "var(--danger)" : "var(--text-muted)",
                       marginLeft: "auto",
                     }}
@@ -876,18 +902,18 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
                 {/* Breakdown Details */}
                 <div
                   style={{
-                    padding: 12,
-                    borderRadius: 14,
+                    padding: 10,
+                    borderRadius: 8,
                     background: "var(--bg-card-subtle)",
-                    fontSize: 13,
+                    fontSize: 12,
                     display: "grid",
-                    gap: 6,
+                    gap: 5,
                     color: "var(--text-secondary)",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span>Periods present/total:</span>
-                    <strong style={{ color: "var(--text-primary)" }}>
+                    <strong style={{ color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
                       {subject.simulatedPresent} / {subject.simulatedTotal}
                     </strong>
                   </div>
@@ -913,14 +939,14 @@ export function MultiversePage({ data }: { data: ReadOnlyAttendanceSnapshot }) {
                     </div>
                   )}
 
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, paddingTop: 6, borderTop: "1px dashed var(--border)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3, paddingTop: 5, borderTop: "1px dashed var(--border)" }}>
                     <span>Status metric:</span>
                     {subject.isSafe ? (
-                      <span style={{ color: "var(--success)", fontWeight: 700 }}>
+                      <span style={{ color: "var(--success)", fontWeight: 600 }}>
                         {subject.simulatedSafeBunks} safe bunk{subject.simulatedSafeBunks === 1 ? "" : "s"} left
                       </span>
                     ) : (
-                      <span style={{ color: "var(--danger)", fontWeight: 700 }}>
+                      <span style={{ color: "var(--danger)", fontWeight: 600 }}>
                         Need {subject.simulatedClassesNeeded} consecutive class{subject.simulatedClassesNeeded === 1 ? "" : "es"}
                       </span>
                     )}

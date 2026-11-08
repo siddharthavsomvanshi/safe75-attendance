@@ -1,4 +1,5 @@
 import React, { ReactNode, useEffect, useId } from "react";
+import { Search, X } from "./Icons";
 
 export function Panel({
   title,
@@ -15,8 +16,8 @@ export function Panel({
     <section
       className="premium-panel rise-in"
       style={{
-        padding: "20px 22px",
-        borderRadius: 20,
+        padding: "18px 20px",
+        borderRadius: 14,
         background: "var(--bg-card)",
         border: "1px solid var(--border)",
         boxShadow: "var(--shadow-sm)",
@@ -25,18 +26,18 @@ export function Panel({
       <div
         className="panel-header"
         style={{
-          marginBottom: 16,
+          marginBottom: 14,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          gap: 16,
+          gap: 12,
         }}
       >
         <div style={{ minWidth: 0 }}>
-          <h2 className="panel-title" style={{ margin: "0 0 4px", fontSize: 20 }}>
+          <h2 className="panel-title" style={{ margin: "0 0 2px", fontSize: 16, fontWeight: 700 }}>
             {title}
           </h2>
-          <p className="panel-subtitle" style={{ margin: 0, color: "var(--text-muted)", fontSize: 13.5 }}>
+          <p className="panel-subtitle" style={{ margin: 0, color: "var(--text-muted)", fontSize: 13, lineHeight: 1.4 }}>
             {subtitle}
           </p>
         </div>
@@ -52,19 +53,19 @@ export function EmptyMessage({ message }: { message: string }) {
     <div
       className="empty-state"
       style={{
-        padding: "24px 20px",
-        borderRadius: 16,
+        padding: "20px 16px",
+        borderRadius: 10,
         border: "1px dashed var(--border-strong)",
         color: "var(--text-muted)",
         background: "var(--bg-card-subtle)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: 10,
-        fontSize: 14,
+        gap: 8,
+        fontSize: 13,
       }}
     >
-      <span style={{ fontSize: 18 }}>🔍</span>
+      <Search size={15} />
       <span>{message}</span>
     </div>
   );
@@ -121,10 +122,10 @@ export function OverlayDialog({
       >
         <div className="overlay-dialog-header">
           <div style={{ minWidth: 0 }}>
-            <h2 className="panel-title overlay-dialog-title" id={titleId}>
+            <h2 className="panel-title overlay-dialog-title" id={titleId} style={{ fontSize: 16 }}>
               {title}
             </h2>
-            {subtitle && <p className="panel-subtitle overlay-dialog-subtitle">{subtitle}</p>}
+            {subtitle && <p className="panel-subtitle overlay-dialog-subtitle" style={{ fontSize: 12.5 }}>{subtitle}</p>}
           </div>
 
           <div className="overlay-dialog-actions">
@@ -134,8 +135,9 @@ export function OverlayDialog({
               className="action-button action-button--secondary overlay-dialog-close"
               onClick={onClose}
               type="button"
+              style={{ padding: "6px 12px", fontSize: 12 }}
             >
-              ✕ Close
+              <X size={14} /> Close
             </button>
           </div>
         </div>

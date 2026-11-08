@@ -7,6 +7,21 @@ import {
   MedicalLeaveAlternative,
 } from "../../utils/medicalLeaveOptimizer";
 import { EmptyMessage } from "../UI";
+import {
+  Target,
+  Calendar,
+  Stethoscope,
+  Sparkles,
+  CheckCircle,
+  ShieldCheck,
+  Check,
+  CheckCheck,
+  Copy,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  CalendarDays,
+} from "../Icons";
 
 export interface MedicalLeaveOptimizerProps {
   streakDayData: Record<string, DayStreakRecord>;
@@ -139,8 +154,8 @@ export function MedicalLeaveOptimizer({
         style={{
           display: "grid",
           gap: 16,
-          padding: 18,
-          borderRadius: 20,
+          padding: 16,
+          borderRadius: 14,
           border: "1px solid var(--border)",
           background: "var(--bg-card-subtle)",
         }}
@@ -148,23 +163,24 @@ export function MedicalLeaveOptimizer({
         {/* Row 1: Target Attendance Selection */}
         <div style={{ display: "grid", gap: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-            <label style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
-              🎯 Target Overall Attendance
+            <label style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6 }}>
+              <Target size={14} style={{ color: "var(--primary)" }} />
+              <span>Target Overall Attendance</span>
             </label>
             <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
               Current: <strong style={{ color: currentPercentage >= 75 ? "var(--success)" : "var(--danger)" }}>{currentPercentage.toFixed(1)}%</strong>
               {targetAttendance && currentPercentage < targetAttendance && targetRequiredClasses > 0 && (
-                <span> (Needs ~{targetRequiredClasses} missed classes recovered)</span>
+                <span> (Needs ~{targetRequiredClasses} classes recovered)</span>
               )}
             </div>
           </div>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             {[
-              { label: "75% (Safe Criteria)", value: 75 },
-              { label: "80% (First Class)", value: 80 },
-              { label: "85% (Distinction)", value: 85 },
-              { label: "Max Boost (No Target)", value: null },
+              { label: "75% Safe Criteria", value: 75 },
+              { label: "80% Target", value: 80 },
+              { label: "85% Target", value: 85 },
+              { label: "Max Boost", value: null },
             ].map((option) => {
               const isSelected = targetAttendance === option.value;
               return (
@@ -173,12 +189,12 @@ export function MedicalLeaveOptimizer({
                   type="button"
                   onClick={() => setTargetAttendance(option.value)}
                   style={{
-                    padding: "7px 14px",
-                    borderRadius: 999,
-                    fontSize: 13,
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    fontSize: 12,
                     fontWeight: 600,
                     cursor: "pointer",
-                    border: `1.5px solid ${isSelected ? "var(--primary)" : "var(--border)"}`,
+                    border: `1px solid ${isSelected ? "var(--primary)" : "var(--border)"}`,
                     background: isSelected ? "var(--primary-soft)" : "var(--bg-card)",
                     color: isSelected ? "var(--primary)" : "var(--text-secondary)",
                     transition: "all 0.15s ease",
@@ -203,9 +219,9 @@ export function MedicalLeaveOptimizer({
                   setTargetAttendance(isNaN(val) ? null : val);
                 }}
                 style={{
-                  width: 60,
-                  padding: "5px 8px",
-                  borderRadius: 8,
+                  width: 56,
+                  padding: "4px 8px",
+                  borderRadius: 6,
                   border: "1px solid var(--border)",
                   background: "var(--bg-card)",
                   color: "var(--text-primary)",
@@ -214,7 +230,7 @@ export function MedicalLeaveOptimizer({
                   textAlign: "center",
                 }}
               />
-              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-muted)" }}>%</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)" }}>%</span>
             </div>
           </div>
         </div>
@@ -231,14 +247,15 @@ export function MedicalLeaveOptimizer({
         >
           {/* Lookback Window */}
           <div style={{ display: "grid", gap: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)" }}>
-              📅 History Lookback Window
+            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 6 }}>
+              <Calendar size={13} style={{ color: "var(--text-muted)" }} />
+              <span>History Lookback Window</span>
             </span>
             <div style={{ display: "flex", gap: 6 }}>
               {[
-                { label: "Last 30 Days", val: 30 },
-                { label: "Last 45 Days", val: 45 },
-                { label: "Last 60 Days", val: 60 },
+                { label: "30 Days", val: 30 },
+                { label: "45 Days", val: 45 },
+                { label: "60 Days", val: 60 },
               ].map((item) => (
                 <button
                   key={item.val}
@@ -247,7 +264,7 @@ export function MedicalLeaveOptimizer({
                   style={{
                     flex: 1,
                     padding: "5px 10px",
-                    borderRadius: 8,
+                    borderRadius: 6,
                     fontSize: 12,
                     fontWeight: 600,
                     cursor: "pointer",
@@ -264,14 +281,15 @@ export function MedicalLeaveOptimizer({
 
           {/* Max Certificate Duration */}
           <div style={{ display: "grid", gap: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)" }}>
-              🏥 Max Certificate Duration
+            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 6 }}>
+              <Stethoscope size={13} style={{ color: "var(--text-muted)" }} />
+              <span>Max Certificate Duration</span>
             </span>
             <div style={{ display: "flex", gap: 6 }}>
               {[
-                { label: "Up to 3 Days", val: 3 },
-                { label: "Up to 5 Days", val: 5 },
-                { label: "Up to 7 Days", val: 7 },
+                { label: "3 Days", val: 3 },
+                { label: "5 Days", val: 5 },
+                { label: "7 Days", val: 7 },
                 { label: "All Spans", val: 30 },
               ].map((item) => (
                 <button
@@ -281,7 +299,7 @@ export function MedicalLeaveOptimizer({
                   style={{
                     flex: 1,
                     padding: "5px 8px",
-                    borderRadius: 8,
+                    borderRadius: 6,
                     fontSize: 12,
                     fontWeight: 600,
                     cursor: "pointer",
@@ -302,17 +320,18 @@ export function MedicalLeaveOptimizer({
       {alternatives.length === 0 ? (
         <EmptyMessage message="No consecutive absence gaps found matching these filters. Try expanding the lookback window or certificate duration." />
       ) : (
-        <div style={{ display: "grid", gap: 14 }}>
+        <div style={{ display: "grid", gap: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-            <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text-primary)" }}>
-              ✨ Recommended Medical Leave Windows ({alternatives.length} Alternatives)
+            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6 }}>
+              <Sparkles size={15} style={{ color: "var(--primary)" }} />
+              <span>Optimal Leave Windows ({alternatives.length} alternatives)</span>
             </div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
               Ranked by consecutive absence density & attendance boost
             </div>
           </div>
 
-          <div style={{ display: "grid", gap: 14 }}>
+          <div style={{ display: "grid", gap: 12 }}>
             {alternatives.map((alt, index) => {
               const isSelected = activeStartDate === alt.startDate && activeEndDate === alt.endDate;
               const isExpanded = expandedAlternativeId === alt.id;
@@ -323,24 +342,24 @@ export function MedicalLeaveOptimizer({
                   key={alt.id}
                   className={`standard-card rise-in ${isSelected ? "surface-card--highlight" : ""}`}
                   style={{
-                    borderRadius: 18,
-                    padding: 18,
-                    border: isSelected ? "2px solid var(--primary)" : "1px solid var(--border)",
+                    borderRadius: 14,
+                    padding: 16,
+                    border: isSelected ? "1.5px solid var(--primary)" : "1px solid var(--border)",
                     background: isSelected ? "var(--primary-soft)" : "var(--bg-card)",
                     display: "grid",
-                    gap: 14,
-                    transition: "all 0.2s ease",
+                    gap: 12,
+                    transition: "all 0.15s ease",
                   }}
                 >
                   {/* Top Bar: Option label, Badge, & Duration */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
-                    <div style={{ display: "grid", gap: 4 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ display: "grid", gap: 3 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <span
                           style={{
-                            fontSize: 12,
-                            fontWeight: 800,
-                            padding: "3px 8px",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            padding: "2px 7px",
                             borderRadius: 6,
                             background: "var(--secondary-soft)",
                             color: "var(--text-secondary)",
@@ -348,14 +367,14 @@ export function MedicalLeaveOptimizer({
                         >
                           Option {index + 1}
                         </span>
-                        <strong style={{ fontSize: 18, color: "var(--text-primary)" }}>
+                        <strong style={{ fontSize: 16, color: "var(--text-primary)" }}>
                           {alt.label}
                         </strong>
                         <span
                           style={{
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: 700,
-                            padding: "3px 10px",
+                            padding: "2px 8px",
                             borderRadius: 999,
                             ...badgeStyle,
                           }}
@@ -372,45 +391,44 @@ export function MedicalLeaveOptimizer({
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                       {alt.reachesTarget ? (
                         <span
-                          className="status-badge"
+                          className="status-badge status-badge--success"
                           style={{
-                            padding: "6px 12px",
-                            borderRadius: 999,
-                            background: "var(--success-soft)",
-                            color: "var(--success)",
-                            fontWeight: 800,
+                            padding: "4px 10px",
                             fontSize: 12,
+                            fontWeight: 700,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
                           }}
                         >
-                          🎯 Reaches {alt.targetPercentage}% Target!
+                          <CheckCircle size={13} />
+                          <span>Reaches {alt.targetPercentage}% target</span>
                         </span>
                       ) : alt.rescuesOverall ? (
                         <span
-                          className="status-badge"
+                          className="status-badge status-badge--info"
                           style={{
-                            padding: "6px 12px",
-                            borderRadius: 999,
-                            background: "var(--info-soft)",
-                            color: "var(--info)",
-                            fontWeight: 800,
+                            padding: "4px 10px",
                             fontSize: 12,
+                            fontWeight: 700,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
                           }}
                         >
-                          🛡️ Crosses 75% Safe Line!
+                          <ShieldCheck size={13} />
+                          <span>Crosses 75% safe line</span>
                         </span>
                       ) : (
                         <span
-                          className="status-badge"
+                          className="status-badge status-badge--warning"
                           style={{
-                            padding: "6px 12px",
-                            borderRadius: 999,
-                            background: "var(--warning-soft)",
-                            color: "var(--warning)",
-                            fontWeight: 700,
+                            padding: "4px 10px",
                             fontSize: 12,
+                            fontWeight: 700,
                           }}
                         >
-                          +{alt.percentageGain.toFixed(1)}% Boost
+                          +{alt.percentageGain.toFixed(1)}% boost
                         </span>
                       )}
                     </div>
@@ -421,9 +439,9 @@ export function MedicalLeaveOptimizer({
                     style={{
                       display: "grid",
                       gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-                      gap: 10,
-                      padding: "12px 14px",
-                      borderRadius: 14,
+                      gap: 8,
+                      padding: "10px 12px",
+                      borderRadius: 10,
                       background: isSelected ? "var(--bg-card)" : "var(--bg-card-subtle)",
                       border: "1px solid var(--border)",
                     }}
@@ -432,9 +450,9 @@ export function MedicalLeaveOptimizer({
                       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
                         New Attendance
                       </div>
-                      <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "baseline", gap: 6 }}>
-                        <span>{alt.projectedPercentage.toFixed(1)}%</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--success)" }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "baseline", gap: 6 }}>
+                        <span style={{ fontVariantNumeric: "tabular-nums" }}>{alt.projectedPercentage.toFixed(1)}%</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "var(--success)" }}>
                           (+{alt.percentageGain.toFixed(1)}%)
                         </span>
                       </div>
@@ -442,9 +460,9 @@ export function MedicalLeaveOptimizer({
 
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
-                        Classes Recovered
+                        Recovered
                       </div>
-                      <div style={{ fontSize: 17, fontWeight: 800, color: "var(--primary)" }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: "var(--primary)" }}>
                         +{alt.missedClassesRecovered} classes
                       </div>
                     </div>
@@ -453,7 +471,7 @@ export function MedicalLeaveOptimizer({
                       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
                         Saved Subjects
                       </div>
-                      <div style={{ fontSize: 17, fontWeight: 800, color: alt.rescuedSubjectsCount > 0 ? "var(--success)" : "var(--text-secondary)" }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: alt.rescuedSubjectsCount > 0 ? "var(--success)" : "var(--text-secondary)" }}>
                         {alt.rescuedSubjectsCount > 0 ? `${alt.rescuedSubjectsCount} rescued ≥75%` : "Safe margin up"}
                       </div>
                     </div>
@@ -462,8 +480,8 @@ export function MedicalLeaveOptimizer({
                       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
                         Absence Density
                       </div>
-                      <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text-secondary)" }}>
-                        {alt.efficiency.toFixed(1)} classes/day
+                      <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-secondary)" }}>
+                        {alt.efficiency.toFixed(1)} / day
                       </div>
                     </div>
                   </div>
@@ -474,38 +492,53 @@ export function MedicalLeaveOptimizer({
                       <button
                         type="button"
                         onClick={() => onApplyWindow(alt.startDate, alt.endDate)}
+                        className={`action-button ${isSelected ? "action-button--success" : "action-button--primary"}`}
                         style={{
-                          padding: "8px 16px",
-                          borderRadius: 10,
+                          padding: "7px 14px",
+                          borderRadius: 8,
                           fontSize: 13,
-                          fontWeight: 700,
+                          fontWeight: 600,
                           cursor: "pointer",
-                          border: "none",
-                          background: isSelected ? "var(--success)" : "var(--primary)",
-                          color: "var(--text-on-primary)",
-                          boxShadow: "var(--shadow-xs)",
-                          transition: "all 0.15s ease",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
                         }}
                       >
-                        {isSelected ? "✓ Active in Preview" : "👉 Apply This Window"}
+                        {isSelected ? (
+                          <>
+                            <Check size={14} />
+                            <span>Active in preview</span>
+                          </>
+                        ) : (
+                          <span>Apply window</span>
+                        )}
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleCopyNote(alt)}
+                        className="action-button action-button--secondary"
                         style={{
-                          padding: "8px 14px",
-                          borderRadius: 10,
+                          padding: "7px 12px",
+                          borderRadius: 8,
                           fontSize: 13,
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          border: "1px solid var(--border)",
-                          background: "var(--bg-card)",
-                          color: "var(--text-secondary)",
-                          transition: "all 0.15s ease",
+                          fontWeight: 500,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
                         }}
                       >
-                        {copiedId === alt.id ? "✓ Copied Note!" : "📋 Copy Leave Note"}
+                        {copiedId === alt.id ? (
+                          <>
+                            <CheckCheck size={14} style={{ color: "var(--success)" }} />
+                            <span>Copied note</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={14} />
+                            <span>Copy leave note</span>
+                          </>
+                        )}
                       </button>
                     </div>
 
@@ -513,17 +546,21 @@ export function MedicalLeaveOptimizer({
                       type="button"
                       onClick={() => setExpandedAlternativeId(isExpanded ? null : alt.id)}
                       style={{
-                        padding: "6px 12px",
-                        borderRadius: 8,
+                        padding: "6px 10px",
+                        borderRadius: 6,
                         fontSize: 12,
-                        fontWeight: 600,
+                        fontWeight: 500,
                         cursor: "pointer",
                         border: "none",
                         background: "transparent",
-                        color: "var(--primary)",
+                        color: "var(--text-secondary)",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
                       }}
                     >
-                      {isExpanded ? "Hide Breakdown ▲" : "View Breakdown ▼"}
+                      <span>{isExpanded ? "Hide breakdown" : "View breakdown"}</span>
+                      {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                     </button>
                   </div>
 
@@ -532,23 +569,24 @@ export function MedicalLeaveOptimizer({
                     <div
                       style={{
                         display: "grid",
-                        gap: 14,
-                        paddingTop: 12,
+                        gap: 12,
+                        paddingTop: 10,
                         borderTop: "1px dashed var(--border)",
                       }}
                     >
                       {/* Day-by-Day Absences */}
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--text-primary)" }}>
-                          📅 Daily Absences in This Consecutive Window:
+                        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 5 }}>
+                          <CalendarDays size={13} style={{ color: "var(--text-muted)" }} />
+                          <span>Daily absences in consecutive window</span>
                         </div>
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                           {alt.dailyBreakdown.map((day) => (
                             <div
                               key={day.dateKey}
                               style={{
-                                padding: "6px 10px",
-                                borderRadius: 8,
+                                padding: "6px 8px",
+                                borderRadius: 6,
                                 background: day.missed > 0 ? "var(--danger-soft)" : "var(--bg-card)",
                                 border: `1px solid ${day.missed > 0 ? "var(--danger)" : "var(--border)"}`,
                                 fontSize: 12,
@@ -568,8 +606,9 @@ export function MedicalLeaveOptimizer({
                       {/* Subject-Wise Recovery */}
                       {alt.subjectImpacts.length > 0 && (
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--text-primary)" }}>
-                            📚 Subject-Wise Recovery:
+                          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 5 }}>
+                            <FileText size={13} style={{ color: "var(--text-muted)" }} />
+                            <span>Subject-wise recovery</span>
                           </div>
                           <div style={{ display: "grid", gap: 6 }}>
                             {alt.subjectImpacts.map((subj) => (
@@ -593,12 +632,12 @@ export function MedicalLeaveOptimizer({
                                   <span style={{ color: "var(--primary)", fontWeight: 700 }}>
                                     +{subj.missedRecovered} present
                                   </span>
-                                  <span>
+                                  <span style={{ fontVariantNumeric: "tabular-nums" }}>
                                     {subj.currentPercentage.toFixed(1)}% → <strong>{subj.newPercentage.toFixed(1)}%</strong>
                                   </span>
                                   {subj.rescued && (
-                                    <span style={{ color: "var(--success)", fontWeight: 800 }}>
-                                      RESCUED ≥75%
+                                    <span className="status-badge status-badge--success" style={{ fontSize: 11, padding: "2px 6px" }}>
+                                      Rescued ≥75%
                                     </span>
                                   )}
                                 </div>

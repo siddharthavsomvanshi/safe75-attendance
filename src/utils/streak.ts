@@ -81,7 +81,7 @@ export function getCachedPastStreakData(
   sessionId: number | string | null,
   subjects: StreakSubjectConfig[],
 ): CachedPastPayload {
-  const todayKey = normalizeIsoDateString(new Date());
+  const todayKey = normalizeIsoDateString(new Date()) || "";
   const cacheKey = getCacheKey(studentId, sessionId, subjects);
   return readCachedPastPayload(cacheKey, todayKey);
 }
@@ -175,7 +175,7 @@ export async function fetchGlobalDatewiseAttendance(
     throw new Error("Student ID is required to fetch streak data.");
   }
 
-  const todayKey = normalizeIsoDateString(new Date());
+  const todayKey = normalizeIsoDateString(new Date()) || "";
   const cacheKey = getCacheKey(studentId, sessionId, subjects);
   const cachedPastPayload = readCachedPastPayload(cacheKey, todayKey);
   const freshData: Record<string, DayStreakRecord> = {};
@@ -221,7 +221,7 @@ export async function fetchGlobalDatewiseAttendance(
           const dateKey = normalizeIsoDateString(lecture.planLecDate);
           const status = (lecture.attendance ?? "").toUpperCase();
 
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey) || !isCountableAttendanceStatus(status)) {
+          if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey) || !isCountableAttendanceStatus(status)) {
             continue;
           }
 
@@ -318,7 +318,7 @@ export function calculateStrictStreak(
   allDays.sort((a, b) => new Date(b.dateKey).getTime() - new Date(a.dateKey).getTime());
 
   let streak = 0;
-  const todayKey = normalizeIsoDateString(new Date());
+  const todayKey = normalizeIsoDateString(new Date()) || "";
 
   for (const day of allDays) {
     if (day.dateKey > todayKey) {

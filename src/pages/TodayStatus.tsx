@@ -8,6 +8,7 @@ import type { StudentExamInfo } from "../data/mse2Datesheet";
 import { Notice, StatusCard, secondaryButtonStyle } from "../App";
 import { Panel } from "../components/UI";
 import { formatScheduleTime } from "../utils/date";
+import { RefreshCw, Clock, GraduationCap, AlertTriangle, CheckCircle2 } from "../components/Icons";
 
 export interface TodayStatusProps {
   attendance: StudentDetails | null;
@@ -170,7 +171,7 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
            ? (rawBuckets as any).data
            : [];
          
-         const lectures = buckets.flatMap((b: DatewiseAttendanceBucket) => b.lectureList || []).filter((l) => {
+         const lectures = buckets.flatMap((b: DatewiseAttendanceBucket) => b.lectureList || []).filter((l: any) => {
             const lectureDateIso = normalizeIsoDateString(l.planLecDate);
             return lectureDateIso === targetDateIso;
          });
@@ -233,40 +234,40 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
   const notMarkedCount = activeClasses.filter(c => (!c.attendanceStatus || String(c.attendanceStatus).toUpperCase() === "NULL") && !c.isLoading && !c.error).length;
   
   return (
-    <div className="rise-in" style={{ display: "grid", gap: 20 }}>
+    <div className="rise-in" style={{ display: "grid", gap: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-        <div style={{ display: "grid", gap: 4 }}>
-          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: "var(--text-primary)" }}>
-            {mode === "today" ? "Today's attendance" : `Yesterday (${formatDisplayDate(getPreviousWorkingDay(new Date()))})`}
+        <div style={{ display: "grid", gap: 2 }}>
+          <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>
+            {mode === "today" ? "Today's Attendance Status" : `Yesterday (${formatDisplayDate(getPreviousWorkingDay(new Date()))})`}
           </h1>
-          <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 15 }}>
-            {mode === "today" ? "Check what's marked and what's missing." : "Review what was marked yesterday."}
+          <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 13 }}>
+            {mode === "today" ? "Real-time marked status for scheduled periods today." : "Review what was marked yesterday."}
           </p>
         </div>
         <button 
            className="action-button action-button--secondary"
            onClick={() => fetchDailyData(mode, true)}
            disabled={isLoadingSchedule}
-           style={{ ...secondaryButtonStyle, opacity: isLoadingSchedule ? 0.7 : 1 }}
+           style={{ ...secondaryButtonStyle, padding: "7px 13px", fontSize: 12.5, opacity: isLoadingSchedule ? 0.7 : 1 }}
         >
+          <RefreshCw size={13} />
           {isLoadingSchedule ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
-      <div style={{ display: "flex", gap: 6, padding: 4, background: "var(--bg-secondary)", borderRadius: 12, width: "fit-content", border: "1px solid var(--border)" }}>
+      <div style={{ display: "flex", gap: 4, padding: 3, background: "var(--bg-section)", borderRadius: 8, width: "fit-content", border: "1px solid var(--border)" }}>
         <button
           onClick={() => handleModeChange("today")}
           style={{
-             padding: "8px 18px",
-             borderRadius: 8,
-             border: mode === "today" ? "1px solid var(--border-strong)" : "1px solid transparent",
-             fontWeight: 700,
-             fontSize: 13.5,
+             padding: "6px 14px",
+             borderRadius: 6,
+             border: "none",
+             fontWeight: mode === "today" ? 650 : 500,
+             fontSize: 13,
              cursor: "pointer",
-             background: mode === "today" ? "var(--bg-primary)" : "transparent",
+             background: mode === "today" ? "var(--bg-card)" : "transparent",
              color: mode === "today" ? "var(--text-primary)" : "var(--text-muted)",
              boxShadow: mode === "today" ? "var(--shadow-xs)" : "none",
-             transition: "all 0.2s ease"
           }}
         >
           Today
@@ -274,16 +275,15 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
         <button
           onClick={() => handleModeChange("yesterday")}
           style={{
-             padding: "8px 18px",
-             borderRadius: 8,
-             border: mode === "yesterday" ? "1px solid var(--border-strong)" : "1px solid transparent",
-             fontWeight: 700,
-             fontSize: 13.5,
+             padding: "6px 14px",
+             borderRadius: 6,
+             border: "none",
+             fontWeight: mode === "yesterday" ? 650 : 500,
+             fontSize: 13,
              cursor: "pointer",
-             background: mode === "yesterday" ? "var(--bg-primary)" : "transparent",
+             background: mode === "yesterday" ? "var(--bg-card)" : "transparent",
              color: mode === "yesterday" ? "var(--text-primary)" : "var(--text-muted)",
              boxShadow: mode === "yesterday" ? "var(--shadow-xs)" : "none",
-             transition: "all 0.2s ease"
           }}
         >
           Yesterday
@@ -303,8 +303,8 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
         if (holidayReason) {
           return (
             <Panel title="College Off / No Classes" subtitle={holidayReason}>
-              <div style={{ padding: 24, textAlign: "center", color: "var(--text-muted)", fontSize: 16 }}>
-                🎉 <strong>{holidayReason}</strong> ({formatDisplayDate(targetDateObj)}). No lectures are scheduled for this day.
+              <div style={{ padding: 20, textAlign: "center", color: "var(--text-muted)", fontSize: 14 }}>
+                <strong>{holidayReason}</strong> ({formatDisplayDate(targetDateObj)}). No lectures are scheduled for this day.
               </div>
             </Panel>
           );
@@ -312,25 +312,28 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
 
         if (matchingExamSlots.length > 0) {
           return (
-            <Panel title="📝 MSE 2 Examination Day" subtitle={`Scheduled exams for ${formatDisplayDate(targetDateObj)}`}>
-              <div style={{ display: "grid", gap: 12, padding: "8px 0" }}>
+            <Panel title="MSE 2 Examination Day" subtitle={`Scheduled exams for ${formatDisplayDate(targetDateObj)}`}>
+              <div style={{ display: "grid", gap: 10, padding: "4px 0" }}>
                 {matchingExamSlots.map((slot, idx) => (
                   <div
                     key={idx}
                     className="standard-card border-l-primary"
-                    style={{ padding: 16, display: "grid", gap: 6 }}
+                    style={{ padding: 14, display: "grid", gap: 4 }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                      <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text-primary)" }}>
+                      <span style={{ fontWeight: 650, fontSize: 14.5, color: "var(--text-primary)" }}>
                         {slot.subjectName}
                       </span>
                       <span className="status-badge status-badge--info">
                         {slot.subjectCode}
                       </span>
                     </div>
-                    <div style={{ display: "flex", gap: 16, color: "var(--text-muted)", fontSize: 13.5, flexWrap: "wrap" }}>
-                      <span>⏰ <strong>{slot.time}</strong></span>
-                      {slot.mode && <span>📋 {slot.mode}</span>}
+                    <div style={{ display: "flex", gap: 14, color: "var(--text-muted)", fontSize: 12.5, flexWrap: "wrap" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <Clock size={12} />
+                        <strong>{slot.time}</strong>
+                      </span>
+                      {slot.mode && <span>{slot.mode}</span>}
                     </div>
                   </div>
                 ))}
@@ -340,8 +343,8 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
         }
 
         return (
-          <Panel title={`No classes ${mode}`} subtitle={`Nothing is scheduled for ${mode}.`}>
-            <div style={{ padding: 24, textAlign: "center", color: "var(--text-muted)", fontSize: 16 }}>
+          <Panel title={`No classes ${mode}`} subtitle={`Nothing is scheduled on the timetable for ${mode}.`}>
+            <div style={{ padding: 20, textAlign: "center", color: "var(--text-muted)", fontSize: 14 }}>
               You're all clear for {mode}.
             </div>
           </Panel>
@@ -350,7 +353,7 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
 
       {totalClasses > 0 && (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10 }}>
             <StatusCard title="Classes" value={String(totalClasses)} tone="var(--text-primary)" />
             <StatusCard title="Present" value={String(presentCount)} tone="var(--success)" />
             <StatusCard title="Absent" value={String(absentCount)} tone="var(--danger)" />
@@ -358,17 +361,20 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
           </div>
 
           {(absentCount > 0 || notMarkedCount > 0) && (
-            <div className={`standard-card ${absentCount > 0 ? 'border-l-danger' : 'border-l-warning'}`} style={{ padding: 16 }}>
-              <h3 style={{ margin: "0 0 8px 0", color: absentCount > 0 ? "var(--danger)" : "var(--warning)", fontSize: 16 }}>Needs attention</h3>
-              <ul style={{ margin: 0, paddingLeft: 20, color: absentCount > 0 ? "var(--danger)" : "var(--warning)" }}>
+            <div className={`standard-card ${absentCount > 0 ? 'border-l-danger' : 'border-l-warning'}`} style={{ padding: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", color: absentCount > 0 ? "var(--danger)" : "var(--warning)", fontSize: 13.5, fontWeight: 650 }}>
+                <AlertTriangle size={15} />
+                <span>Needs attention</span>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 20, color: "var(--text-secondary)", fontSize: 13 }}>
                 {absentCount > 0 && <li>{absentCount} class{absentCount > 1 ? "es" : ""} marked absent.</li>}
-                {notMarkedCount > 0 && <li>{notMarkedCount} class{notMarkedCount > 1 ? "es" : ""} not yet marked.</li>}
+                {notMarkedCount > 0 && <li>{notMarkedCount} class{notMarkedCount > 1 ? "es" : ""} not yet marked by faculty.</li>}
               </ul>
             </div>
           )}
 
-          <Panel title={`${mode === "today" ? "Today's" : "Yesterday's"} classes`} subtitle="See what is marked for each class.">
-            <div style={{ display: "grid", gap: 12 }}>
+          <Panel title={`${mode === "today" ? "Today's" : "Yesterday's"} Scheduled Classes`} subtitle="Period-by-period marked attendance breakdown.">
+            <div style={{ display: "grid", gap: 10 }}>
               {activeClasses.map((tc, idx) => {
                  let statusDisplay = "Not marked";
                  let statusTheme = {
@@ -378,7 +384,7 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
                  
                  const currentStatus = String(tc.attendanceStatus).toUpperCase();
 
-              if (tc.isLoading) {
+                 if (tc.isLoading) {
                     statusDisplay = "Loading";
                     statusTheme = {
                       background: "var(--secondary-soft)",
@@ -436,29 +442,35 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
                      justifyContent: "space-between", 
                      alignItems: "center",
                      flexWrap: "wrap",
-                     gap: 12
+                     gap: 12,
+                     padding: "12px 14px",
                    }}>
-                     <div style={{ display: "grid", gap: 4 }}>
+                     <div style={{ display: "grid", gap: 3 }}>
                        <div
-                         style={{ fontWeight: 700, fontSize: 16, color: "var(--text-primary)" }}
+                         style={{ fontWeight: 650, fontSize: 14.5, color: "var(--text-primary)" }}
                        >
                          {tc.entry.courseName || tc.entry.title}
                        </div>
-                       <div style={{ fontSize: 14, color: "var(--text-muted)" }}>
-                          {formatScheduleTime(tc.entry.start)} - {formatScheduleTime(tc.entry.end)} - {tc.entry.courseCode} - {tc.entry.courseCompName}
+                       <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--text-muted)" }}>
+                         <Clock size={12} />
+                         <span>{formatScheduleTime(tc.entry.start)} - {formatScheduleTime(tc.entry.end)}</span>
+                         <span>•</span>
+                         <span>{tc.entry.courseCode}</span>
+                         <span>•</span>
+                         <span>{tc.entry.courseCompName}</span>
                        </div>
                      </div>
                      <div
                         className={statusBadgeClass}
                         style={{
-                        padding: "6px 12px",
-                        borderRadius: 999,
-                        background: statusTheme.background,
-                        color: statusTheme.color,
-                        fontWeight: 700,
-                        fontSize: 14,
-                        whiteSpace: "nowrap"
-                     }}
+                          padding: "4px 10px",
+                          borderRadius: 6,
+                          background: statusTheme.background,
+                          color: statusTheme.color,
+                          fontWeight: 600,
+                          fontSize: 12,
+                          whiteSpace: "nowrap"
+                        }}
                      >
                        {statusDisplay}
                      </div>

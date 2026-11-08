@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Bell, Ticket, Sparkles, X, Info } from "./Icons";
 
 const CURRENT_WHATS_NEW_VERSION = "2.1";
 const STORAGE_KEY = "kiet_seen_whats_new_version";
@@ -65,11 +66,11 @@ export function WhatsNewModal({ isOpen: overrideIsOpen, onClose, onOpenGuide }: 
         style={{
           background: "var(--bg-card)",
           border: "1px solid var(--border)",
-          borderRadius: 24,
+          borderRadius: 14,
           width: "95%",
-          maxWidth: 520,
+          maxWidth: 480,
           overflow: "hidden",
-          boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
+          boxShadow: "var(--shadow-md)",
           display: "flex",
           flexDirection: "column",
         }}
@@ -77,87 +78,74 @@ export function WhatsNewModal({ isOpen: overrideIsOpen, onClose, onOpenGuide }: 
         {/* Header Banner */}
         <div
           style={{
-            padding: "24px 24px 20px 24px",
-            background: "linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%)",
+            padding: "20px 22px 18px",
+            background: "var(--bg-card-subtle)",
             borderBottom: "1px solid var(--border)",
             position: "relative",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <span
               style={{
                 fontSize: 11,
-                fontWeight: 800,
+                fontWeight: 700,
                 textTransform: "uppercase",
-                letterSpacing: "1px",
-                background: "var(--primary)",
-                color: "#fff",
-                padding: "3px 8px",
-                borderRadius: 999,
+                letterSpacing: "0.5px",
+                background: "var(--primary-soft)",
+                color: "var(--primary)",
+                padding: "2px 7px",
+                borderRadius: 4,
               }}
             >
-              What's New v{CURRENT_WHATS_NEW_VERSION}
+              Update v{CURRENT_WHATS_NEW_VERSION}
             </span>
-            <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600 }}>
-              New Feature Update
+            <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 500 }}>
+              Release Notes
             </span>
           </div>
 
-          <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: "var(--text-primary)" }}>
-            🚀 Exciting New Features Released!
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>
+            New Features & Improvements
           </h2>
-          <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: "6px 0 0 0" }}>
-            We've added powerful new tools to help you manage your attendance and exams effortlessly.
+          <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: "4px 0 0 0" }}>
+            New tools designed to keep your attendance above 75% with zero guesswork.
           </p>
         </div>
 
         {/* Modal Content Items */}
-        <div style={{ padding: "20px 24px", display: "grid", gap: 16 }}>
+        <div style={{ padding: "18px 22px", display: "grid", gap: 12 }}>
           {/* Feature 1: Notifications */}
           <div
             style={{
               display: "flex",
-              gap: 14,
-              padding: "14px",
-              borderRadius: 16,
+              gap: 12,
+              padding: "12px",
+              borderRadius: 10,
               background: "var(--bg-card-subtle)",
               border: "1px solid var(--border)",
             }}
           >
             <div
               style={{
-                fontSize: 24,
-                width: 44,
-                height: 44,
-                borderRadius: 12,
-                background: "rgba(99, 102, 241, 0.1)",
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                background: "var(--primary-soft)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                color: "var(--primary)",
                 flexShrink: 0,
               }}
             >
-              🔔
+              <Bell size={18} />
             </div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>
-                Smart Daily 8:00 AM Notifications
+              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
+                Daily 8:00 AM Attendance Briefings
               </div>
-              <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 2, lineHeight: 1.4 }}>
-                Get personalized morning advice on which classes you can safely bunk or must attend.
-              </div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: "var(--primary)",
-                  fontWeight: 700,
-                  marginTop: 6,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                <span>💡 Tip: Check app once daily after college to keep advice accurate!</span>
+              <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2, lineHeight: 1.4 }}>
+                Personalized morning guidance on classes you can safely skip or must attend to stay safe.
               </div>
             </div>
           </div>
@@ -166,34 +154,34 @@ export function WhatsNewModal({ isOpen: overrideIsOpen, onClose, onOpenGuide }: 
           <div
             style={{
               display: "flex",
-              gap: 14,
-              padding: "14px",
-              borderRadius: 16,
+              gap: 12,
+              padding: "12px",
+              borderRadius: 10,
               background: "var(--bg-card-subtle)",
               border: "1px solid var(--border)",
             }}
           >
             <div
               style={{
-                fontSize: 24,
-                width: 44,
-                height: 44,
-                borderRadius: 12,
-                background: "rgba(16, 185, 129, 0.1)",
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                background: "var(--success-soft)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                color: "var(--success)",
                 flexShrink: 0,
               }}
             >
-              🎫
+              <Ticket size={18} />
             </div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>
-                Official CyberVidya Hall Tickets
+              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
+                Direct CyberVidya Admit Cards
               </div>
-              <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 2, lineHeight: 1.4 }}>
-                Fetch and download official PDF admit cards for all exam sessions directly in-app.
+              <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2, lineHeight: 1.4 }}>
+                Fetch and download official PDF hall tickets for all your exam sessions directly inside the app.
               </div>
             </div>
           </div>
@@ -202,7 +190,7 @@ export function WhatsNewModal({ isOpen: overrideIsOpen, onClose, onOpenGuide }: 
         {/* Modal Actions Footer */}
         <div
           style={{
-            padding: "16px 24px",
+            padding: "14px 22px",
             borderTop: "1px solid var(--border)",
             background: "var(--bg-card-subtle)",
             display: "flex",
@@ -216,18 +204,19 @@ export function WhatsNewModal({ isOpen: overrideIsOpen, onClose, onOpenGuide }: 
             type="button"
             onClick={handleLearnNotifications}
             className="action-button action-button--secondary"
-            style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600 }}
+            style={{ padding: "6px 12px", fontSize: 12, fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 5 }}
           >
-            💡 How Notifications Work
+            <Info size={12} />
+            <span>How notifications work</span>
           </button>
 
           <button
             type="button"
             onClick={handleDismiss}
             className="action-button action-button--primary"
-            style={{ padding: "8px 20px", fontSize: 13, fontWeight: 700 }}
+            style={{ padding: "7px 16px", fontSize: 13, fontWeight: 600 }}
           >
-            Awesome, Got It!
+            Got it
           </button>
         </div>
       </div>

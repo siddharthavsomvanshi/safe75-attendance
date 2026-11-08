@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ScheduleEntry } from "../../types/kiet";
 import type { SubjectSummary } from "../../App";
+import { Calendar, Sparkles } from "../Icons";
 
 interface BunkableDay {
   dateKey: string;
@@ -124,17 +125,17 @@ export function RedemptionArc({ data, schedule, subjectSummaries }: RedemptionAr
       style={{
         display: "grid",
         gap: 12,
-        padding: "18px 20px",
-        borderRadius: 22,
+        padding: "16px 18px",
+        borderRadius: 14,
         border: "1px solid var(--border)",
         background: "var(--bg-card)",
       }}
     >
       <div>
-        <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: "var(--text-primary)" }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>
           Attendance recovery
         </h2>
-        <p style={{ color: "var(--text-secondary)", fontSize: 14, margin: "4px 0 0" }}>
+        <p style={{ color: "var(--text-secondary)", fontSize: 13, margin: "3px 0 0" }}>
           See where your attendance lands if you attend every class until a selected date.
         </p>
       </div>
@@ -147,9 +148,9 @@ export function RedemptionArc({ data, schedule, subjectSummaries }: RedemptionAr
           onChange={(e) => setSelectedDate(e.target.value)}
           style={{
             padding: "8px 12px",
-            borderRadius: 10,
+            borderRadius: 8,
             border: "1px solid var(--border)",
-            fontSize: 14,
+            fontSize: 13,
             outline: "none",
             background: "var(--bg-card)",
             color: "var(--text-primary)",
@@ -161,31 +162,31 @@ export function RedemptionArc({ data, schedule, subjectSummaries }: RedemptionAr
           type="button"
           onClick={handleCalculate}
           style={{
-            padding: "8.5px 18px",
-            borderRadius: 10,
-            border: "none",
-            background: "var(--primary)",
-            color: "var(--text-on-primary)",
+            padding: "8px 16px",
+            borderRadius: 8,
+            fontSize: 13,
             fontWeight: 600,
             cursor: "pointer",
-            fontSize: 14,
-            transition: "all 0.2s",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
           }}
         >
-          Preview
+          <Sparkles size={14} />
+          <span>Preview</span>
         </button>
       </div>
 
       {result !== null && (
-        <div style={{ display: "grid", gap: 16, marginTop: 4 }}>
+        <div style={{ display: "grid", gap: 14, marginTop: 4 }}>
           <div
             style={{
-              padding: "14px 16px",
-              borderRadius: 12,
+              padding: "12px 14px",
+              borderRadius: 10,
               background: "var(--bg-card-subtle)",
-              border: "1px dashed var(--border-strong)",
+              border: "1px solid var(--border)",
               color: "var(--text-primary)",
-              fontSize: 15,
+              fontSize: 14,
             }}
           >
             If you attend every class until {new Date(selectedDate).toLocaleDateString("en-IN", {
@@ -193,18 +194,21 @@ export function RedemptionArc({ data, schedule, subjectSummaries }: RedemptionAr
               month: "short",
               year: "numeric",
             })}{" "}
-            your attendance reaches <strong style={{ fontSize: 18 }}>{result.percentage.toFixed(1)}%</strong>
-            <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4, color: "var(--text-muted)" }}>
+            your attendance reaches{" "}
+            <strong style={{ fontSize: 16, fontVariantNumeric: "tabular-nums" }}>
+              {result.percentage.toFixed(1)}%
+            </strong>
+            <div style={{ fontSize: 12, marginTop: 3, color: "var(--text-muted)" }}>
               +{result.classesAdded} classes added
             </div>
           </div>
 
           {result.subjectResults.length > 0 && (
-            <div style={{ display: "grid", gap: 10, marginTop: 4 }}>
+            <div style={{ display: "grid", gap: 8, marginTop: 4 }}>
               <div
                 style={{
-                  fontWeight: 700,
-                  fontSize: 15,
+                  fontWeight: 600,
+                  fontSize: 14,
                   color: "var(--text-primary)",
                   display: "flex",
                   alignItems: "center",
@@ -212,12 +216,12 @@ export function RedemptionArc({ data, schedule, subjectSummaries }: RedemptionAr
                 }}
               >
                 <span>Subject-wise recovery</span>
-                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>
+                <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-muted)" }}>
                   {result.subjectResults.length} subject{result.subjectResults.length === 1 ? "" : "s"}
                 </span>
               </div>
 
-              <div style={{ display: "grid", gap: 8 }}>
+              <div style={{ display: "grid", gap: 6 }}>
                 {result.subjectResults.map((subj) => {
                   const displayName =
                     subj.componentCount > 1 && subj.componentName
@@ -233,19 +237,19 @@ export function RedemptionArc({ data, schedule, subjectSummaries }: RedemptionAr
                         justifyContent: "space-between",
                         alignItems: "center",
                         gap: 12,
-                        padding: "12px 14px",
-                        borderRadius: 12,
+                        padding: "10px 12px",
+                        borderRadius: 10,
                         border: "1px solid var(--border)",
                         background: "var(--bg-card-subtle)",
                         flexWrap: "wrap",
                       }}
                     >
                       <div style={{ display: "grid", gap: 2, minWidth: 160, flex: "1 1 200px" }}>
-                        <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+                        <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>
                           {displayName}
                         </span>
                         {subj.courseCode && (
-                          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
                             {subj.courseCode}
                           </span>
                         )}
@@ -255,17 +259,17 @@ export function RedemptionArc({ data, schedule, subjectSummaries }: RedemptionAr
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: 16,
+                          gap: 14,
                           flexWrap: "wrap",
                           justifyContent: "flex-end",
                           marginLeft: "auto",
                         }}
                       >
                         <div style={{ textAlign: "right" }}>
-                          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+                          <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
                             {subj.currentPercentage.toFixed(1)}% → {subj.projectedPercentage.toFixed(1)}%
                           </div>
-                          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
                             {subj.classesAdded > 0
                               ? `+${subj.classesAdded} class${subj.classesAdded === 1 ? "" : "es"}`
                               : "No classes"}
@@ -275,13 +279,13 @@ export function RedemptionArc({ data, schedule, subjectSummaries }: RedemptionAr
                         <span
                           className={`status-badge ${subj.isSafe ? "status-badge--success" : "status-badge--danger"}`}
                           style={{
-                            minWidth: 85,
+                            minWidth: 80,
                             textAlign: "center",
-                            fontSize: 12,
-                            padding: "5px 10px",
+                            fontSize: 11,
+                            padding: "3px 8px",
                           }}
                         >
-                          {subj.isSafe ? "Safe" : "Still below 75%"}
+                          {subj.isSafe ? "Safe" : "Below 75%"}
                         </span>
                       </div>
                     </div>

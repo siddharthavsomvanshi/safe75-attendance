@@ -1,21 +1,22 @@
 import { useState } from "react";
 import emailjs from "@emailjs/browser";
 import { Panel } from "../components/UI";
+import { Send, AlertTriangle } from "../components/Icons";
 
 const SERVICE_ID = "service_74zznfb";
 const TEMPLATE_ID = "template_bl3ru6b";
 const PUBLIC_KEY = "my0XXtzejINkKbVI_";
 
 const inputStyle = {
-  padding: "10px 14px",
-  borderRadius: 10,
+  padding: "9px 12px",
+  borderRadius: 8,
   border: "1px solid var(--border)",
-  fontSize: 15,
+  fontSize: 14,
   width: "100%",
   background: "var(--bg-card)",
   outline: "none",
   color: "var(--text-primary)",
-  fontWeight: 500,
+  fontWeight: 400,
   fontFamily: "inherit",
   boxSizing: "border-box" as const,
 };
@@ -55,20 +56,22 @@ export function Snitch() {
   return (
     <section style={{ display: "grid", gap: 14 }}>
       <Panel
-        title="Report attendance issues"
-        subtitle="Something wrong with today's attendance? Let me know."
+        title="Report Attendance Issues"
+        subtitle="Notice an anomaly with your attendance? Let us know."
       >
         <div
           className="standard-card rise-in border-l-warning"
           style={{
             display: "grid",
-            gap: 18,
+            gap: 16,
+            borderRadius: 12,
+            padding: "18px 20px",
           }}
         >
           {/* Issue Type */}
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)" }}>
-              Issue type
+          <div style={{ display: "grid", gap: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)" }}>
+              Issue Type
             </label>
             <select
               className="standard-input"
@@ -76,33 +79,33 @@ export function Snitch() {
               onChange={(e) => setIssueType(e.target.value)}
               style={inputStyle}
             >
-              <option value="" disabled>Pick one</option>
-              <option value="app-broke">App issue</option>
-              <option value="attendance-messed-up">Attendance issue</option>
-              <option value="idea">Idea</option>
-              <option value="weird">Something else</option>
+              <option value="" disabled>Select issue category</option>
+              <option value="app-broke">App malfunction or crash</option>
+              <option value="attendance-messed-up">Attendance count discrepancy</option>
+              <option value="idea">Feature request or feedback</option>
+              <option value="weird">Other inquiry</option>
             </select>
           </div>
 
           {/* Message */}
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)" }}>
-              What happened?
+          <div style={{ display: "grid", gap: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)" }}>
+              Description
             </label>
             <textarea
               className="standard-input"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Tell me what looks wrong."
-              rows={7}
-              style={{ ...inputStyle, resize: "vertical", minHeight: 160 }}
+              placeholder="Provide context or details about the issue..."
+              rows={6}
+              style={{ ...inputStyle, resize: "vertical", minHeight: 140 }}
             />
           </div>
 
           {/* Email */}
-          <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)" }}>
-              Email (optional)
+          <div style={{ display: "grid", gap: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)" }}>
+              Contact Email (Optional)
             </label>
             <input
               className="standard-input"
@@ -115,19 +118,25 @@ export function Snitch() {
           </div>
 
           {/* Submit */}
-          <div style={{ display: "flex", justifyContent: "flex-start" }}>
+          <div style={{ display: "flex", justifyContent: "flex-start", paddingTop: 4 }}>
             <button
               type="button"
               className="action-button action-button--primary"
               onClick={() => void handleSend()}
               disabled={sending}
               style={{
-                padding: "12px 28px",
+                padding: "9px 20px",
+                fontSize: 13,
+                fontWeight: 600,
                 opacity: sending ? 0.7 : 1,
                 cursor: sending ? "not-allowed" : "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
               }}
             >
-              {sending ? "Sending..." : "Send report"}
+              <Send size={13} />
+              <span>{sending ? "Sending report..." : "Submit report"}</span>
             </button>
           </div>
         </div>

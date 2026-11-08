@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Panel, EmptyMessage } from '../components/UI';
 import { HallTicketCard } from '../components/Attendance/HallTicketCard';
+import { Clock, Search, Copy, CheckCheck, FileText, Plus, RefreshCw, Info } from '../components/Icons';
 import type { StudentDetails } from '../types/kiet';
 import type { SubjectSummary } from '../utils/attendanceCalculations';
 import type { StudentExamInfo } from '../data/mse2Datesheet';
@@ -276,39 +277,42 @@ export function ExamMode({ attendance, subjects, overallSummary, studentExamInfo
 
       {studentExamInfo && studentExamInfo.examSlots.length > 0 && (
         <Panel
-          title="MSE 2 & PUE Examination Datesheet"
-          subtitle={`${studentExamInfo.degree} • Semester ${studentExamInfo.semester} • Branch: ${studentExamInfo.branch} (Odd Sem 2026-27)`}
+          title="Examination Datesheet"
+          subtitle={`${studentExamInfo.degree} • Semester ${studentExamInfo.semester} • Branch: ${studentExamInfo.branch}`}
         >
-          <div style={{ display: "grid", gap: 12, padding: "8px 0" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+          <div style={{ display: "grid", gap: 10, padding: "4px 0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 10 }}>
               {studentExamInfo.examSlots.map((slot, index) => (
                 <div
                   key={index}
                   className="standard-card border-l-primary"
                   style={{
-                    padding: "16px 18px",
+                    padding: "14px 16px",
                     display: "grid",
-                    gap: 8,
+                    gap: 6,
                     background: "var(--bg-card)",
-                    borderRadius: 16,
+                    borderRadius: 12,
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
                     <div>
-                      <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text-primary)" }}>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
                         {slot.subjectName}
                       </div>
-                      <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
                         Code: <strong>{slot.subjectCode}</strong>
                       </div>
                     </div>
-                    <span className="status-badge status-badge--info">
+                    <span className="status-badge status-badge--info" style={{ fontSize: 11, padding: "2px 7px" }}>
                       {slot.date} ({slot.day})
                     </span>
                   </div>
-                  <div style={{ display: "flex", gap: 16, fontSize: 13, color: "var(--text-muted)", flexWrap: "wrap", marginTop: 4 }}>
-                    <span>⏰ <strong>{slot.time}</strong></span>
-                    {slot.mode && <span>📋 {slot.mode}</span>}
+                  <div style={{ display: "flex", gap: 14, fontSize: 12, color: "var(--text-muted)", flexWrap: "wrap", marginTop: 2 }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <Clock size={12} style={{ color: "var(--primary)" }} />
+                      <strong>{slot.time}</strong>
+                    </span>
+                    {slot.mode && <span>{slot.mode}</span>}
                   </div>
                 </div>
               ))}
@@ -324,33 +328,34 @@ export function ExamMode({ attendance, subjects, overallSummary, studentExamInfo
             <button
               onClick={() => navigate('/contribute')}
               className="action-button action-button--primary"
-              style={{ padding: '8px 16px', fontSize: '13px' }}
+              style={{ padding: '7px 14px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: 5 }}
             >
-              Share a resource
+              <Plus size={14} />
+              <span>Share a resource</span>
             </button>
           </div>
         }
       >
-        <div style={{ display: 'grid', gap: '20px', padding: '10px 0' }}>
+        <div style={{ display: 'grid', gap: '16px', padding: '6px 0' }}>
           {/* Supabase Notice Banner if using fallback */}
           {isUsingFallback && (
             <div
               className="standard-card"
               style={{
-                padding: '14px 18px',
-                borderRadius: 16,
+                padding: '10px 14px',
+                borderRadius: 10,
                 background: 'var(--bg-card-subtle)',
                 border: '1px solid var(--border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
-                gap: 12,
+                gap: 10,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 18 }}>📚</span>
-                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Info size={14} style={{ color: "var(--text-muted)" }} />
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                   Showing curated offline study resources.{' '}
                   {error && <span style={{ color: 'var(--text-muted)' }}>({error})</span>}
                 </div>
@@ -358,9 +363,10 @@ export function ExamMode({ attendance, subjects, overallSummary, studentExamInfo
               <button
                 onClick={fetchResources}
                 className="action-button action-button--secondary"
-                style={{ padding: '6px 14px', fontSize: 12 }}
+                style={{ padding: '5px 10px', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 5 }}
               >
-                🔄 Refresh Live Sync
+                <RefreshCw size={12} />
+                <span>Refresh live sync</span>
               </button>
             </div>
           )}
@@ -369,40 +375,40 @@ export function ExamMode({ attendance, subjects, overallSummary, studentExamInfo
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: 12,
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: 10,
             }}
           >
             <div
               className="standard-card"
-              style={{ padding: '16px 20px', borderRadius: 16, background: 'var(--bg-card)' }}
+              style={{ padding: '12px 16px', borderRadius: 10, background: 'var(--bg-card)' }}
             >
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 Total Resources
               </div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
                 {resources.length}
               </div>
             </div>
             <div
               className="standard-card"
-              style={{ padding: '16px 20px', borderRadius: 16, background: 'var(--bg-card)' }}
+              style={{ padding: '12px 16px', borderRadius: 10, background: 'var(--bg-card)' }}
             >
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 Subjects
               </div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
                 {uniqueSubjects.filter((s) => s !== 'All').length}
               </div>
             </div>
             <div
               className="standard-card"
-              style={{ padding: '16px 20px', borderRadius: 16, background: 'var(--bg-card)' }}
+              style={{ padding: '12px 16px', borderRadius: 10, background: 'var(--bg-card)' }}
             >
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 Filtered Results
               </div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--primary)', marginTop: 4 }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--primary)', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
                 {totalFilteredCount}
               </div>
             </div>
@@ -587,17 +593,28 @@ export function ExamMode({ attendance, subjects, overallSummary, studentExamInfo
                             <button
                               onClick={() => handleCopyLink(resource.file_url, resource.id)}
                               className="action-button action-button--secondary"
-                              style={{ padding: '8px 14px', fontSize: '13px' }}
+                              style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                               title="Copy link to clipboard"
                             >
-                              {copiedId === resource.id ? '✓ Copied!' : '🔗 Copy'}
+                              {copiedId === resource.id ? (
+                                <>
+                                  <CheckCheck size={13} style={{ color: "var(--success)" }} />
+                                  <span>Copied</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy size={13} />
+                                  <span>Copy</span>
+                                </>
+                              )}
                             </button>
                             <button
                               onClick={() => window.open(resource.file_url, '_blank')}
                               className="action-button action-button--primary"
-                              style={{ padding: '8px 16px', fontSize: '13px' }}
+                              style={{ padding: '6px 14px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                             >
-                              View PDF
+                              <FileText size={13} />
+                              <span>View PDF</span>
                             </button>
                           </div>
                         </div>

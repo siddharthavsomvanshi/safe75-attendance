@@ -21,6 +21,21 @@ import {
   getScheduleEntryKey,
 } from "../App";
 import { Panel, EmptyMessage, OverlayDialog } from "../components/UI";
+import {
+  RefreshCw,
+  LogOut,
+  GraduationCap,
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  Flame,
+  Stethoscope,
+  Target,
+  History as HistoryIcon,
+  ChevronRight,
+  MapPin,
+  User,
+} from "../components/Icons";
 import type {
   LoadState,
   SubjectSummary,
@@ -73,21 +88,24 @@ function formatClassCount(count: number) {
 function getSubjectAttendanceGuidance(subject: SubjectSummary) {
   if (subject.percentage < 75) {
     return {
-      text: `● Attend ${formatClassCount(subject.classesNeeded)} to reach 75%.`,
+      text: `Attend ${formatClassCount(subject.classesNeeded)} to reach 75%.`,
       tone: "var(--danger)",
+      isDanger: true,
     };
   }
 
   if (subject.safeBunks > 0) {
     return {
-      text: `✓ You can miss ${formatClassCount(subject.safeBunks)}.`,
+      text: `Safe to miss ${formatClassCount(subject.safeBunks)}.`,
       tone: "var(--success)",
+      isSafe: true,
     };
   }
 
   return {
-    text: `● Try not to miss any class.`,
+    text: `At threshold. Try not to miss any class.`,
     tone: "var(--warning)",
+    isWarning: true,
   };
 }
 
@@ -127,46 +145,45 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
         <>
           {/* COMPACT STUDENT IDENTITY HEADER */}
           <section
-            className="standard-card rise-in border-l-primary"
+            className="standard-card rise-in"
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
               flexWrap: "wrap",
-              gap: 16,
-              padding: "16px 22px",
+              gap: 14,
+              padding: "14px 18px",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div
                 style={{
-                  width: 46,
-                  height: 46,
-                  borderRadius: 14,
-                  background: "var(--primary-gradient)",
-                  color: "#ffffff",
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: "var(--bg-section)",
+                  color: "var(--text-primary)",
+                  border: "1px solid var(--border)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontWeight: 800,
-                  fontSize: 18,
-                  fontFamily: "'Outfit', sans-serif",
-                  boxShadow: "var(--shadow-sm)",
+                  fontWeight: 700,
+                  fontSize: 16,
                   flexShrink: 0,
                 }}
               >
                 {data.attendance.fullName ? data.attendance.fullName.charAt(0).toUpperCase() : "S"}
               </div>
-              <div style={{ display: "grid", gap: 4 }}>
+              <div style={{ display: "grid", gap: 3 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>
+                  <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--text-primary)" }}>
                     {data.attendance.fullName}
                   </h1>
-                  <span className="status-badge status-badge--success" style={{ fontSize: 11, padding: "3px 8px" }}>
+                  <span className="status-badge status-badge--success" style={{ fontSize: 11, padding: "2px 7px" }}>
                     ● Synced
                   </span>
                 </div>
-                <div style={{ color: "var(--text-secondary)", fontSize: 13.5, fontWeight: 600, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                <div style={{ color: "var(--text-secondary)", fontSize: 12.5, fontWeight: 500, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
                   <span style={{ color: "var(--text-muted)" }}>ID:</span>
                   <strong style={{ color: "var(--text-primary)" }}>{data.attendance.registrationNumber}</strong>
                   <span style={{ color: "var(--border-strong)" }}>•</span>
@@ -176,23 +193,23 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                 </div>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <button
                 className="action-button action-button--secondary"
                 type="button"
                 onClick={handlers.syncDashboard}
-                style={{ ...secondaryButtonStyle, padding: "8px 16px", fontSize: 13 }}
+                style={{ ...secondaryButtonStyle, padding: "7px 12px", fontSize: 12.5 }}
                 title="Refresh attendance"
               >
-                <span>🔄</span> Refresh
+                <RefreshCw size={13} /> Refresh
               </button>
               <button
                 className="action-button action-button--secondary"
                 type="button"
                 onClick={handlers.handleClearSession}
-                style={{ ...secondaryButtonStyle, padding: "8px 16px", fontSize: 13 }}
+                style={{ ...secondaryButtonStyle, padding: "7px 12px", fontSize: 12.5 }}
               >
-                <span>🚪</span> Log out
+                <LogOut size={13} /> Log out
               </button>
             </div>
           </section>
@@ -205,22 +222,20 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
             <div
               className="standard-card rise-in border-l-primary"
               style={{
-                padding: "16px 20px",
-                borderRadius: 18,
-                background: "var(--bg-card)",
-                border: "1px solid var(--border)",
+                padding: "14px 18px",
+                borderRadius: 12,
                 display: "grid",
-                gap: 12,
+                gap: 10,
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 22 }}>📋</span>
+                  <GraduationCap size={20} />
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text-primary)" }}>
+                    <div style={{ fontWeight: 700, fontSize: 14.5, color: "var(--text-primary)" }}>
                       MSE 2 & PUE Datesheet ({data.studentExamInfo.degree} Sem {data.studentExamInfo.semester} • {data.studentExamInfo.branch})
                     </div>
-                    <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                    <div style={{ fontSize: 12.5, color: "var(--text-muted)" }}>
                       Exams scheduled from Nov 18–26.
                     </div>
                   </div>
@@ -228,7 +243,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                 <Link
                   to="/exam"
                   className="action-button action-button--secondary"
-                  style={{ padding: "6px 14px", fontSize: 13, textDecoration: "none" }}
+                  style={{ padding: "6px 12px", fontSize: 12.5, textDecoration: "none" }}
                 >
                   View Datesheet →
                 </Link>
@@ -244,9 +259,9 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
               }`}
               style={{
                 display: "grid",
-                gap: 18,
+                gap: 16,
                 textAlign: "center",
-                padding: "26px 24px",
+                padding: "24px 20px",
               }}
             >
               <div
@@ -255,19 +270,19 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                   justifyContent: "space-between",
                   alignItems: "center",
                   flexWrap: "wrap",
-                  gap: 10,
+                  gap: 8,
                 }}
               >
                 <span
                   style={{
-                    fontSize: 12,
-                    fontWeight: 800,
+                    fontSize: 11,
+                    fontWeight: 700,
                     color: "var(--text-muted)",
-                    letterSpacing: "0.08em",
+                    letterSpacing: "0.06em",
                     textTransform: "uppercase",
                   }}
                 >
-                  ACADEMIC ATTENDANCE STANDING
+                  CUMULATIVE ATTENDANCE STANDING
                 </span>
                 <span
                   className={`status-badge ${
@@ -275,22 +290,30 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                       ? "status-badge--success"
                       : "status-badge--danger"
                   }`}
-                  style={{ fontSize: 12.5, padding: "5px 12px" }}
+                  style={{ fontSize: 12, padding: "4px 10px" }}
                 >
-                  {data.overallSummary.percentage >= 75
-                    ? "✓ Safe Zone (75%+)"
-                    : "⚠️ Below 75% Threshold"}
+                  {data.overallSummary.percentage >= 75 ? (
+                    <>
+                      <CheckCircle2 size={13} />
+                      Safe Zone (75%+)
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle size={13} />
+                      Below 75% Threshold
+                    </>
+                  )}
                 </span>
               </div>
 
               <div>
                 <div
                   style={{
-                    fontSize: "clamp(3.4rem, 8vw, 5rem)",
-                    fontWeight: 900,
+                    fontSize: "clamp(3rem, 7vw, 4.4rem)",
+                    fontWeight: 800,
                     lineHeight: 1,
-                    letterSpacing: "-0.04em",
-                    fontFamily: "'Outfit', sans-serif",
+                    letterSpacing: "-0.035em",
+                    fontVariantNumeric: "tabular-nums",
                     color:
                       data.overallSummary.percentage >= 75
                         ? "var(--success)"
@@ -302,9 +325,9 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                 <div
                   style={{
                     color: "var(--text-muted)",
-                    fontSize: 14.5,
-                    fontWeight: 600,
-                    marginTop: 8,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    marginTop: 6,
                   }}
                 >
                   Overall Cumulative Attendance
@@ -314,25 +337,25 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
               <div
                 style={{
                   display: "flex",
-                  gap: 14,
+                  gap: 12,
                   justifyContent: "center",
                   alignItems: "center",
                   flexWrap: "wrap",
-                  fontSize: 14,
+                  fontSize: 13,
                   color: "var(--text-secondary)",
-                  fontWeight: 600,
+                  fontWeight: 500,
                 }}
               >
                 <span>
                   Current:{" "}
-                  <strong style={{ color: "var(--text-primary)" }}>
+                  <strong style={{ color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
                     {data.overallSummary.percentage.toFixed(1)}%
                   </strong>
                 </span>
                 <span style={{ opacity: 0.35 }}>•</span>
                 <span>
-                  If you attend all:{" "}
-                  <strong style={{ color: "var(--text-primary)" }}>
+                  If you attend all remaining:{" "}
+                  <strong style={{ color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
                     {data.overallSummary.projectedPercentage.toFixed(1)}%
                   </strong>
                 </span>
@@ -342,13 +365,17 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                 <span
                   className="status-badge status-badge--info"
                   style={{
-                    padding: "6px 14px",
+                    padding: "4px 12px",
                     borderRadius: 999,
-                    fontSize: 13,
-                    fontWeight: 700,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
                   }}
                 >
-                  ⏳ {data.overallSummary.upcomingCount} classes remaining in schedule
+                  <Clock size={12} />
+                  {data.overallSummary.upcomingCount} classes remaining in schedule
                 </span>
               </div>
 
@@ -364,21 +391,21 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-                  gap: 10,
-                  marginTop: 6,
+                  gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+                  gap: 8,
+                  marginTop: 4,
                 }}
               >
                 <Metric label="Attended" value={String(data.overallSummary.present)} />
                 <Metric label="Total Classes" value={String(data.overallSummary.total)} />
                 <Metric
-                  label="If Attended"
+                  label="Projected"
                   value={`${data.overallSummary.projectedPresent}/${data.overallSummary.projectedTotal}`}
                 />
                 <Metric label="Planned Bunks" value={String(data.overallSummary.plannedBunkCount)} />
                 <Metric label="Upcoming" value={String(data.overallSummary.upcomingCount)} />
                 <Metric
-                  label="Streak 🔥"
+                  label="Streak"
                   value={formatStreakMetricValue(data.streakResult, data.streakLoading)}
                 />
               </div>
@@ -387,66 +414,74 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
 
           {data.overallSummary && data.overallSummary.percentage < 75 && (
             <div
-              className="surface-card rise-in"
+              className="surface-card rise-in border-l-warning"
               style={{
-                padding: "16px 20px",
-                borderRadius: 20,
-                border: "1.5px solid var(--warning)",
-                background: "var(--warning-soft)",
+                padding: "14px 18px",
+                borderRadius: 12,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 flexWrap: "wrap",
-                gap: 14,
+                gap: 12,
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ fontSize: 26 }}>🏥</span>
-                <div style={{ display: "grid", gap: 3 }}>
-                  <strong style={{ color: "var(--text-primary)", fontSize: 15 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 8,
+                    background: "var(--warning-soft)",
+                    color: "var(--warning)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Stethoscope size={18} />
+                </div>
+                <div style={{ display: "grid", gap: 2 }}>
+                  <strong style={{ color: "var(--text-primary)", fontSize: 13.5 }}>
                     Need medical leave to cross the 75% safe mark?
                   </strong>
-                  <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
-                    Discover the highest-impact consecutive absence windows from the last 30–50 days with overall attendance projections.
+                  <div style={{ color: "var(--text-secondary)", fontSize: 12.5 }}>
+                    Discover the highest-impact consecutive absence windows from the last 30–50 days with attendance projections.
                   </div>
                 </div>
               </div>
               <Link
                 to="/strategy"
+                className="action-button action-button--primary"
                 style={{
-                  padding: "9px 18px",
-                  borderRadius: 12,
-                  background: "var(--primary)",
-                  color: "var(--text-on-primary)",
+                  padding: "8px 14px",
+                  fontSize: 12.5,
                   textDecoration: "none",
-                  fontWeight: 700,
-                  fontSize: 13,
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 6,
-                  boxShadow: "var(--shadow-xs)",
                 }}
               >
-                ✨ Open Medical Optimizer →
+                Open Medical Optimizer →
               </Link>
             </div>
           )}
 
-          <section style={{ display: "grid", gap: 20 }}>
+          <section style={{ display: "grid", gap: 16 }}>
             <Panel
-              title="Subject attendance overview"
-              subtitle="See what is safe, risky, and worth fixing first."
+              title="Subject Attendance Overview"
+              subtitle="Track your attendance by subject, monitor margins, and plan upcoming classes."
             >
               {data.subjectSummaries.length === 0 ? (
-                <EmptyMessage message="Connect KIET and refresh to load your attendance." />
+                <EmptyMessage message="Connect your student portal and refresh to load subject attendance." />
               ) : (
-                <div style={{ display: "grid", gap: 16 }}>
+                <div style={{ display: "grid", gap: 14 }}>
                   <div
                     className="overview-subject-grid"
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
-                      gap: 14,
+                      gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+                      gap: 12,
                       alignItems: "start",
                     }}
                   >
@@ -476,20 +511,21 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                               <span
                                 style={{
-                                  fontSize: 11,
-                                  fontWeight: 800,
-                                  padding: "2px 7px",
-                                  borderRadius: 6,
+                                  fontSize: 10.5,
+                                  fontWeight: 700,
+                                  padding: "2px 6px",
+                                  borderRadius: 5,
                                   background: "var(--bg-section)",
                                   color: "var(--text-muted)",
+                                  letterSpacing: "0.02em",
                                 }}
                               >
                                 {subject.courseCode}
                               </span>
                               <span
                                 style={{
-                                  fontSize: 11,
-                                  fontWeight: 700,
+                                  fontSize: 10.5,
+                                  fontWeight: 600,
                                   color: "var(--text-muted)",
                                   textTransform: "uppercase",
                                 }}
@@ -497,23 +533,23 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                                 {subject.componentName}
                               </span>
                             </div>
-                            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", lineHeight: 1.3 }}>
+                            <div style={{ fontWeight: 650, fontSize: 14.5, color: "var(--text-primary)", lineHeight: 1.35 }}>
                               {subject.title}
                             </div>
                           </div>
                           <div style={{ display: "grid", gap: 2, justifyItems: "end" }}>
                             <strong
                               style={{
-                                fontFamily: "'Outfit', sans-serif",
                                 fontWeight: 800,
-                                fontSize: 20,
+                                fontSize: 18,
                                 lineHeight: 1,
+                                fontVariantNumeric: "tabular-nums",
                                 color: subject.percentage >= 75 ? "var(--success)" : "var(--danger)",
                               }}
                             >
                               {subject.percentage.toFixed(1)}%
                             </strong>
-                            <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600 }}>
+                            <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
                               {subject.present}/{subject.total} classes
                             </span>
                           </div>
@@ -531,10 +567,10 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                             display: "flex",
                             alignItems: "center",
                             gap: 6,
-                            padding: "6px 12px",
-                            borderRadius: 8,
-                            fontSize: 12.5,
-                            fontWeight: 600,
+                            padding: "6px 10px",
+                            borderRadius: 6,
+                            fontSize: 12,
+                            fontWeight: 550,
                             background: isDanger ? "var(--danger-soft)" : isWarning ? "var(--warning-soft)" : "var(--success-soft)",
                             color: attendanceGuidance.tone,
                           }}
@@ -542,7 +578,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                           {attendanceGuidance.text}
                         </div>
 
-                        <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                        <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
                           {subject.upcomingCount > 0 && (
                             <button
                               className="action-button action-button--secondary"
@@ -551,13 +587,13 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                               style={{
                                 ...secondaryButtonStyle,
                                 flex: 1,
-                                padding: "7px 12px",
-                                fontSize: 12.5,
+                                padding: "6px 10px",
+                                fontSize: 12,
                                 textAlign: "center",
                                 justifyContent: "center",
                               }}
                             >
-                              <span>🎯</span> Plan bunks
+                              <Target size={13} /> Plan bunks
                             </button>
                           )}
                           <button
@@ -567,13 +603,13 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                             style={{
                               ...secondaryButtonStyle,
                               flex: 1,
-                              padding: "7px 12px",
-                              fontSize: 12.5,
+                              padding: "6px 10px",
+                              fontSize: 12,
                               textAlign: "center",
                               justifyContent: "center",
                             }}
                           >
-                            <span>📜</span> Log
+                            <HistoryIcon size={13} /> Attendance log
                           </button>
                         </div>
                       </div>
@@ -592,8 +628,8 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
           {data.upcomingClasses.length > 0 && (
             <section style={{ display: "grid", gap: 14 }}>
               <Panel
-                title="Coming up"
-                subtitle="Your next few classes."
+                title="Upcoming Classes"
+                subtitle="Next classes scheduled on your timetable."
               >
                 <div
                   className="schedule-reference-grid"
@@ -611,7 +647,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                         display: "grid",
                         gap: 8,
                         padding: 14,
-                        borderRadius: 18,
+                        borderRadius: 12,
                         border: "1px solid var(--border)",
                         background: "var(--bg-card)",
                       }}
@@ -620,23 +656,23 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
-                          gap: 12,
+                          gap: 10,
                           alignItems: "start",
                         }}
                       >
-                        <div style={{ display: "grid", gap: 4 }}>
-                          <strong>{entry.courseName ?? entry.title}</strong>
-                          <div style={{ color: "var(--text-secondary)", fontSize: 14 }}>
-                            {(entry.courseCode ?? "NA") + " - " + (entry.courseCompName ?? "CLASS")}
+                        <div style={{ display: "grid", gap: 3 }}>
+                          <strong style={{ fontSize: 14, lineHeight: 1.35 }}>{entry.courseName ?? entry.title}</strong>
+                          <div style={{ color: "var(--text-secondary)", fontSize: 12.5, fontWeight: 500 }}>
+                            {(entry.courseCode ?? "NA") + " • " + (entry.courseCompName ?? "CLASS")}
                           </div>
                         </div>
                         <span
                           className="status-badge status-badge--info"
                           style={{
-                            padding: "6px 10px",
-                            borderRadius: 999,
-                            fontSize: 12,
-                            fontWeight: 700,
+                            padding: "4px 8px",
+                            borderRadius: 6,
+                            fontSize: 11.5,
+                            fontWeight: 600,
                             whiteSpace: "nowrap",
                           }}
                         >
@@ -644,11 +680,13 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                         </span>
                       </div>
 
-                      <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text-muted)", fontSize: 12.5 }}>
+                        <Clock size={12} />
                         {formatScheduleTime(entry.start)} - {formatScheduleTime(entry.end)}
-                        {entry.classRoom ? ` - ${entry.classRoom}` : ""}
+                        {entry.classRoom ? ` • ${entry.classRoom}` : ""}
                       </div>
-                      <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text-muted)", fontSize: 12 }}>
+                        <User size={12} />
                         {entry.facultyName ? `Faculty: ${entry.facultyName}` : "Faculty unavailable"}
                       </div>
                     </div>
@@ -661,7 +699,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
           {activeDetailsSubject && (
             <OverlayDialog
               title={activeDetailsSubject.title}
-              subtitle={`${activeDetailsSubject.courseCode} - ${activeDetailsSubject.componentName}`}
+              subtitle={`${activeDetailsSubject.courseCode} • ${activeDetailsSubject.componentName}`}
               onClose={handlers.closeSubjectOverlay}
               headerAction={
                 <span
@@ -671,10 +709,10 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                       : "status-badge--danger"
                   }`}
                   style={{
-                    padding: "7px 12px",
-                    borderRadius: 999,
+                    padding: "4px 10px",
+                    borderRadius: 6,
                     fontSize: 12,
-                    fontWeight: 700,
+                    fontWeight: 600,
                   }}
                 >
                   Current {activeDetailsSubject.percentage.toFixed(1)}%
@@ -682,17 +720,17 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
               }
             >
               <div style={{ display: "grid", gap: 14 }}>
-                <div style={{ color: "var(--text-secondary)", fontSize: 14 }}>
+                <div style={{ color: "var(--text-secondary)", fontSize: 13.5 }}>
                   Full breakdown for this subject.
                 </div>
 
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-                    gap: 10,
-                    padding: 12,
-                    borderRadius: 14,
+                    gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+                    gap: 8,
+                    padding: 10,
+                    borderRadius: 10,
                     border: "1px solid var(--border)",
                     background: "var(--bg-card)",
                   }}
@@ -703,7 +741,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                   <Metric label="Upcoming" value={String(activeDetailsSubject.upcomingCount)} />
                   <Metric label="Selected" value={String(activeDetailsSubject.plannedBunkCount)} />
                   <Metric
-                    label="If all this week"
+                    label="If all attended"
                     value={`${activeDetailsSubject.projectedPresent}/${activeDetailsSubject.projectedTotal}`}
                   />
                   <Metric label="Safe bunks" value={String(activeDetailsSubject.safeBunks)} />
@@ -714,7 +752,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                   <div
                     style={{
                       color: activeOverlayGuidance.tone,
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: 600,
                     }}
                   >
@@ -728,16 +766,16 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
           {activePlannerSubject && (
             <OverlayDialog
               title={activePlannerSubject.title}
-              subtitle={`${activePlannerSubject.courseCode} - ${activePlannerSubject.componentName}`}
+              subtitle={`${activePlannerSubject.courseCode} • ${activePlannerSubject.componentName}`}
               onClose={handlers.closeSubjectOverlay}
               headerAction={
                 <span
                   className="status-badge status-badge--info"
                   style={{
-                    padding: "7px 12px",
-                    borderRadius: 999,
+                    padding: "4px 10px",
+                    borderRadius: 6,
                     fontSize: 12,
-                    fontWeight: 700,
+                    fontWeight: 600,
                   }}
                 >
                   Selected {activePlannerSubject.plannedBunkCount}
@@ -747,14 +785,14 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
               <div
                 style={{
                   display: "grid",
-                  gap: 16,
+                  gap: 14,
                   minHeight: 0,
                   height: "100%",
                   gridTemplateRows: "auto auto minmax(0, 1fr)",
                 }}
               >
-                <div style={{ color: "var(--text-secondary)", fontSize: 14 }}>
-                  Choose the classes you may skip this week.
+                <div style={{ color: "var(--text-secondary)", fontSize: 13.5 }}>
+                  Choose the classes you may skip this week to preview the impact.
                 </div>
 
                 <div
@@ -762,7 +800,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                     display: "grid",
                     gap: 10,
                     padding: 12,
-                    borderRadius: 14,
+                    borderRadius: 10,
                     border: "1px solid var(--border)",
                     background: "var(--bg-card)",
                   }}
@@ -776,7 +814,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                       flexWrap: "wrap",
                     }}
                   >
-                    <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>
+                    <div style={{ fontWeight: 600, fontSize: 13.5, color: "var(--text-primary)" }}>
                       After selected bunks
                     </div>
                     <div
@@ -786,6 +824,8 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                             ? "var(--success)"
                             : "var(--danger)",
                         fontWeight: 700,
+                        fontSize: 16,
+                        fontVariantNumeric: "tabular-nums",
                       }}
                     >
                       {activePlannerSubject.bunkAdjustedPercentage.toFixed(1)}%
@@ -801,10 +841,10 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-                      gap: 10,
+                      gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+                      gap: 8,
                       color: "var(--text-secondary)",
-                      fontSize: 14,
+                      fontSize: 13,
                     }}
                   >
                     <Metric label="Current" value={`${activePlannerSubject.percentage.toFixed(1)}%`} />
@@ -845,9 +885,10 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                             gap: 10,
                             alignItems: "start",
                             padding: 12,
-                            borderRadius: 14,
+                            borderRadius: 10,
                             border: `1px solid ${isChecked ? "var(--primary)" : "var(--border)"}`,
                             background: isChecked ? "var(--primary-soft)" : "var(--bg-card)",
+                            cursor: "pointer",
                           }}
                         >
                           <input
@@ -856,16 +897,16 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                             onChange={() => handlers.handleBunkToggle(entry)}
                             style={{ marginTop: 3 }}
                           />
-                          <div style={{ display: "grid", gap: 4 }}>
-                            <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>
+                          <div style={{ display: "grid", gap: 3 }}>
+                            <div style={{ fontWeight: 650, fontSize: 13.5, color: "var(--text-primary)" }}>
                               {formatScheduleDay(entry.start)}
                             </div>
-                            <div style={{ color: "var(--text-secondary)", fontSize: 14 }}>
+                            <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
                               {formatScheduleTime(entry.start)} - {formatScheduleTime(entry.end)}
                             </div>
-                            <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                            <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
                               {entry.courseName ?? activePlannerSubject.title}
-                              {entry.classRoom ? ` - ${entry.classRoom}` : ""}
+                              {entry.classRoom ? ` • ${entry.classRoom}` : ""}
                             </div>
                           </div>
                         </label>
@@ -882,7 +923,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
           {activeDatewiseSubject && (
             <OverlayDialog
               title={activeDatewiseSubject.title}
-              subtitle={`${activeDatewiseSubject.courseCode} - ${activeDatewiseSubject.componentName}`}
+              subtitle={`${activeDatewiseSubject.courseCode} • ${activeDatewiseSubject.componentName}`}
               onClose={handlers.closeSubjectOverlay}
               headerAction={
                 <span
@@ -892,10 +933,10 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                       : "status-badge--danger"
                   }`}
                   style={{
-                    padding: "7px 12px",
-                    borderRadius: 999,
+                    padding: "4px 10px",
+                    borderRadius: 6,
                     fontSize: 12,
-                    fontWeight: 700,
+                    fontWeight: 600,
                   }}
                 >
                   Current {activeDatewiseSubject.percentage.toFixed(1)}%
@@ -917,7 +958,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                     display: "grid",
                     gap: 8,
                     padding: "10px 14px",
-                    borderRadius: 14,
+                    borderRadius: 10,
                     border: "1px solid var(--border)",
                     background: "var(--bg-card-subtle)",
                     flexShrink: 0,
@@ -932,7 +973,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                       flexWrap: "wrap",
                     }}
                   >
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
                       {activeDatewiseState
                         ? `${activeDatewiseState.presentCount}/${activeDatewiseState.lectureCount} Present (${activeDatewiseState.percent?.toFixed(1) ?? activeDatewiseSubject.percentage.toFixed(1)}%)`
                         : `${activeDatewiseSubject.present}/${activeDatewiseSubject.total} Present (${activeDatewiseSubject.percentage.toFixed(1)}%)`}
@@ -942,7 +983,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                       className="action-button action-button--secondary"
                       type="button"
                       onClick={() => setShowDatewiseDetails((prev) => !prev)}
-                      style={{ padding: "3px 10px", fontSize: 11.5, borderRadius: 999 }}
+                      style={{ padding: "3px 9px", fontSize: 11.5, borderRadius: 6 }}
                     >
                       {showDatewiseDetails ? "Hide stats" : "Show stats"}
                     </button>
@@ -961,7 +1002,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                   )}
 
                   {showDatewiseDetails && (
-                    <div style={{ display: "grid", gap: 10, paddingTop: 6 }}>
+                    <div style={{ display: "grid", gap: 8, paddingTop: 4 }}>
                       <ProgressBar
                         label="Current"
                         percentage={activeDatewiseSubject.percentage}
@@ -978,7 +1019,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                             display: "grid",
                             gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
                             gap: 8,
-                            paddingTop: 4,
+                            paddingTop: 2,
                           }}
                         >
                           <Metric label="Present" value={String(activeDatewiseState.presentCount)} />
@@ -998,11 +1039,12 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                   <div
                     style={{
                       padding: 16,
-                      borderRadius: 14,
+                      borderRadius: 10,
                       background: "var(--bg-card)",
                       color: "var(--text-secondary)",
                       border: "1px solid var(--border)",
                       textAlign: "center",
+                      fontSize: 13,
                     }}
                   >
                     Loading attendance log...
@@ -1034,9 +1076,9 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                             key={`${lecture.planLecDate ?? "unknown"}-${lecture.timeSlot ?? index}-${lecture.attendance ?? "na"}`}
                             style={{
                               display: "grid",
-                              gap: 8,
+                              gap: 6,
                               padding: 12,
-                              borderRadius: 14,
+                              borderRadius: 10,
                               border: "1px solid var(--border)",
                               background: "var(--bg-card)",
                             }}
@@ -1050,17 +1092,17 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                                 flexWrap: "wrap",
                               }}
                             >
-                              <div style={{ display: "grid", gap: 4 }}>
-                                <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>
+                              <div style={{ display: "grid", gap: 3 }}>
+                                <div style={{ fontWeight: 650, fontSize: 13.5, color: "var(--text-primary)" }}>
                                   {formatDatewiseLectureDate(
                                     lecture.planLecDate,
                                     lecture.dayName,
                                   )}
                                 </div>
-                                <div style={{ color: "var(--text-secondary)", fontSize: 14 }}>
+                                <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
                                   {lecture.timeSlot ?? "Time not available"}
                                 </div>
-                                <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                                <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
                                   {lecture.lectureType ?? "Lecture type unavailable"}
                                 </div>
                               </div>
@@ -1068,12 +1110,12 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                               <span
                                 className="status-badge"
                                 style={{
-                                  padding: "6px 10px",
-                                  borderRadius: 999,
+                                  padding: "4px 8px",
+                                  borderRadius: 6,
                                   background: statusTheme.background,
                                   color: statusTheme.color,
-                                  fontWeight: 700,
-                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  fontSize: 11.5,
                                 }}
                               >
                                 {lecture.attendance ?? "Not marked"}
@@ -1083,11 +1125,11 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                             {lecture.attendanceAdjustmentDetails && (
                               <div
                                 style={{
-                                  padding: "10px 12px",
-                                  borderRadius: 12,
+                                  padding: "8px 10px",
+                                  borderRadius: 8,
                                   background: "var(--bg-card-subtle)",
                                   color: "var(--text-secondary)",
-                                  fontSize: 13,
+                                  fontSize: 12,
                                 }}
                               >
                                 {lecture.attendanceAdjustmentDetails}

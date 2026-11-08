@@ -57,6 +57,22 @@ import { FooterCollaborators } from "./components/FooterCollaborators";
 import { MultiversePage } from "./pages/Multiverse";
 import { WhatsNewModal } from "./components/WhatsNewModal";
 import { NotificationGuideModal } from "./components/NotificationGuideModal";
+import {
+  LayoutDashboard,
+  Clock,
+  Target,
+  Sparkles,
+  Calendar as CalendarIcon,
+  History as HistoryIcon,
+  GraduationCap,
+  MessageSquareWarning,
+  Sun,
+  Moon,
+  Menu,
+  X,
+  Github,
+  AlertTriangle,
+} from "./components/Icons";
 
 const AdminLogin = lazy(() => import('./pages/AdminLogin').then(m => ({ default: m.AdminLogin })));
 const AdminPanel = lazy(() => import('./pages/AdminPanel').then(m => ({ default: m.AdminPanel })));
@@ -142,7 +158,6 @@ export type SubjectOverlayState =
 
 function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [extensionDetected, setExtensionDetected] = useState(false);
   const [isSyncingFuture, setIsSyncingFuture] = useState(false);
   const [loadState, setLoadState] = useState<LoadState>("idle");
@@ -616,7 +631,6 @@ function App() {
 
   function handleConnectClick() {
     setError("");
-    setIsLoginModalOpen(true);
   }
 
   async function handleClearSession() {
@@ -843,28 +857,28 @@ function App() {
 
               <div className="app-nav-links">
                 <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
-                  <span>📊</span> Dashboard
+                  <LayoutDashboard size={15} /> Dashboard
                 </Link>
                 <Link to="/today" className={`nav-link ${location.pathname === '/today' ? 'active' : ''}`}>
-                  <span>📌</span> Today
+                  <Clock size={15} /> Today
                 </Link>
                 <Link to="/strategy" className={`nav-link ${location.pathname === '/strategy' ? 'active' : ''}`}>
-                  <span>🎯</span> Planner
+                  <Target size={15} /> Planner
                 </Link>
                 <Link to="/multiverse" className={`nav-link ${location.pathname === '/multiverse' ? 'active' : ''}`}>
-                  <span>🌀</span> What If?
+                  <Sparkles size={15} /> What If?
                 </Link>
                 <Link to="/calendar" className={`nav-link ${location.pathname === '/calendar' ? 'active' : ''}`}>
-                  <span>📅</span> Schedule
+                  <CalendarIcon size={15} /> Schedule
                 </Link>
                 <Link to="/history" className={`nav-link ${location.pathname === '/history' ? 'active' : ''}`}>
-                  <span>📜</span> History
+                  <HistoryIcon size={15} /> History
                 </Link>
                 <Link to="/exam" className={`nav-link ${location.pathname === '/exam' ? 'active' : ''}`}>
-                  <span>📚</span> Exam
+                  <GraduationCap size={15} /> Exam
                 </Link>
                 <Link to="/feedback" className={`nav-link ${location.pathname === '/feedback' ? 'active' : ''}`}>
-                  <span>💬</span> Report
+                  <MessageSquareWarning size={15} /> Report
                 </Link>
               </div>
             </div>
@@ -879,13 +893,13 @@ function App() {
               >
                 {theme === "light" ? (
                   <>
-                    <span>🌙</span>
-                    <span style={{ fontSize: 12, fontWeight: 700 }}>Dark</span>
+                    <Moon size={14} />
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>Dark</span>
                   </>
                 ) : (
                   <>
-                    <span>☀️</span>
-                    <span style={{ fontSize: 12, fontWeight: 700 }}>Light</span>
+                    <Sun size={14} />
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>Light</span>
                   </>
                 )}
               </button>
@@ -894,29 +908,46 @@ function App() {
                 className="mobile-menu-toggle action-button action-button--secondary"
                 onClick={() => setMobileMenuOpen(prev => !prev)}
                 style={{
-                  padding: "7px 12px",
-                  fontSize: 13,
-                  fontWeight: 700,
+                  padding: "6px 10px",
+                  fontSize: 12.5,
+                  fontWeight: 600,
                   alignItems: "center",
                   gap: 4
                 }}
                 aria-label="Toggle navigation menu"
               >
-                {mobileMenuOpen ? "✕ Close" : "☰ Menu"}
+                {mobileMenuOpen ? <X size={14} /> : <Menu size={14} />}
+                <span>{mobileMenuOpen ? "Close" : "Menu"}</span>
               </button>
             </div>
           </div>
 
           {mobileMenuOpen && (
             <div className="mobile-nav-collapsible">
-              <Link to="/" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>📊 Dashboard</Link>
-              <Link to="/today" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/today' ? 'active' : ''}`}>📌 Today's Status</Link>
-              <Link to="/strategy" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/strategy' ? 'active' : ''}`}>🎯 Attendance Planner</Link>
-              <Link to="/multiverse" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/multiverse' ? 'active' : ''}`}>🌀 What If? (Multiverse)</Link>
-              <Link to="/calendar" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/calendar' ? 'active' : ''}`}>📅 Class Schedule</Link>
-              <Link to="/history" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/history' ? 'active' : ''}`}>📜 Attendance History</Link>
-              <Link to="/exam" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/exam' ? 'active' : ''}`}>📚 Exam Resources</Link>
-              <Link to="/feedback" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/feedback' ? 'active' : ''}`}>💬 Feedback & Report</Link>
+              <Link to="/" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
+                <LayoutDashboard size={15} /> Dashboard
+              </Link>
+              <Link to="/today" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/today' ? 'active' : ''}`}>
+                <Clock size={15} /> Today's Status
+              </Link>
+              <Link to="/strategy" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/strategy' ? 'active' : ''}`}>
+                <Target size={15} /> Attendance Planner
+              </Link>
+              <Link to="/multiverse" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/multiverse' ? 'active' : ''}`}>
+                <Sparkles size={15} /> What If? (Multiverse)
+              </Link>
+              <Link to="/calendar" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/calendar' ? 'active' : ''}`}>
+                <CalendarIcon size={15} /> Class Schedule
+              </Link>
+              <Link to="/history" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/history' ? 'active' : ''}`}>
+                <HistoryIcon size={15} /> Attendance History
+              </Link>
+              <Link to="/exam" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/exam' ? 'active' : ''}`}>
+                <GraduationCap size={15} /> Exam Resources
+              </Link>
+              <Link to="/feedback" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/feedback' ? 'active' : ''}`}>
+                <MessageSquareWarning size={15} /> Feedback & Report
+              </Link>
             </div>
           )}
         </nav>
@@ -966,8 +997,8 @@ function App() {
           className="standard-card rise-in"
           style={{
             marginTop: 16,
-            padding: "24px 28px",
-            borderRadius: 24,
+            padding: "20px 24px",
+            borderRadius: 14,
             background: "var(--bg-card)",
             border: "1px solid var(--border)",
             display: "grid",
@@ -983,14 +1014,14 @@ function App() {
               gap: 16,
             }}
           >
-            <div style={{ display: "grid", gap: 6 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 20 }}>⭐</span>
+            <div style={{ display: "grid", gap: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Github size={18} />
                 <h3
                   style={{
                     margin: 0,
-                    fontSize: 18,
-                    fontWeight: 800,
+                    fontSize: 15,
+                    fontWeight: 700,
                     color: "var(--text-primary)",
                   }}
                 >
@@ -1000,7 +1031,7 @@ function App() {
               <p
                 style={{
                   margin: 0,
-                  fontSize: 14,
+                  fontSize: 13,
                   color: "var(--text-secondary)",
                   maxWidth: 680,
                   lineHeight: 1.5,
@@ -1010,32 +1041,24 @@ function App() {
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <a
                 href="https://github.com/siddharthavsomvanshi/kiet-bunk-helper"
                 target="_blank"
                 rel="noreferrer"
                 className="action-button action-button--primary"
                 style={{
-                  padding: "10px 18px",
-                  borderRadius: 14,
-                  fontSize: 14,
-                  fontWeight: 700,
+                  padding: "8px 14px",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 600,
                   textDecoration: "none",
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 8,
+                  gap: 6,
                 }}
               >
-                <svg
-                  height="18"
-                  width="18"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                  style={{ display: "block" }}
-                >
-                  <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
-                </svg>
+                <Github size={14} />
                 Star on GitHub
               </a>
 
@@ -1045,9 +1068,9 @@ function App() {
                 rel="noreferrer"
                 className="action-button action-button--secondary"
                 style={{
-                  padding: "10px 18px",
-                  borderRadius: 14,
-                  fontSize: 14,
+                  padding: "8px 14px",
+                  borderRadius: 8,
+                  fontSize: 13,
                   fontWeight: 600,
                   textDecoration: "none",
                   display: "inline-flex",
@@ -1055,7 +1078,8 @@ function App() {
                   gap: 6,
                 }}
               >
-                <span>🐛</span> Report Issue
+                <AlertTriangle size={14} />
+                Report Issue
               </a>
             </div>
           </div>
@@ -1064,34 +1088,33 @@ function App() {
 
           <div
             style={{
-              padding: "14px 18px",
-              borderRadius: 14,
+              padding: "12px 14px",
+              borderRadius: 8,
               background: "var(--bg-card-subtle)",
               border: "1px solid var(--border)",
-              fontSize: 12,
+              fontSize: 11.5,
               color: "var(--text-muted)",
               lineHeight: 1.5,
             }}
           >
-            <strong>Legal & Privacy Disclaimer:</strong> Safe75 Attendance is an independent, user-side utility designed to assist students in monitoring and maintaining mandatory attendance compliance. It is not affiliated with, endorsed by, or connected to any educational institution or portal software provider. All credentials and data processing remain strictly on your local device.
+            <strong>Legal & Privacy Notice:</strong> Safe75 Attendance is an independent, client-side utility designed to assist students in monitoring and maintaining attendance compliance. It is not affiliated with or endorsed by any educational institution. All credentials and data remain strictly on your local device.
           </div>
 
           <div
-
             style={{
-              paddingTop: 12,
+              paddingTop: 10,
               borderTop: "1px solid var(--border)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
               flexWrap: "wrap",
               gap: 10,
-              fontSize: 13,
+              fontSize: 12,
               color: "var(--text-muted)",
             }}
           >
             <div>
-              Made with ❤️ for Students • <strong>Safe75 Attendance</strong>
+              Made with precision for students • <strong>Safe75 Attendance</strong>
             </div>
             <div>
               MIT Licensed • Client-Side Privacy
@@ -1114,17 +1137,17 @@ export function SetupCard({ hasData, onLoginClick }: { hasData: boolean; onLogin
   return (
     <section
       className="premium-panel rise-in"
-      style={{ padding: "28px", borderRadius: 28, display: "grid", gap: 24 }}
+      style={{ padding: "24px", borderRadius: 14, display: "grid", gap: 20 }}
     >
       {!hasData && (
         <div
           className="notice-banner"
           style={{
-            padding: "14px 18px",
-            borderRadius: 16,
+            padding: "12px 16px",
+            borderRadius: 8,
             background: "var(--danger-soft)",
             color: "var(--danger)",
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: 600,
           }}
         >
@@ -1133,20 +1156,20 @@ export function SetupCard({ hasData, onLoginClick }: { hasData: boolean; onLogin
       )}
 
       <div>
-        <h2 style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)", margin: "0 0 10px 0" }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)", margin: "0 0 6px 0" }}>
           Get connected
         </h2>
-        <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: 16, lineHeight: 1.6 }}>
+        <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.5 }}>
           Log in directly with your Student ID & Password, or use the Chrome extension.
         </p>
       </div>
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         {onLoginClick && (
           <button
             type="button"
             className="action-button action-button--primary"
-            style={{ ...primaryButtonStyle(false), padding: "14px 28px", fontSize: 15 }}
+            style={{ ...primaryButtonStyle(false), padding: "10px 20px", fontSize: 13.5 }}
             onClick={onLoginClick}
           >
             Login to CyberVidya
@@ -1155,7 +1178,7 @@ export function SetupCard({ hasData, onLoginClick }: { hasData: boolean; onLogin
         <button
           type="button"
           className="action-button action-button--secondary"
-          style={{ padding: "14px 24px", fontSize: 15 }}
+          style={{ ...secondaryButtonStyle, padding: "10px 18px", fontSize: 13.5 }}
           onClick={() => {
             window.open("/bunk-helper-extension.zip", "_blank");
           }}
@@ -1164,37 +1187,38 @@ export function SetupCard({ hasData, onLoginClick }: { hasData: boolean; onLogin
         </button>
       </div>
 
-      <div style={{ display: "grid", gap: 12, marginTop: 4 }}>
+      <div style={{ display: "grid", gap: 10, marginTop: 2 }}>
         <div
           className="standard-card"
           style={{
-            padding: "24px 28px",
+            padding: "18px 20px",
             background: "var(--bg-card-subtle)",
-            borderRadius: 20,
+            borderRadius: 10,
             border: "1px solid var(--border)",
           }}
         >
           <ol
             style={{
               margin: 0,
-              paddingLeft: 22,
+              paddingLeft: 20,
               display: "grid",
-              gap: 14,
+              gap: 10,
               color: "var(--text-secondary)",
-              fontSize: 16,
+              fontSize: 13.5,
               lineHeight: 1.5,
             }}
           >
             <li><strong>Download the extension</strong>.</li>
-            <li><strong>Extract the ZIP</strong> to a folder you will keep.</li>
+            <li><strong>Extract the ZIP</strong> to a persistent folder.</li>
             <li>
               Open{" "}
               <code
                 style={{
                   background: "var(--bg-section)",
-                  padding: "4px 8px",
-                  borderRadius: 6,
+                  padding: "2px 6px",
+                  borderRadius: 4,
                   fontWeight: 600,
+                  fontSize: 12.5,
                   color: "var(--text-primary)",
                 }}
               >
@@ -1204,7 +1228,7 @@ export function SetupCard({ hasData, onLoginClick }: { hasData: boolean; onLogin
             </li>
             <li>Turn on <strong>Developer Mode</strong>.</li>
             <li>Click <strong>Load unpacked</strong>.</li>
-            <li><strong>Select the extracted extension folder</strong> (the one with <code>manifest.json</code>).</li>
+            <li><strong>Select the extracted extension folder</strong> (the one containing <code>manifest.json</code>).</li>
           </ol>
         </div>
       </div>
@@ -1217,16 +1241,16 @@ export function StatusCard({ title, value, tone }: { title: string; value: strin
     <div
       className="status-card standard-card rise-in"
       style={{
-        padding: 16,
-        borderRadius: 22,
+        padding: 14,
+        borderRadius: 10,
         background: "var(--bg-card)",
         border: "1px solid var(--border)",
       }}
     >
-      <div className="status-label" style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 6 }}>
+      <div className="status-label" style={{ color: "var(--text-muted)", fontSize: 11.5, marginBottom: 4 }}>
         {title}
       </div>
-      <div className="status-value" style={{ color: tone, fontWeight: 700 }}>
+      <div className="status-value" style={{ color: tone, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
         {value}
       </div>
     </div>
@@ -1246,28 +1270,32 @@ export function ProgressBar({
   showThreshold?: boolean;
   showMeta?: boolean;
 }) {
+  const clamped = Math.min(Math.max(percentage, 0), 100);
   return (
-    <div className="progress-meter" style={{ display: "grid", gap: showMeta ? 8 : 0 }}>
+    <div className="progress-meter" style={{ display: "grid", gap: showMeta ? 6 : 0 }}>
       {showMeta && (
         <div
           className="progress-meta"
           style={{
             display: "flex",
             justifyContent: "space-between",
+            alignItems: "center",
             gap: 12,
-            fontSize: 12,
+            fontSize: 11.5,
             color: "var(--text-muted)",
           }}
         >
           <span>{label}</span>
-          <span>{percentage.toFixed(1)}%</span>
+          <span style={{ fontVariantNumeric: "tabular-nums", color: healthy ? "var(--success)" : "var(--danger)" }}>
+            {percentage.toFixed(1)}%
+          </span>
         </div>
       )}
       <div
         className="progress-track"
         style={{
           position: "relative",
-          height: 12,
+          height: 7,
           borderRadius: 999,
           background: "var(--bg-section)",
           overflow: "hidden",
@@ -1276,13 +1304,13 @@ export function ProgressBar({
         <div
           className={`progress-fill ${healthy ? "progress-fill--healthy" : ""}`}
           style={{
-            width: `${Math.min(percentage, 100)}%`,
+            width: `${clamped}%`,
             height: "100%",
           }}
         />
         {showThreshold && (
           <div
-            title="75% Attendance Threshold"
+            title="75% Attendance Safe Threshold"
             style={{
               position: "absolute",
               top: 0,
@@ -1290,7 +1318,7 @@ export function ProgressBar({
               left: "75%",
               width: 2,
               background: "var(--text-primary)",
-              opacity: 0.6,
+              opacity: 0.45,
               zIndex: 2,
             }}
           />
@@ -1316,11 +1344,13 @@ export function RecoveryNote({
       <div
         className="recovery-note recovery-note--success"
         style={{
-          padding: 12,
-          borderRadius: 14,
+          padding: "10px 14px",
+          borderRadius: 8,
           background: "var(--success-soft)",
           color: "var(--success)",
-          fontSize: 14,
+          border: "1px solid var(--success-border)",
+          fontSize: 13,
+          fontWeight: 500,
         }}
       >
         Still above 75% after these bunks.
@@ -1333,11 +1363,13 @@ export function RecoveryNote({
       <div
         className="recovery-note recovery-note--warning"
         style={{
-          padding: 12,
-          borderRadius: 14,
+          padding: "10px 14px",
+          borderRadius: 8,
           background: "var(--warning-soft)",
           color: "var(--warning)",
-          fontSize: 14,
+          border: "1px solid var(--warning-border)",
+          fontSize: 13,
+          fontWeight: 500,
         }}
       >
         Drops below 75%, but recovers by{" "}
@@ -1356,19 +1388,20 @@ export function RecoveryNote({
   return (
     <div
       className="recovery-note recovery-note--danger"
-        style={{
-          padding: 12,
-          borderRadius: 14,
-          background: "var(--danger-soft)",
-          color: "var(--danger)",
-          fontSize: 14,
-        }}
-      >
+      style={{
+        padding: "10px 14px",
+        borderRadius: 8,
+        background: "var(--danger-soft)",
+        color: "var(--danger)",
+        border: "1px solid var(--danger-border)",
+        fontSize: 13,
+        fontWeight: 500,
+      }}
+    >
       Drops below 75% and does not recover within the loaded schedule.
     </div>
   );
 }
-
 
 export function Notice({
   tone,
@@ -1383,11 +1416,12 @@ export function Notice({
     <div
       className="notice-banner"
       style={{
-        padding: "12px 14px",
-        borderRadius: 16,
+        padding: "10px 14px",
+        borderRadius: 8,
         color: tone,
         background,
-        fontSize: 14,
+        fontSize: 13,
+        fontWeight: 500,
       }}
     >
       {children}
@@ -1398,23 +1432,21 @@ export function Notice({
 export function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="metric-chip">
-      <div className="metric-label" style={{ fontSize: 12, color: "var(--text-muted)" }}>
+      <div className="metric-label">
         {label}
       </div>
-      <div className="metric-value" style={{ fontWeight: 700 }}>
+      <div className="metric-value">
         {value}
       </div>
     </div>
   );
 }
 
-
-
 export function primaryButtonStyle(disabled: boolean): CSSProperties {
   return {
     border: "none",
-    borderRadius: 12,
-    padding: "10px 20px",
+    borderRadius: 8,
+    padding: "8px 16px",
     background: disabled ? "var(--border-strong)" : "var(--primary)",
     color: "var(--text-on-primary)",
     cursor: disabled ? "not-allowed" : "pointer",
@@ -1424,14 +1456,14 @@ export function primaryButtonStyle(disabled: boolean): CSSProperties {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: 7,
   };
 }
 
 export const secondaryButtonStyle: CSSProperties = {
   border: "1px solid var(--border)",
-  borderRadius: 12,
-  padding: "9px 18px",
+  borderRadius: 8,
+  padding: "8px 14px",
   background: "var(--bg-card)",
   color: "var(--text-primary)",
   cursor: "pointer",
@@ -1441,7 +1473,7 @@ export const secondaryButtonStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  gap: 8,
+  gap: 7,
 };
 
 export function AttendanceSniper({ data, schedule }: { data: OverallSummary | null; schedule: BunkableDay[] }) {
@@ -1550,28 +1582,26 @@ export function AttendanceSniper({ data, schedule }: { data: OverallSummary | nu
   const currentPercent = data.total === 0 ? 0 : (data.present / data.total) * 100;
 
   return (
-    <Panel title="Attendance Target" subtitle="See the closest paths to your target percentage.">
-      <div className="surface-card surface-card--highlight rise-in" style={{ padding: "20px 24px", display: "grid", gap: 20 }}>
-        <div style={{ display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap" }}>
-          <div style={{ display: "grid", gap: 8, flex: 1, minWidth: 200 }}>
-            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)" }}>Target (%)</label>
+    <Panel title="Attendance Target Calculator" subtitle="Calculate the exact classes needed or safe to skip to hit a target percentage.">
+      <div className="surface-card surface-card--highlight rise-in" style={{ padding: "16px 18px", display: "grid", gap: 16 }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap" }}>
+          <div style={{ display: "grid", gap: 6, flex: 1, minWidth: 200 }}>
+            <label style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text-secondary)" }}>Target Attendance (%)</label>
             <input 
               className="standard-input"
               type="number" 
               value={targetInput} 
               onChange={e => setTargetInput(e.target.value)} 
-              placeholder="e.g. 92"
+              placeholder="e.g. 75, 80, 90"
               min="0"
               max="100"
               style={{
-                padding: "10px 14px",
-                borderRadius: 10,
-                border: "1px solid var(--border-strong)",
-                fontSize: 16,
+                padding: "8px 12px",
+                borderRadius: 8,
+                fontSize: 14,
                 width: "100%",
                 background: "var(--bg-card)",
                 outline: "none",
-                color: "var(--text-primary)",
                 fontWeight: "600",
               }}
             />
@@ -1580,23 +1610,27 @@ export function AttendanceSniper({ data, schedule }: { data: OverallSummary | nu
             type="button" 
             className="action-button action-button--primary" 
             onClick={handleCalculate}
-            style={{ padding: "12px 24px" }}
+            style={{ padding: "9px 18px" }}
           >
-            Show plan
+            Calculate Path
           </button>
         </div>
 
         {result && (
-          <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
-            <div style={{ fontWeight: 800, fontSize: 17, color: "var(--text-primary)" }}>
-              Target {result.target}% from {currentPercent.toFixed(1)}%
+          <div style={{ display: "grid", gap: 10, marginTop: 4 }}>
+            <div style={{ fontWeight: 700, fontSize: 14.5, color: "var(--text-primary)" }}>
+              Target {result.target}% (Current: {currentPercent.toFixed(1)}%)
             </div>
             
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
-              <div className="surface-card interactive-row" style={{ padding: 18, display: "grid", gap: 8 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Closest below</div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>{result.belowPercent.toFixed(2)}%</div>
-                <div style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.4, marginTop: 4 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+              <div className="surface-card interactive-row" style={{ padding: 14, display: "grid", gap: 6 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  Closest below threshold
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                  {result.belowPercent.toFixed(2)}%
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.4, marginTop: 2 }}>
                   Attended {result.belowPresent} of {result.belowTotal} classes.<br/>
                   <strong style={{ color: result.target > currentPercent ? "var(--text-muted)" : "var(--danger)" }}>
                     {(() => {
@@ -1611,12 +1645,14 @@ export function AttendanceSniper({ data, schedule }: { data: OverallSummary | nu
                 </div>
               </div>
 
-              <div className="surface-card interactive-row" style={{ padding: 18, display: "grid", gap: 8, border: "2px solid var(--info-soft)" }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--info)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  Closest above {result.target > currentPercent ? "(Needed)" : "(Safe)"}
+              <div className="surface-card interactive-row" style={{ padding: 14, display: "grid", gap: 6, border: "1.5px solid var(--border-strong)" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--info)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  Closest above {result.target > currentPercent ? "(Target Reached)" : "(Safe Margin)"}
                 </div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--info)", lineHeight: 1 }}>{result.abovePercent.toFixed(2)}%</div>
-                <div style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.4, marginTop: 4 }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--info)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                  {result.abovePercent.toFixed(2)}%
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.4, marginTop: 2 }}>
                   Attended {result.abovePresent} of {result.aboveTotal} classes.<br/>
                   <strong style={{ color: result.target > currentPercent ? "var(--success)" : "var(--text-muted)" }}>
                     {(() => {

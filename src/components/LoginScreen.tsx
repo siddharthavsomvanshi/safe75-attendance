@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { loginDirect, verifyOtpDirect, clearStoredSession } from "../services/cybervidyaApi";
+import { AlertTriangle, Eye, EyeOff, ShieldCheck } from "./Icons";
 
 interface LoginScreenProps {
   initialError?: string | null;
@@ -92,46 +93,46 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
   }
 
   return (
-    <div style={{ maxWidth: 440, margin: "24px auto", padding: "0 12px" }}>
+    <div style={{ maxWidth: 400, margin: "32px auto", padding: "0 12px" }}>
       <section
         className="premium-panel rise-in"
         style={{
-          padding: "32px 28px",
-          borderRadius: 28,
+          padding: "26px 24px",
+          borderRadius: 14,
           background: "var(--bg-card)",
           border: "1px solid var(--border)",
-          boxShadow: "var(--shadow-md)",
+          boxShadow: "var(--shadow-sm)",
         }}
       >
         {/* Branding Header */}
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <div style={{ textAlign: "center", marginBottom: 22 }}>
           <img
             src="/favicon.png"
             alt="Safe75 Attendance logo"
             style={{
-              width: 52,
-              height: 52,
-              borderRadius: 16,
+              width: 44,
+              height: 44,
+              borderRadius: 10,
               objectFit: "contain",
-              marginBottom: 14,
-              boxShadow: "0 8px 20px rgba(124, 58, 237, 0.25)",
+              marginBottom: 12,
+              border: "1px solid var(--border)",
             }}
           />
           <h1
             style={{
-              margin: "0 0 6px 0",
-              fontSize: 24,
-              fontWeight: 800,
+              margin: "0 0 4px 0",
+              fontSize: 20,
+              fontWeight: 700,
               color: "var(--text-primary)",
-              letterSpacing: "-0.5px",
+              letterSpacing: "-0.025em",
             }}
           >
             Safe75 Attendance
           </h1>
-          <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 14, lineHeight: 1.5 }}>
+          <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 13, lineHeight: 1.5 }}>
             {transactionId
-              ? otpMessage || "Enter the 6-digit OTP sent to your mobile/email"
-              : "Enter your Student ID & Password to continue."}
+              ? otpMessage || "Enter the 6-digit OTP sent to your registered contacts"
+              : "Enter your Student ID and CyberVidya credentials to sync."}
           </p>
         </div>
 
@@ -139,23 +140,23 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
         {error && (
           <div
             style={{
-              padding: "14px 16px",
-              borderRadius: 14,
-              backgroundColor: "rgba(239, 68, 68, 0.12)",
-              border: "1px solid rgba(239, 68, 68, 0.25)",
-              color: "#f87171",
-              fontSize: 13,
-              marginBottom: 20,
+              padding: "10px 14px",
+              borderRadius: 8,
+              backgroundColor: "var(--danger-soft)",
+              border: "1px solid var(--danger-border)",
+              color: "var(--danger)",
+              fontSize: 12.5,
+              marginBottom: 16,
               lineHeight: 1.5,
               textAlign: "left",
             }}
           >
-            <div style={{ fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-              <span>⚠️</span>
+            <div style={{ fontWeight: 650, marginBottom: 3, display: "flex", alignItems: "center", gap: 6 }}>
+              <AlertTriangle size={14} />
               <span>{error.includes("403") || error.includes("firewall") ? "CyberVidya Cloud Firewall (403)" : "Authentication Notice"}</span>
             </div>
             <div>{error}</div>
-            <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
+            <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
               <button
                 type="button"
                 onClick={() => {
@@ -167,7 +168,7 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
                   background: "transparent",
                   border: "none",
                   color: "var(--text-muted)",
-                  fontSize: 12,
+                  fontSize: 11.5,
                   textDecoration: "underline",
                   cursor: "pointer",
                   padding: 0,
@@ -179,25 +180,25 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
             {(error.includes("403") || error.includes("firewall")) && (
               <div
                 style={{
-                  marginTop: 10,
-                  paddingTop: 10,
-                  borderTop: "1px solid rgba(239, 68, 68, 0.2)",
-                  fontSize: 12,
+                  marginTop: 8,
+                  paddingTop: 8,
+                  borderTop: "1px solid var(--danger-border)",
+                  fontSize: 11.5,
                   color: "var(--text-muted)",
                 }}
               >
-                <p style={{ margin: "0 0 6px 0", fontWeight: 600, color: "var(--text-primary)" }}>
-                  💡 How to resolve:
+                <p style={{ margin: "0 0 4px 0", fontWeight: 600, color: "var(--text-primary)" }}>
+                  Resolution steps:
                 </p>
-                <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
+                <ul style={{ margin: 0, paddingLeft: 16, lineHeight: 1.5 }}>
                   <li>
-                    CyberVidya's servers block direct logins from cloud hosting (AWS / Vercel).
+                    CyberVidya blocks direct cloud logins.
                   </li>
                   <li>
-                    <strong>On Desktop Chrome:</strong> Load the <code>extension/chrome</code> folder unpacked in <code>chrome://extensions</code> to bypass server blocks directly from your browser.
+                    <strong>Chrome extension:</strong> Load the <code>extension/chrome</code> folder unpacked in <code>chrome://extensions</code> to connect directly.
                   </li>
                   <li>
-                    <strong>For in-app login:</strong> Deploy the <code>cloudflare-worker.js</code> proxy on Cloudflare and add <code>CYBERVIDYA_UPSTREAM_URL</code> in Vercel settings.
+                    <strong>Proxy login:</strong> Deploy <code>cloudflare-worker.js</code> and configure <code>CYBERVIDYA_UPSTREAM_URL</code>.
                   </li>
                 </ul>
               </div>
@@ -207,16 +208,16 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
 
         {!transactionId ? (
           /* Credentials Form */
-          <form onSubmit={handleLoginSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <form onSubmit={handleLoginSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
               <label
                 htmlFor="cybervidya-rollno"
                 style={{
                   display: "block",
-                  fontSize: 13,
+                  fontSize: 12.5,
                   fontWeight: 600,
-                  color: "var(--text-muted)",
-                  marginBottom: 6,
+                  color: "var(--text-secondary)",
+                  marginBottom: 5,
                 }}
               >
                 Student ID / Roll Number
@@ -229,17 +230,13 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
                 placeholder="e.g. 2300290100000"
                 disabled={loading}
                 required
+                className="standard-input"
                 style={{
                   width: "100%",
-                  padding: "14px 16px",
-                  borderRadius: 14,
-                  border: "1px solid var(--border)",
-                  backgroundColor: "var(--bg-card)",
-                  color: "var(--text-primary)",
-                  fontSize: 15,
-                  outline: "none",
+                  padding: "9px 12px",
+                  borderRadius: 8,
+                  fontSize: 14,
                   boxSizing: "border-box",
-                  transition: "all 0.2s",
                 }}
               />
             </div>
@@ -249,10 +246,10 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
                 htmlFor="cybervidya-pass"
                 style={{
                   display: "block",
-                  fontSize: 13,
+                  fontSize: 12.5,
                   fontWeight: 600,
-                  color: "var(--text-muted)",
-                  marginBottom: 6,
+                  color: "var(--text-secondary)",
+                  marginBottom: 5,
                 }}
               >
                 CyberVidya Password
@@ -266,17 +263,13 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
                   placeholder="••••••••••••"
                   disabled={loading}
                   required
+                  className="standard-input"
                   style={{
                     width: "100%",
-                    padding: "14px 46px 14px 16px",
-                    borderRadius: 14,
-                    border: "1px solid var(--border)",
-                    backgroundColor: "var(--bg-card)",
-                    color: "var(--text-primary)",
-                    fontSize: 15,
-                    outline: "none",
+                    padding: "9px 38px 9px 12px",
+                    borderRadius: 8,
+                    fontSize: 14,
                     boxSizing: "border-box",
-                    transition: "all 0.2s",
                   }}
                 />
                 <button
@@ -287,31 +280,18 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
                   tabIndex={-1}
                   style={{
                     position: "absolute",
-                    right: 12,
+                    right: 8,
                     background: "none",
                     border: "none",
-                    padding: 6,
+                    padding: 4,
                     cursor: "pointer",
                     color: "var(--text-muted)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    borderRadius: 8,
                   }}
                 >
-                  {showPassword ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-                      <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-                      <line x1="2" y1="2" x2="22" y2="22" />
-                    </svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  )}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
@@ -322,11 +302,11 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
               disabled={loading}
               style={{
                 width: "100%",
-                padding: "14px",
-                borderRadius: 14,
-                fontSize: 16,
-                fontWeight: 700,
-                marginTop: 6,
+                padding: "10px",
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 600,
+                marginTop: 4,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -336,23 +316,28 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
             >
               {loading ? "Authenticating..." : "Login"}
             </button>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 11.5, color: "var(--text-muted)", marginTop: 4 }}>
+              <ShieldCheck size={13} />
+              <span>100% Client-Side Privacy • Credentials never stored off-device</span>
+            </div>
           </form>
         ) : (
           /* OTP Form */
-          <form onSubmit={handleOtpSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <form onSubmit={handleOtpSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
               <label
                 htmlFor="cybervidya-otp-input"
                 style={{
                   display: "block",
-                  fontSize: 13,
+                  fontSize: 12.5,
                   fontWeight: 600,
-                  color: "var(--text-muted)",
+                  color: "var(--text-secondary)",
                   marginBottom: 6,
                   textAlign: "center",
                 }}
               >
-                6-Digit OTP
+                6-Digit Security OTP
               </label>
               <input
                 id="cybervidya-otp-input"
@@ -364,29 +349,27 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
                 maxLength={6}
                 required
                 autoFocus
+                className="standard-input"
                 style={{
                   width: "100%",
-                  padding: "14px 16px",
-                  borderRadius: 14,
-                  border: "1px solid var(--border)",
-                  backgroundColor: "var(--bg-card)",
-                  color: "var(--text-primary)",
-                  fontSize: 20,
-                  letterSpacing: 6,
+                  padding: "10px 14px",
+                  borderRadius: 8,
+                  fontSize: 18,
+                  letterSpacing: 4,
                   textAlign: "center",
-                  outline: "none",
                   boxSizing: "border-box",
+                  fontVariantNumeric: "tabular-nums",
                 }}
               />
             </div>
 
-            <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ display: "flex", gap: 8 }}>
               <button
                 type="button"
                 className="action-button action-button--secondary"
                 onClick={handleReset}
                 disabled={loading}
-                style={{ flex: 1, padding: "14px", fontSize: 14, borderRadius: 14 }}
+                style={{ flex: 1, padding: "10px", fontSize: 13, borderRadius: 8 }}
               >
                 Back
               </button>
@@ -396,10 +379,10 @@ export function LoginScreen({ initialError, onSuccess, onClearSession }: LoginSc
                 disabled={loading}
                 style={{
                   flex: 2,
-                  padding: "14px",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  borderRadius: 14,
+                  padding: "10px",
+                  fontSize: 13.5,
+                  fontWeight: 600,
+                  borderRadius: 8,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",

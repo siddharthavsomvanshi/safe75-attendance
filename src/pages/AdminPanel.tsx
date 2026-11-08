@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Panel } from '../components/UI';
+import { LogOut, Upload, Check, X } from '../components/Icons';
 
 interface ExamResource {
   id: string;
@@ -166,21 +167,25 @@ export function AdminPanel() {
   }
 
   const inputStyle = {
-    padding: '10px 14px',
-    borderRadius: '10px',
+    padding: '8px 12px',
+    borderRadius: '8px',
     border: '1px solid var(--border)',
-    fontSize: '14px',
+    fontSize: '13px',
     width: '100%',
     boxSizing: 'border-box' as const,
     fontFamily: 'inherit',
+    background: 'var(--bg-card)',
+    color: 'var(--text-primary)',
+    outline: 'none',
   };
 
   return (
-    <div style={{ display: 'grid', gap: '20px' }}>
+    <div style={{ display: 'grid', gap: '16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ margin: 0, fontSize: '24px', color: 'var(--text-primary)' }}>Resource manager</h1>
-        <button onClick={handleLogout} className="action-button action-button--secondary" style={{ padding: '8px 16px' }}>
-          Logout
+        <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)' }}>Resource Manager</h1>
+        <button onClick={handleLogout} className="action-button action-button--secondary" style={{ padding: '6px 14px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <LogOut size={13} />
+          <span>Logout</span>
         </button>
       </div>
 

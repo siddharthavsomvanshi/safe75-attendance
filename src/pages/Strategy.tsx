@@ -8,6 +8,7 @@ import {
 import { Panel, EmptyMessage } from "../components/UI";
 import { RedemptionArc } from "../components/Attendance/RedemptionArc";
 import { MedicalLeaveOptimizer } from "../components/Attendance/MedicalLeaveOptimizer";
+import { Sparkles, Calendar, CalendarDays, Check, CheckCheck, TrendingUp, Plus, Stethoscope } from "../components/Icons";
 import type {
   OverallSummary,
   BunkableDay,
@@ -356,22 +357,24 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                 alignItems: "start",
               }}
             >
-              <div style={{ display: "grid", gap: 12 }}>
+              <div style={{ display: "grid", gap: 10 }}>
                 <div
                   style={{
-                    display: "grid",
-                    gap: 6,
-                    padding: 14,
-                    borderRadius: 16,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "10px 14px",
+                    borderRadius: 10,
                     background: "var(--bg-card-subtle)",
                     border: "1px solid var(--border)",
                   }}
                 >
-                  <strong>Pick planned leave days</strong>
-                  <span style={{ color: "var(--text-muted)", fontSize: 14 }}>
-                    Selected: {data.selectedBunkDates.size}
+                  <strong style={{ fontSize: 13 }}>Leave Days Selected</strong>
+                  <span className="status-badge status-badge--neutral" style={{ fontSize: 12 }}>
+                    {data.selectedBunkDates.size} day{data.selectedBunkDates.size === 1 ? "" : "s"}
                     {data.selectedBunkCutoffDateKey
-                      ? ` - through ${formatDateKeyLabel(data.selectedBunkCutoffDateKey)}`
+                      ? ` • thru ${formatDateKeyLabel(data.selectedBunkCutoffDateKey)}`
                       : ""}
                   </span>
                 </div>
@@ -397,11 +400,11 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                           key={day.dateKey}
                           style={{
                             display: "grid",
-                            gridTemplateColumns: "20px minmax(0, 1fr)",
-                            gap: 10,
+                            gridTemplateColumns: "18px minmax(0, 1fr)",
+                            gap: 12,
                             alignItems: "start",
-                            padding: 14,
-                            borderRadius: 16,
+                            padding: "12px 14px",
+                            borderRadius: 12,
                             border: `1px solid ${isSelected ? "var(--primary)" : "var(--border)"}`,
                             background: isSelected ? "var(--primary-soft)" : "var(--bg-card)",
                             cursor: "pointer",
@@ -411,14 +414,14 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => handlers.handleWholeDayToggle(day.dateKey)}
-                            style={{ marginTop: 3 }}
+                            style={{ marginTop: 2, accentColor: "var(--primary)" }}
                           />
-                          <div style={{ display: "grid", gap: 4 }}>
-                            <div style={{ fontWeight: 700 }}>{day.label}</div>
-                            <div style={{ color: "var(--text-secondary)", fontSize: 14 }}>
+                          <div style={{ display: "grid", gap: 3 }}>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>{day.label}</div>
+                            <div style={{ color: "var(--text-secondary)", fontSize: 12 }}>
                               {day.entries.length} class{day.entries.length === 1 ? "" : "es"}
                             </div>
-                            <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                            <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
                               {day.entries
                                 .slice(0, 3)
                                 .map((entry) => entry.courseCode ?? entry.title)
@@ -650,7 +653,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
               <div
                 style={{
                   display: "flex",
-                  gap: 10,
+                  gap: 8,
                   borderBottom: "1px solid var(--border)",
                   paddingBottom: 12,
                   flexWrap: "wrap",
@@ -661,40 +664,42 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                   onClick={() => setActiveRescueTab("smart")}
                   style={{
                     padding: "8px 16px",
-                    borderRadius: 12,
+                    borderRadius: 10,
                     fontSize: 13,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     cursor: "pointer",
-                    border: `1.5px solid ${activeRescueTab === "smart" ? "var(--primary)" : "var(--border)"}`,
+                    border: `1px solid ${activeRescueTab === "smart" ? "var(--primary)" : "var(--border)"}`,
                     background: activeRescueTab === "smart" ? "var(--primary-soft)" : "var(--bg-card)",
                     color: activeRescueTab === "smart" ? "var(--primary)" : "var(--text-secondary)",
                     display: "flex",
                     alignItems: "center",
-                    gap: 6,
+                    gap: 7,
                     transition: "all 0.15s ease",
                   }}
                 >
-                  ✨ Smart Consecutive Windows (AI)
+                  <Sparkles size={14} style={{ color: "var(--primary)" }} />
+                  <span>Consecutive Windows</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveRescueTab("custom")}
                   style={{
                     padding: "8px 16px",
-                    borderRadius: 12,
+                    borderRadius: 10,
                     fontSize: 13,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     cursor: "pointer",
-                    border: `1.5px solid ${activeRescueTab === "custom" ? "var(--primary)" : "var(--border)"}`,
+                    border: `1px solid ${activeRescueTab === "custom" ? "var(--primary)" : "var(--border)"}`,
                     background: activeRescueTab === "custom" ? "var(--primary-soft)" : "var(--bg-card)",
                     color: activeRescueTab === "custom" ? "var(--primary)" : "var(--text-secondary)",
                     display: "flex",
                     alignItems: "center",
-                    gap: 6,
+                    gap: 7,
                     transition: "all 0.15s ease",
                   }}
                 >
-                  📅 Custom Date Range & Daily Picker
+                  <Calendar size={14} style={{ color: "var(--text-muted)" }} />
+                  <span>Custom Range & Days</span>
                 </button>
               </div>
 
