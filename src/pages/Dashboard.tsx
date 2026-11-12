@@ -451,7 +451,7 @@ export function Dashboard({ data, handlers }: { data: DashboardData; handlers: D
                 </div>
               </div>
               <Link
-                to="/strategy"
+                to="/strategy?tab=medical"
                 className="action-button action-button--primary"
                 style={{
                   padding: "8px 14px",

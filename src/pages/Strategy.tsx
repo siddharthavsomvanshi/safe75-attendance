@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { useSearchParams, useLocation } from "react-router-dom";
 import {
   ProgressBar,
   Metric,
@@ -8,7 +9,15 @@ import {
 import { Panel, EmptyMessage } from "../components/UI";
 import { RedemptionArc } from "../components/Attendance/RedemptionArc";
 import { MedicalLeaveOptimizer } from "../components/Attendance/MedicalLeaveOptimizer";
-import { Sparkles, Calendar, CalendarDays, Check, CheckCheck, TrendingUp, Plus, Stethoscope } from "../components/Icons";
+import {
+  Sparkles,
+  Calendar,
+  Target,
+  Stethoscope,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
+} from "../components/Icons";
 import type {
   OverallSummary,
   BunkableDay,
@@ -178,11 +187,614 @@ export interface StrategyHandlers {
   handleWholeDayToggle: (dateKey: string) => void;
 }
 
+/* =========================================================================
+   COMPACT MASTER-DETAIL SUBJECT TABLE (SOLUTION 2)
+   ========================================================================= */
+
+function CompactBunkSubjectTable({
+  subjects,
+  cutoffDateKey,
+}: {
+  subjects: WholeDayPlanSummary[];
+  cutoffDateKey: string | null;
+}) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+
+  const toggleExpand = (id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id));
+  };
+
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 8,
+          padding: "2px 0",
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+          Subject Breakdown ({subjects.length})
+        </div>
+        <div
+          style={{
+            display: "flex",
+            gap: 4,
+            background: "var(--bg-section)",
+            padding: 3,
+            borderRadius: 8,
+            border: "1px solid var(--border)",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setViewMode("table")}
+            style={{
+              padding: "4px 10px",
+              borderRadius: 6,
+              border: "none",
+              fontSize: 11.5,
+              fontWeight: viewMode === "table" ? 650 : 500,
+              cursor: "pointer",
+              background: viewMode === "table" ? "var(--bg-card)" : "transparent",
+              color: viewMode === "table" ? "var(--text-primary)" : "var(--text-muted)",
+              boxShadow: viewMode === "table" ? "var(--shadow-xs)" : "none",
+            }}
+          >
+            Compact Table
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("cards")}
+            style={{
+              padding: "4px 10px",
+              borderRadius: 6,
+              border: "none",
+              fontSize: 11.5,
+              fontWeight: viewMode === "cards" ? 650 : 500,
+              cursor: "pointer",
+              background: viewMode === "cards" ? "var(--bg-card)" : "transparent",
+              color: viewMode === "cards" ? "var(--text-primary)" : "var(--text-muted)",
+              boxShadow: viewMode === "cards" ? "var(--shadow-xs)" : "none",
+            }}
+          >
+            Cards Grid
+          </button>
+        </div>
+      </div>
+
+      {viewMode === "table" ? (
+        <div
+          style={{
+            display: "grid",
+            gap: 6,
+            maxHeight: 520,
+            overflowY: "auto",
+            paddingRight: 4,
+          }}
+        >
+          {subjects.map((subject) => {
+            const isExpanded = expandedId === subject.id;
+            const delta = subject.afterSelectedPercentage - subject.currentPercentage;
+            const isSafe = subject.afterSelectedPercentage >= 75;
+            const isRecoverable = !isSafe && subject.recovery.status === "recoverable";
+            const borderClass = isSafe
+              ? "border-l-success"
+              : isRecoverable
+              ? "border-l-warning"
+              : "border-l-danger";
+
+            return (
+              <div
+                key={`bunk-row-${subject.id}`}
+                className={`standard-card interactive-row ${borderClass}`}
+                style={{
+                  display: "grid",
+                  gap: isExpanded ? 10 : 0,
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  background: isExpanded ? "var(--bg-card-subtle)" : "var(--bg-card)",
+                  transition: "all 0.15s ease",
+                  cursor: "pointer",
+                }}
+                onClick={() => toggleExpand(subject.id)}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 10,
+                  }}
+                >
+                  {/* Left: Subject Identity */}
+                  <div style={{ display: "grid", gap: 2, minWidth: 150, flex: "1 1 180px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span
+                        style={{
+                          fontSize: 10.5,
+                          fontWeight: 700,
+                          padding: "1px 6px",
+                          borderRadius: 4,
+                          background: "var(--bg-section)",
+                          color: "var(--text-muted)",
+                        }}
+                      >
+                        {subject.courseCode}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 10.5,
+                          fontWeight: 600,
+                          color: "var(--text-muted)",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {subject.componentName}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        fontWeight: 650,
+                        fontSize: 13.5,
+                        color: "var(--text-primary)",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {subject.title}
+                    </div>
+                  </div>
+
+                  {/* Middle / Right: Percentage & Status */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      flexWrap: "wrap",
+                      marginLeft: "auto",
+                    }}
+                  >
+                    <div style={{ textAlign: "right" }}>
+                      <div
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 13.5,
+                          color: isSafe ? "var(--success)" : "var(--danger)",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {subject.currentPercentage.toFixed(1)}% → {subject.afterSelectedPercentage.toFixed(1)}%
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11.5,
+                          color: "var(--text-muted)",
+                          display: "flex",
+                          gap: 6,
+                          justifyContent: "flex-end",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        <span style={{ color: delta < 0 ? "var(--danger)" : "var(--text-muted)" }}>
+                          {delta > 0 ? `+${delta.toFixed(1)}%` : `${delta.toFixed(1)}%`}
+                        </span>
+                        <span>•</span>
+                        <span>{subject.selectedClassCount} missed</span>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`status-badge ${
+                        isSafe
+                          ? "status-badge--success"
+                          : isRecoverable
+                          ? "status-badge--warning"
+                          : "status-badge--danger"
+                      }`}
+                      style={{
+                        minWidth: 76,
+                        textAlign: "center",
+                        fontSize: 11,
+                        padding: "3px 8px",
+                      }}
+                    >
+                      {isSafe ? "Safe ≥75%" : isRecoverable ? "Recoverable" : "Drops <75%"}
+                    </span>
+
+                    <button
+                      type="button"
+                      aria-label={isExpanded ? "Collapse details" : "Expand details"}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        color: "var(--text-muted)",
+                        cursor: "pointer",
+                        padding: 2,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expanded Detailed Area */}
+                {isExpanded && (
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: 10,
+                      paddingTop: 10,
+                      borderTop: "1px solid var(--border)",
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ProgressBar
+                      label="Current Standing"
+                      percentage={subject.currentPercentage}
+                      healthy={subject.currentPercentage >= 75}
+                    />
+                    <ProgressBar
+                      label={`After Selected Bunks (${subject.selectedClassCount} missed)`}
+                      percentage={subject.afterSelectedPercentage}
+                      healthy={subject.afterSelectedPercentage >= 75}
+                    />
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+                        gap: 8,
+                      }}
+                    >
+                      <Metric
+                        label="Projected Present"
+                        value={`${subject.afterSelectedPresent}/${subject.afterSelectedTotal}`}
+                      />
+                      <Metric
+                        label="Missed Bunks"
+                        value={String(subject.selectedClassCount)}
+                      />
+                      <Metric
+                        label="Attended Future"
+                        value={String(subject.attendedClassCount)}
+                      />
+                    </div>
+
+                    <RecoveryNote
+                      recovery={subject.recovery}
+                      cutoffDateKey={cutoffDateKey}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* Full cards grid if user toggles view */
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: 10,
+            maxHeight: 620,
+            overflowY: "auto",
+            paddingRight: 4,
+          }}
+        >
+          {subjects.map((subject) => (
+            <div
+              className="standard-card rise-in"
+              key={`whole-day-${subject.id}`}
+              style={{
+                display: "grid",
+                gap: 10,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  alignItems: "baseline",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 700 }}>{subject.title}</div>
+                  <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                    {subject.courseCode} - {subject.componentName}
+                  </div>
+                </div>
+                <div style={{ display: "grid", gap: 4, justifyItems: "end" }}>
+                  <strong
+                    style={{
+                      color:
+                        subject.currentPercentage >= 75
+                          ? "var(--success)"
+                          : "var(--danger)",
+                    }}
+                  >
+                    Current: {subject.currentPercentage.toFixed(1)}%
+                  </strong>
+                  <span
+                    style={{
+                      color:
+                        subject.afterSelectedPercentage >= 75
+                          ? "var(--success)"
+                          : "var(--danger)",
+                      fontWeight: 700,
+                      fontSize: 13,
+                    }}
+                  >
+                    After bunks: {subject.afterSelectedPercentage.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+
+              <ProgressBar
+                label="Current"
+                percentage={subject.currentPercentage}
+                healthy={subject.currentPercentage >= 75}
+              />
+              <ProgressBar
+                label={`After bunks (${subject.selectedClassCount} missed)`}
+                percentage={subject.afterSelectedPercentage}
+                healthy={subject.afterSelectedPercentage >= 75}
+              />
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+                  gap: 10,
+                  color: "var(--text-secondary)",
+                  fontSize: 14,
+                }}
+              >
+                <Metric
+                  label="After"
+                  value={`${subject.afterSelectedPresent}/${subject.afterSelectedTotal}`}
+                />
+                <Metric
+                  label="Missed"
+                  value={String(subject.selectedClassCount)}
+                />
+                <Metric
+                  label="Attended"
+                  value={String(subject.attendedClassCount)}
+                />
+              </div>
+
+              <RecoveryNote
+                recovery={subject.recovery}
+                cutoffDateKey={cutoffDateKey}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CompactMedicalSubjectTable({
+  subjects,
+}: {
+  subjects: LeaveRescueImpactSubject[];
+}) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const toggleExpand = (id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id));
+  };
+
+  return (
+    <div style={{ display: "grid", gap: 6 }}>
+      {subjects.map((subject) => {
+        const isExpanded = expandedId === subject.id;
+        const impactTheme = getLeaveRescueImpactTheme(subject);
+
+        return (
+          <div
+            key={`medical-table-${subject.id}`}
+            className={`standard-card interactive-row ${impactTheme.borderClass}`}
+            style={{
+              display: "grid",
+              gap: isExpanded ? 10 : 0,
+              padding: "10px 14px",
+              borderRadius: 10,
+              background: isExpanded ? "var(--bg-card-subtle)" : "var(--bg-card)",
+              transition: "all 0.15s ease",
+              cursor: "pointer",
+            }}
+            onClick={() => toggleExpand(subject.id)}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 10,
+              }}
+            >
+              {/* Left: Subject Info */}
+              <div style={{ display: "grid", gap: 2, minWidth: 150, flex: "1 1 180px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      padding: "1px 6px",
+                      borderRadius: 4,
+                      background: "var(--bg-section)",
+                      color: "var(--text-muted)",
+                    }}
+                  >
+                    {subject.courseCode}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 600,
+                      color: "var(--text-muted)",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {subject.componentName}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontWeight: 650,
+                    fontSize: 13.5,
+                    color: "var(--text-primary)",
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {subject.title}
+                </div>
+              </div>
+
+              {/* Right: Percentage & Status */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  marginLeft: "auto",
+                }}
+              >
+                <div style={{ textAlign: "right" }}>
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      fontSize: 13.5,
+                      color: "var(--text-primary)",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {formatPercentage(subject.oldPercentage)} → {formatPercentage(subject.newPercentage)}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: impactTheme.color, fontWeight: 600 }}>
+                    +{subject.addedPresent} class{subject.addedPresent === 1 ? "" : "es"} recovered
+                  </div>
+                </div>
+
+                <span
+                  className={`status-badge ${
+                    subject.crossesThreshold
+                      ? "status-badge--success"
+                      : subject.stillRisky
+                      ? "status-badge--warning"
+                      : "status-badge--info"
+                  }`}
+                  style={{
+                    minWidth: 76,
+                    textAlign: "center",
+                    fontSize: 11,
+                    padding: "3px 8px",
+                  }}
+                >
+                  {impactTheme.label}
+                </span>
+
+                <button
+                  type="button"
+                  aria-label={isExpanded ? "Collapse details" : "Expand details"}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "var(--text-muted)",
+                    cursor: "pointer",
+                    padding: 2,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Expanded view */}
+            {isExpanded && (
+              <div
+                style={{
+                  display: "grid",
+                  gap: 8,
+                  paddingTop: 10,
+                  borderTop: "1px solid var(--border)",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--text-secondary)" }}>
+                  <span>Present classes:</span>
+                  <strong>{subject.oldPresent}/{subject.total} → {subject.newPresent}/{subject.total}</strong>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--text-secondary)" }}>
+                  <span>Net improvement:</span>
+                  <strong style={{ color: impactTheme.color }}>
+                    +{(subject.newPercentage - subject.oldPercentage).toFixed(1)} percentage points
+                  </strong>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* =========================================================================
+   MAIN STRATEGY COMPONENT WITH TOP SEGMENTED SWITCHER (SOLUTION 1)
+   ========================================================================= */
+
 export function Strategy({ data, handlers }: { data: StrategyData; handlers: StrategyHandlers }) {
-  const FUTURE_WEEKS_TO_FETCH = 12;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+
+  // Tab State: "bunk" | "medical" | "redemption"
+  const initialTab = useMemo<"bunk" | "medical" | "redemption">(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "medical" || location.hash === "#medical-optimizer") return "medical";
+    if (tabParam === "redemption") return "redemption";
+    return "bunk";
+  }, []);
+
+  const [activeTab, setActiveTab] = useState<"bunk" | "medical" | "redemption">(initialTab);
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "medical" || location.hash === "#medical-optimizer") {
+      setActiveTab("medical");
+    } else if (tabParam === "redemption") {
+      setActiveTab("redemption");
+    } else if (tabParam === "bunk") {
+      setActiveTab("bunk");
+    }
+  }, [searchParams, location.hash]);
+
+  const handleTabChange = (tab: "bunk" | "medical" | "redemption") => {
+    setActiveTab(tab);
+    setSearchParams({ tab }, { replace: true });
+  };
+
   const [medicalLeaveStartDate, setMedicalLeaveStartDate] = useState("");
   const [medicalLeaveEndDate, setMedicalLeaveEndDate] = useState("");
   const [activeRescueTab, setActiveRescueTab] = useState<"smart" | "custom">("smart");
+
   const allLeaveRescueDays = useMemo<LeaveRescueDay[]>(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -211,6 +823,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
           right.dateKey.localeCompare(left.dateKey),
       );
   }, [data.streakDayData]);
+
   const leaveRescueDays = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -220,6 +833,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
 
     return allLeaveRescueDays.filter((day) => day.dateKey >= startKey);
   }, [allLeaveRescueDays]);
+
   const medicalLeaveDateBounds = useMemo(() => {
     const dateKeys = Object.values(data.streakDayData)
       .map((day) => day.dateKey)
@@ -231,6 +845,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
       max: dateKeys[dateKeys.length - 1] ?? "",
     };
   }, [data.streakDayData]);
+
   const selectedLeaveRescueDays = useMemo(
     () =>
       medicalLeaveStartDate && medicalLeaveEndDate
@@ -240,8 +855,10 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
         : [],
     [allLeaveRescueDays, medicalLeaveEndDate, medicalLeaveStartDate],
   );
+
   const featuredLeaveRescueDays = leaveRescueDays.slice(0, 3);
   const extraLeaveRescueDays = leaveRescueDays.slice(3);
+
   const leaveRescueImpact = useMemo<LeaveRescueImpactSummary | null>(() => {
     if (!data.overallSummary || data.subjectSummaries.length === 0 || selectedLeaveRescueDays.length === 0) {
       return null;
@@ -327,587 +944,577 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
   }
 
   return (
-    <>
-      <section style={{ display: "grid", gap: 14 }}>
-        <Panel
-          title="Whole Day Absence Planner"
-          subtitle="Plan off-days safely without dropping below 75%."
-        >
-          <div className="planner-panel-shell" style={{ display: "grid", gap: 18 }}>
-            <div
-              className="planner-panel-toolbar"
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 12,
-                alignItems: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <div style={{ color: "var(--text-secondary)", fontSize: 14, maxWidth: "72ch" }}>
-                Pick future dates and see the impact before taking planned leave.
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-                gap: 20,
-                alignItems: "start",
-              }}
-            >
-              <div style={{ display: "grid", gap: 10 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "10px 14px",
-                    borderRadius: 10,
-                    background: "var(--bg-card-subtle)",
-                    border: "1px solid var(--border)",
-                  }}
-                >
-                  <strong style={{ fontSize: 13 }}>Leave Days Selected</strong>
-                  <span className="status-badge status-badge--neutral" style={{ fontSize: 12 }}>
-                    {data.selectedBunkDates.size} day{data.selectedBunkDates.size === 1 ? "" : "s"}
-                    {data.selectedBunkCutoffDateKey
-                      ? ` • thru ${formatDateKeyLabel(data.selectedBunkCutoffDateKey)}`
-                      : ""}
-                  </span>
-                </div>
-
-                {data.bunkableDays.length === 0 ? (
-                  <EmptyMessage message="No upcoming class days yet." />
-                ) : (
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: 8,
-                      maxHeight: 620,
-                      overflowY: "auto",
-                      paddingRight: 4,
-                    }}
-                  >
-                    {data.bunkableDays.map((day) => {
-                      const isSelected = data.selectedBunkDates.has(day.dateKey);
-
-                      return (
-                        <label
-                          className="surface-card interactive-row"
-                          key={day.dateKey}
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "18px minmax(0, 1fr)",
-                            gap: 12,
-                            alignItems: "start",
-                            padding: "12px 14px",
-                            borderRadius: 12,
-                            border: `1px solid ${isSelected ? "var(--primary)" : "var(--border)"}`,
-                            background: isSelected ? "var(--primary-soft)" : "var(--bg-card)",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handlers.handleWholeDayToggle(day.dateKey)}
-                            style={{ marginTop: 2, accentColor: "var(--primary)" }}
-                          />
-                          <div style={{ display: "grid", gap: 3 }}>
-                            <div style={{ fontWeight: 600, fontSize: 14 }}>{day.label}</div>
-                            <div style={{ color: "var(--text-secondary)", fontSize: 12 }}>
-                              {day.entries.length} class{day.entries.length === 1 ? "" : "es"}
-                            </div>
-                            <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
-                              {day.entries
-                                .slice(0, 3)
-                                .map((entry) => entry.courseCode ?? entry.title)
-                                .join(", ")}
-                              {day.entries.length > 3 ? "..." : ""}
-                            </div>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div style={{ display: "grid", gap: 14 }}>
-                {data.selectedBunkDates.size === 0 || !data.overallWholeDayPlan ? (
-                  <EmptyMessage message="Select a future date to start planning." />
-                ) : (
-                  <>
-                    <div
-                      className="standard-card rise-in border-l-primary"
-                      style={{
-                        display: "grid",
-                        gap: 10,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: 12,
-                          alignItems: "baseline",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: 18 }}>Overall after planned leave</div>
-                          <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                            Your attendance after the last selected day.
-                          </div>
-                        </div>
-                        <div style={{ display: "grid", gap: 4, justifyItems: "end" }}>
-                          <strong
-                            style={{
-                              color:
-                                data.overallWholeDayPlan.currentPercentage >= 75
-                                  ? "var(--success)"
-                                  : "var(--danger)",
-                            }}
-                          >
-                            Current: {data.overallWholeDayPlan.currentPercentage.toFixed(1)}%
-                          </strong>
-                          <span
-                            style={{
-                              color:
-                                data.overallWholeDayPlan.afterSelectedPercentage >= 75
-                                  ? "var(--success)"
-                                  : "var(--danger)",
-                              fontWeight: 700,
-                              fontSize: 13,
-                            }}
-                          >
-                            After leave:{" "}
-                            {data.overallWholeDayPlan.afterSelectedPercentage.toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-
-                      <ProgressBar
-                        label="Current"
-                        percentage={data.overallWholeDayPlan.currentPercentage}
-                        healthy={data.overallWholeDayPlan.currentPercentage >= 75}
-                      />
-                      <ProgressBar
-                        label={`After leave (${data.overallWholeDayPlan.selectedClassCount} missed)`}
-                        percentage={data.overallWholeDayPlan.afterSelectedPercentage}
-                        healthy={data.overallWholeDayPlan.afterSelectedPercentage >= 75}
-                      />
-
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-                          gap: 10,
-                          color: "var(--text-secondary)",
-                          fontSize: 14,
-                        }}
-                      >
-                        <Metric
-                          label="After"
-                          value={`${data.overallWholeDayPlan.afterSelectedPresent}/${data.overallWholeDayPlan.afterSelectedTotal}`}
-                        />
-                        <Metric
-                          label="Missed"
-                          value={String(data.overallWholeDayPlan.selectedClassCount)}
-                        />
-                        <Metric
-                          label="Attended"
-                          value={String(data.overallWholeDayPlan.attendedClassCount)}
-                        />
-                      </div>
-
-                      <RecoveryNote
-                        recovery={data.overallWholeDayPlan.recovery}
-                        cutoffDateKey={data.selectedBunkCutoffDateKey}
-                      />
-                    </div>
-
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                        gap: 10,
-                      }}
-                    >
-                      {data.wholeDayPlanSummaries.map((subject) => (
-                        <div
-                          className="standard-card rise-in"
-                          key={`whole-day-${subject.id}`}
-                          style={{
-                            display: "grid",
-                            gap: 10,
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              gap: 12,
-                              alignItems: "baseline",
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <div>
-                              <div style={{ fontWeight: 700 }}>{subject.title}</div>
-                              <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                                {subject.courseCode} - {subject.componentName}
-                              </div>
-                            </div>
-                            <div style={{ display: "grid", gap: 4, justifyItems: "end" }}>
-                              <strong
-                                style={{
-                                  color:
-                                    subject.currentPercentage >= 75
-                                      ? "var(--success)"
-                                      : "var(--danger)",
-                                }}
-                              >
-                                Current: {subject.currentPercentage.toFixed(1)}%
-                              </strong>
-                              <span
-                                style={{
-                                  color:
-                                    subject.afterSelectedPercentage >= 75
-                                      ? "var(--success)"
-                                      : "var(--danger)",
-                                  fontWeight: 700,
-                                  fontSize: 13,
-                                }}
-                              >
-                                After bunks: {subject.afterSelectedPercentage.toFixed(1)}%
-                              </span>
-                            </div>
-                          </div>
-
-                          <ProgressBar
-                            label="Current"
-                            percentage={subject.currentPercentage}
-                            healthy={subject.currentPercentage >= 75}
-                          />
-                          <ProgressBar
-                            label={`After bunks (${subject.selectedClassCount} missed)`}
-                            percentage={subject.afterSelectedPercentage}
-                            healthy={subject.afterSelectedPercentage >= 75}
-                          />
-
-                          <div
-                            style={{
-                              display: "grid",
-                              gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-                              gap: 10,
-                              color: "var(--text-secondary)",
-                              fontSize: 14,
-                            }}
-                          >
-                            <Metric
-                              label="After"
-                              value={`${subject.afterSelectedPresent}/${subject.afterSelectedTotal}`}
-                            />
-                            <Metric
-                              label="Missed"
-                              value={String(subject.selectedClassCount)}
-                            />
-                            <Metric
-                              label="Attended"
-                              value={String(subject.attendedClassCount)}
-                            />
-                          </div>
-
-                          <RecoveryNote
-                            recovery={subject.recovery}
-                            cutoffDateKey={data.selectedBunkCutoffDateKey}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+    <div style={{ display: "grid", gap: 16 }}>
+      {/* =========================================================================
+          TOP SEGMENTED SWITCHER (SOLUTION 1)
+          ========================================================================= */}
+      <section
+        className="standard-card rise-in"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+          padding: "16px 18px",
+          borderRadius: 14,
+          background: "var(--bg-card)",
+          border: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 19, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.025em" }}>
+              Attendance Planner & Strategy
+            </h1>
+            <p style={{ margin: "3px 0 0 0", color: "var(--text-muted)", fontSize: 13 }}>
+              Choose a strategic tool below to forecast bunks, optimize medical certificates, or simulate targets.
+            </p>
           </div>
-        </Panel>
+        </div>
+
+        {/* 3-Pill Segmented Switcher */}
+        <div
+          style={{
+            display: "flex",
+            gap: 6,
+            padding: 4,
+            background: "var(--bg-section)",
+            borderRadius: 10,
+            border: "1px solid var(--border)",
+            overflowX: "auto",
+            width: "fit-content",
+            maxWidth: "100%",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => handleTabChange("bunk")}
+            style={{
+              padding: "7px 15px",
+              borderRadius: 8,
+              border: "none",
+              fontSize: 13,
+              fontWeight: activeTab === "bunk" ? 650 : 500,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              background: activeTab === "bunk" ? "var(--bg-card)" : "transparent",
+              color: activeTab === "bunk" ? "var(--text-primary)" : "var(--text-muted)",
+              boxShadow: activeTab === "bunk" ? "var(--shadow-xs)" : "none",
+              transition: "all 0.15s ease",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Target size={14} style={{ color: activeTab === "bunk" ? "var(--primary)" : "inherit" }} />
+            <span>Future Bunk Planner</span>
+            {data.selectedBunkDates.size > 0 && (
+              <span
+                className="status-badge status-badge--primary"
+                style={{ fontSize: 11, padding: "1px 6px", borderRadius: 999 }}
+              >
+                {data.selectedBunkDates.size}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange("medical")}
+            style={{
+              padding: "7px 15px",
+              borderRadius: 8,
+              border: "none",
+              fontSize: 13,
+              fontWeight: activeTab === "medical" ? 650 : 500,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              background: activeTab === "medical" ? "var(--bg-card)" : "transparent",
+              color: activeTab === "medical" ? "var(--text-primary)" : "var(--text-muted)",
+              boxShadow: activeTab === "medical" ? "var(--shadow-xs)" : "none",
+              transition: "all 0.15s ease",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Stethoscope size={14} style={{ color: activeTab === "medical" ? "var(--primary)" : "inherit" }} />
+            <span>Medical Leave Rescue</span>
+            {selectedLeaveRescueDays.length > 0 && (
+              <span
+                className="status-badge status-badge--info"
+                style={{ fontSize: 11, padding: "1px 6px", borderRadius: 999 }}
+              >
+                {selectedLeaveRescueDays.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange("redemption")}
+            style={{
+              padding: "7px 15px",
+              borderRadius: 8,
+              border: "none",
+              fontSize: 13,
+              fontWeight: activeTab === "redemption" ? 650 : 500,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              background: activeTab === "redemption" ? "var(--bg-card)" : "transparent",
+              color: activeTab === "redemption" ? "var(--text-primary)" : "var(--text-muted)",
+              boxShadow: activeTab === "redemption" ? "var(--shadow-xs)" : "none",
+              transition: "all 0.15s ease",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <TrendingUp size={14} style={{ color: activeTab === "redemption" ? "var(--primary)" : "inherit" }} />
+            <span>100% Attendance Target</span>
+          </button>
+        </div>
       </section>
 
-      <section style={{ display: "grid", gap: 14 }} id="medical-optimizer">
-        <Panel
-          title="Smart Medical Leave Optimizer"
-          subtitle="Find the best consecutive days in the last 30–50 days to apply for medical leave and reach your target attendance."
-        >
-          {data.streakLoading && Object.keys(data.streakDayData).length === 0 ? (
-            <EmptyMessage message="Loading recent attendance..." />
-          ) : !data.streakIsReliable && Object.keys(data.streakDayData).length === 0 ? (
-            <EmptyMessage message="Recent attendance is not available right now." />
-          ) : allLeaveRescueDays.length === 0 ? (
-            <EmptyMessage message="No recorded absences are available for a medical-leave calculation." />
-          ) : (
-            <div style={{ display: "grid", gap: 20 }}>
-              {/* Tab Selector */}
+      {/* =========================================================================
+          TAB 1: WHOLE DAY ABSENCE PLANNER
+          ========================================================================= */}
+      {activeTab === "bunk" && (
+        <section style={{ display: "grid", gap: 14 }} className="rise-in">
+          <Panel
+            title="Whole Day Absence Planner"
+            subtitle="Plan off-days safely without dropping below the 75% threshold."
+          >
+            <div className="planner-panel-shell" style={{ display: "grid", gap: 18 }}>
               <div
+                className="planner-panel-toolbar"
                 style={{
                   display: "flex",
-                  gap: 8,
-                  borderBottom: "1px solid var(--border)",
-                  paddingBottom: 12,
+                  justifyContent: "space-between",
+                  gap: 12,
+                  alignItems: "center",
                   flexWrap: "wrap",
                 }}
               >
-                <button
-                  type="button"
-                  onClick={() => setActiveRescueTab("smart")}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 10,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    border: `1px solid ${activeRescueTab === "smart" ? "var(--primary)" : "var(--border)"}`,
-                    background: activeRescueTab === "smart" ? "var(--primary-soft)" : "var(--bg-card)",
-                    color: activeRescueTab === "smart" ? "var(--primary)" : "var(--text-secondary)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 7,
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  <Sparkles size={14} style={{ color: "var(--primary)" }} />
-                  <span>Consecutive Windows</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveRescueTab("custom")}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 10,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    border: `1px solid ${activeRescueTab === "custom" ? "var(--primary)" : "var(--border)"}`,
-                    background: activeRescueTab === "custom" ? "var(--primary-soft)" : "var(--bg-card)",
-                    color: activeRescueTab === "custom" ? "var(--primary)" : "var(--text-secondary)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 7,
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  <Calendar size={14} style={{ color: "var(--text-muted)" }} />
-                  <span>Custom Range & Days</span>
-                </button>
+                <div style={{ color: "var(--text-secondary)", fontSize: 13.5, maxWidth: "72ch" }}>
+                  Pick future class dates to forecast how missing them impacts your overall and subject-level standing.
+                </div>
               </div>
 
-              {/* View 1: Smart Consecutive Windows */}
-              {activeRescueTab === "smart" && (
-                <MedicalLeaveOptimizer
-                  streakDayData={data.streakDayData}
-                  streakSubjectAbsencesByDate={data.streakSubjectAbsencesByDate}
-                  subjectSummaries={data.subjectSummaries}
-                  overallSummary={data.overallSummary}
-                  streakLoading={data.streakLoading}
-                  studentName={data.studentDetails?.fullName}
-                  registrationNumber={data.studentDetails?.registrationNumber}
-                  activeStartDate={medicalLeaveStartDate}
-                  activeEndDate={medicalLeaveEndDate}
-                  onApplyWindow={(start, end) => setMedicalLeaveRange(start, end)}
-                />
-              )}
-
-              {/* View 2: Custom Date Range & Daily Picker */}
-              {activeRescueTab === "custom" && (
-                <div style={{ display: "grid", gap: 18 }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                  gap: 20,
+                  alignItems: "start",
+                }}
+              >
+                {/* Left: Day Checklist */}
+                <div style={{ display: "grid", gap: 10 }}>
                   <div
                     style={{
                       display: "flex",
-                      gap: 12,
+                      justifyContent: "space-between",
                       alignItems: "center",
-                      flexWrap: "wrap",
+                      gap: 8,
+                      padding: "10px 14px",
+                      borderRadius: 10,
+                      background: "var(--bg-card-subtle)",
+                      border: "1px solid var(--border)",
                     }}
                   >
-                    <div style={{ color: "var(--text-secondary)", fontSize: 14, maxWidth: "72ch" }}>
-                      Choose your custom medical leave period. For this preview only, recorded absences in that range are treated as present.
-                    </div>
+                    <strong style={{ fontSize: 13 }}>Upcoming Class Days</strong>
+                    <span className="status-badge status-badge--neutral" style={{ fontSize: 12 }}>
+                      {data.selectedBunkDates.size} day{data.selectedBunkDates.size === 1 ? "" : "s"} selected
+                      {data.selectedBunkCutoffDateKey
+                        ? ` • thru ${formatDateKeyLabel(data.selectedBunkCutoffDateKey)}`
+                        : ""}
+                    </span>
+                  </div>
+
+                  {data.bunkableDays.length === 0 ? (
+                    <EmptyMessage message="No upcoming class days loaded in schedule." />
+                  ) : (
                     <div
-                      className="status-badge status-badge--neutral"
                       style={{
-                        padding: "8px 12px",
-                        borderRadius: 999,
-                        fontSize: 13,
-                        fontWeight: 700,
+                        display: "grid",
+                        gap: 8,
+                        maxHeight: 560,
+                        overflowY: "auto",
+                        paddingRight: 4,
                       }}
                     >
-                      {allLeaveRescueDays.length} missed day{allLeaveRescueDays.length === 1 ? "" : "s"} found
-                    </div>
-                    {selectedLeaveRescueDays.length > 0 && (
-                      <div
-                        className="status-badge status-badge--info"
-                        style={{
-                          padding: "8px 12px",
-                          borderRadius: 999,
-                          fontSize: 13,
-                          fontWeight: 700,
-                        }}
-                      >
-                        {selectedLeaveRescueDays.length} selected
-                      </div>
-                    )}
-                  </div>
-
-                  <div
-                    className="surface-card"
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-                      gap: 14,
-                      padding: 16,
-                      borderRadius: 16,
-                      border: "1px solid var(--border)",
-                      background: "var(--bg-card-subtle)",
-                    }}
-                  >
-                    <label style={{ display: "grid", gap: 7, fontWeight: 700 }}>
-                      Medical leave start
-                      <input
-                        type="date"
-                        value={medicalLeaveStartDate}
-                        min={medicalLeaveDateBounds.min || undefined}
-                        max={medicalLeaveEndDate || medicalLeaveDateBounds.max || undefined}
-                        onChange={(event) => {
-                          const startDate = event.target.value;
-                          setMedicalLeaveStartDate(startDate);
-                          if (medicalLeaveEndDate && startDate > medicalLeaveEndDate) {
-                            setMedicalLeaveEndDate(startDate);
-                          }
-                        }}
-                        style={{ font: "inherit", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)" }}
-                      />
-                    </label>
-                    <label style={{ display: "grid", gap: 7, fontWeight: 700 }}>
-                      Medical leave end
-                      <input
-                        type="date"
-                        value={medicalLeaveEndDate}
-                        min={medicalLeaveStartDate || medicalLeaveDateBounds.min || undefined}
-                        max={medicalLeaveDateBounds.max || undefined}
-                        onChange={(event) => {
-                          const endDate = event.target.value;
-                          setMedicalLeaveEndDate(endDate);
-                          if (medicalLeaveStartDate && endDate < medicalLeaveStartDate) {
-                            setMedicalLeaveStartDate(endDate);
-                          }
-                        }}
-                        style={{ font: "inherit", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)" }}
-                      />
-                    </label>
-                  </div>
-
-                  {leaveRescueDays.length > 0 && (
-                    <div
-                      style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}
-                    >
-                      {featuredLeaveRescueDays.map((day) => {
-                        const theme = getLeaveRescueTheme(day.intensity);
-                        const isSelected = Boolean(medicalLeaveStartDate && medicalLeaveEndDate && day.dateKey >= medicalLeaveStartDate && day.dateKey <= medicalLeaveEndDate);
+                      {data.bunkableDays.map((day) => {
+                        const isSelected = data.selectedBunkDates.has(day.dateKey);
 
                         return (
-                          <button
-                            type="button"
-                            className={`standard-card interactive-row rise-in ${theme.borderClass}`}
-                            key={`leave-rescue-featured-${day.dateKey}`}
-                            onClick={() => setMedicalLeaveRange(day.dateKey, day.dateKey)}
+                          <label
+                            className="surface-card interactive-row"
+                            key={day.dateKey}
                             style={{
                               display: "grid",
-                              gap: 10,
-                              width: "100%",
-                              textAlign: "left",
+                              gridTemplateColumns: "18px minmax(0, 1fr)",
+                              gap: 12,
+                              alignItems: "start",
+                              padding: "12px 14px",
+                              borderRadius: 12,
+                              border: `1px solid ${isSelected ? "var(--primary)" : "var(--border)"}`,
+                              background: isSelected ? "var(--primary-soft)" : "var(--bg-card)",
                               cursor: "pointer",
-                              font: "inherit",
-                              background: isSelected ? "var(--primary-soft)" : undefined,
-                              borderColor: isSelected ? "var(--primary)" : undefined,
                             }}
                           >
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: 12,
-                                alignItems: "start",
-                                flexWrap: "wrap",
-                              }}
-                            >
-                              <div style={{ display: "grid", gap: 4 }}>
-                                <strong style={{ fontSize: 18 }}>{day.label}</strong>
-                                <span style={{ color: "var(--text-secondary)", fontSize: 13 }}>
-                                  {day.dateKey}
-                                </span>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handlers.handleWholeDayToggle(day.dateKey)}
+                              style={{ marginTop: 2, accentColor: "var(--primary)" }}
+                            />
+                            <div style={{ display: "grid", gap: 3 }}>
+                              <div style={{ fontWeight: 600, fontSize: 14 }}>{day.label}</div>
+                              <div style={{ color: "var(--text-secondary)", fontSize: 12 }}>
+                                {day.entries.length} class{day.entries.length === 1 ? "" : "es"}
                               </div>
-                              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginLeft: "auto" }}>
-                                {isSelected && (
-                                  <span
-                                    className="status-badge"
-                                    style={{
-                                      padding: "6px 10px",
-                                      borderRadius: 999,
-                                      background: "var(--primary)",
-                                      color: "var(--text-on-primary)",
-                                      fontSize: 12,
-                                      fontWeight: 800,
-                                    }}
-                                  >
-                                    Selected
-                                  </span>
-                                )}
-                                <span
-                                  className={`status-badge ${day.intensity === "high" ? "status-badge--danger" : day.intensity === "medium" ? "status-badge--warning" : "status-badge--success"}`}
-                                  style={{
-                                    padding: "6px 10px",
-                                    borderRadius: 999,
-                                    background: theme.badgeBackground,
-                                    color: theme.color,
-                                    fontSize: 12,
-                                    fontWeight: 800,
-                                  }}
-                                >
-                                  {theme.label}
-                                </span>
+                              <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+                                {day.entries
+                                  .slice(0, 3)
+                                  .map((entry) => entry.courseCode ?? entry.title)
+                                  .join(", ")}
+                                {day.entries.length > 3 ? "..." : ""}
                               </div>
                             </div>
-
-                            <div style={{ color: "var(--text-primary)", fontSize: 24, fontWeight: 800 }}>
-                              Missed {day.missed} of {day.total}
-                            </div>
-                            <div style={{ color: "var(--text-secondary)", fontSize: 14 }}>
-                              Attended {day.attended} class{day.attended === 1 ? "" : "es"}
-                            </div>
-                          </button>
+                          </label>
                         );
                       })}
                     </div>
                   )}
+                </div>
 
-                  {extraLeaveRescueDays.length > 0 && (
-                    <div style={{ display: "grid", gap: 10 }}>
-                      <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>More recovery days</div>
-                      <div style={{ display: "grid", gap: 8 }}>
-                        {extraLeaveRescueDays.map((day) => {
+                {/* Right: Cumulative Impact & Master-Detail Compact Table */}
+                <div style={{ display: "grid", gap: 14 }}>
+                  {data.selectedBunkDates.size === 0 || !data.overallWholeDayPlan ? (
+                    <EmptyMessage message="Select one or more future dates from the list to preview the bunk projection." />
+                  ) : (
+                    <>
+                      {/* Overall Impact Card */}
+                      <div
+                        className="standard-card rise-in border-l-primary"
+                        style={{
+                          display: "grid",
+                          gap: 10,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: 12,
+                            alignItems: "baseline",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 800, fontSize: 17 }}>Overall Standing After Planned Leave</div>
+                            <div style={{ color: "var(--text-muted)", fontSize: 12.5 }}>
+                              Your projected attendance through the last selected day.
+                            </div>
+                          </div>
+                          <div style={{ display: "grid", gap: 4, justifyItems: "end" }}>
+                            <strong
+                              style={{
+                                color:
+                                  data.overallWholeDayPlan.currentPercentage >= 75
+                                    ? "var(--success)"
+                                    : "var(--danger)",
+                                fontVariantNumeric: "tabular-nums",
+                              }}
+                            >
+                              Current: {data.overallWholeDayPlan.currentPercentage.toFixed(1)}%
+                            </strong>
+                            <span
+                              style={{
+                                color:
+                                  data.overallWholeDayPlan.afterSelectedPercentage >= 75
+                                    ? "var(--success)"
+                                    : "var(--danger)",
+                                fontWeight: 700,
+                                fontSize: 13,
+                                fontVariantNumeric: "tabular-nums",
+                              }}
+                            >
+                              After leave:{" "}
+                              {data.overallWholeDayPlan.afterSelectedPercentage.toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+
+                        <ProgressBar
+                          label="Current Overall"
+                          percentage={data.overallWholeDayPlan.currentPercentage}
+                          healthy={data.overallWholeDayPlan.currentPercentage >= 75}
+                        />
+                        <ProgressBar
+                          label={`After leave (${data.overallWholeDayPlan.selectedClassCount} classes missed)`}
+                          percentage={data.overallWholeDayPlan.afterSelectedPercentage}
+                          healthy={data.overallWholeDayPlan.afterSelectedPercentage >= 75}
+                        />
+
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+                            gap: 10,
+                            color: "var(--text-secondary)",
+                            fontSize: 13.5,
+                          }}
+                        >
+                          <Metric
+                            label="Projected"
+                            value={`${data.overallWholeDayPlan.afterSelectedPresent}/${data.overallWholeDayPlan.afterSelectedTotal}`}
+                          />
+                          <Metric
+                            label="Missed"
+                            value={String(data.overallWholeDayPlan.selectedClassCount)}
+                          />
+                          <Metric
+                            label="Attended"
+                            value={String(data.overallWholeDayPlan.attendedClassCount)}
+                          />
+                        </div>
+
+                        <RecoveryNote
+                          recovery={data.overallWholeDayPlan.recovery}
+                          cutoffDateKey={data.selectedBunkCutoffDateKey}
+                        />
+                      </div>
+
+                      {/* Compact Master-Detail Table */}
+                      <CompactBunkSubjectTable
+                        subjects={data.wholeDayPlanSummaries}
+                        cutoffDateKey={data.selectedBunkCutoffDateKey}
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Panel>
+        </section>
+      )}
+
+      {/* =========================================================================
+          TAB 2: SMART MEDICAL LEAVE OPTIMIZER
+          ========================================================================= */}
+      {activeTab === "medical" && (
+        <section style={{ display: "grid", gap: 14 }} id="medical-optimizer" className="rise-in">
+          <Panel
+            title="Smart Medical Leave Optimizer"
+            subtitle="Find the best consecutive days in the last 30–50 days to apply for medical leave and reach your target attendance."
+          >
+            {data.streakLoading && Object.keys(data.streakDayData).length === 0 ? (
+              <EmptyMessage message="Scanning recent attendance history..." />
+            ) : !data.streakIsReliable && Object.keys(data.streakDayData).length === 0 ? (
+              <EmptyMessage message="Recent attendance is not available right now." />
+            ) : allLeaveRescueDays.length === 0 ? (
+              <EmptyMessage message="No recorded absences are available for a medical-leave calculation." />
+            ) : (
+              <div style={{ display: "grid", gap: 20 }}>
+                {/* Sub-Tab Selector */}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    borderBottom: "1px solid var(--border)",
+                    paddingBottom: 12,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveRescueTab("smart")}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: 10,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      border: `1px solid ${activeRescueTab === "smart" ? "var(--primary)" : "var(--border)"}`,
+                      background: activeRescueTab === "smart" ? "var(--primary-soft)" : "var(--bg-card)",
+                      color: activeRescueTab === "smart" ? "var(--primary)" : "var(--text-secondary)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 7,
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <Sparkles size={14} style={{ color: "var(--primary)" }} />
+                    <span>Consecutive Windows (Smart Optimization)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveRescueTab("custom")}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: 10,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      border: `1px solid ${activeRescueTab === "custom" ? "var(--primary)" : "var(--border)"}`,
+                      background: activeRescueTab === "custom" ? "var(--primary-soft)" : "var(--bg-card)",
+                      color: activeRescueTab === "custom" ? "var(--primary)" : "var(--text-secondary)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 7,
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <Calendar size={14} style={{ color: "var(--text-muted)" }} />
+                    <span>Custom Range & Daily Breakdown</span>
+                  </button>
+                </div>
+
+                {/* Sub-View 1: Smart Consecutive Windows */}
+                {activeRescueTab === "smart" && (
+                  <MedicalLeaveOptimizer
+                    streakDayData={data.streakDayData}
+                    streakSubjectAbsencesByDate={data.streakSubjectAbsencesByDate}
+                    subjectSummaries={data.subjectSummaries}
+                    overallSummary={data.overallSummary}
+                    streakLoading={data.streakLoading}
+                    studentName={data.studentDetails?.fullName}
+                    registrationNumber={data.studentDetails?.registrationNumber}
+                    activeStartDate={medicalLeaveStartDate}
+                    activeEndDate={medicalLeaveEndDate}
+                    onApplyWindow={(start, end) => setMedicalLeaveRange(start, end)}
+                  />
+                )}
+
+                {/* Sub-View 2: Custom Date Range & Daily Picker */}
+                {activeRescueTab === "custom" && (
+                  <div style={{ display: "grid", gap: 18 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 12,
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div style={{ color: "var(--text-secondary)", fontSize: 13.5, maxWidth: "72ch" }}>
+                        Choose your custom medical leave period. For this preview only, recorded absences in that range are treated as present.
+                      </div>
+                      <div
+                        className="status-badge status-badge--neutral"
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: 999,
+                          fontSize: 12.5,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {allLeaveRescueDays.length} missed day{allLeaveRescueDays.length === 1 ? "" : "s"} found
+                      </div>
+                      {selectedLeaveRescueDays.length > 0 && (
+                        <div
+                          className="status-badge status-badge--info"
+                          style={{
+                            padding: "6px 12px",
+                            borderRadius: 999,
+                            fontSize: 12.5,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {selectedLeaveRescueDays.length} selected
+                        </div>
+                      )}
+                    </div>
+
+                    <div
+                      className="surface-card"
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+                        gap: 14,
+                        padding: 16,
+                        borderRadius: 14,
+                        border: "1px solid var(--border)",
+                        background: "var(--bg-card-subtle)",
+                      }}
+                    >
+                      <label style={{ display: "grid", gap: 7, fontWeight: 700, fontSize: 13 }}>
+                        Medical leave start
+                        <input
+                          type="date"
+                          value={medicalLeaveStartDate}
+                          min={medicalLeaveDateBounds.min || undefined}
+                          max={medicalLeaveEndDate || medicalLeaveDateBounds.max || undefined}
+                          onChange={(event) => {
+                            const startDate = event.target.value;
+                            setMedicalLeaveStartDate(startDate);
+                            if (medicalLeaveEndDate && startDate > medicalLeaveEndDate) {
+                              setMedicalLeaveEndDate(startDate);
+                            }
+                          }}
+                          style={{
+                            font: "inherit",
+                            padding: "9px 12px",
+                            borderRadius: 8,
+                            border: "1px solid var(--border)",
+                            background: "var(--bg-card)",
+                            color: "var(--text-primary)",
+                          }}
+                        />
+                      </label>
+                      <label style={{ display: "grid", gap: 7, fontWeight: 700, fontSize: 13 }}>
+                        Medical leave end
+                        <input
+                          type="date"
+                          value={medicalLeaveEndDate}
+                          min={medicalLeaveStartDate || medicalLeaveDateBounds.min || undefined}
+                          max={medicalLeaveDateBounds.max || undefined}
+                          onChange={(event) => {
+                            const endDate = event.target.value;
+                            setMedicalLeaveEndDate(endDate);
+                            if (medicalLeaveStartDate && endDate < medicalLeaveStartDate) {
+                              setMedicalLeaveStartDate(endDate);
+                            }
+                          }}
+                          style={{
+                            font: "inherit",
+                            padding: "9px 12px",
+                            borderRadius: 8,
+                            border: "1px solid var(--border)",
+                            background: "var(--bg-card)",
+                            color: "var(--text-primary)",
+                          }}
+                        />
+                      </label>
+                    </div>
+
+                    {leaveRescueDays.length > 0 && (
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                          gap: 10,
+                        }}
+                      >
+                        {featuredLeaveRescueDays.map((day) => {
                           const theme = getLeaveRescueTheme(day.intensity);
-                          const isSelected = Boolean(medicalLeaveStartDate && medicalLeaveEndDate && day.dateKey >= medicalLeaveStartDate && day.dateKey <= medicalLeaveEndDate);
+                          const isSelected = Boolean(
+                            medicalLeaveStartDate &&
+                              medicalLeaveEndDate &&
+                              day.dateKey >= medicalLeaveStartDate &&
+                              day.dateKey <= medicalLeaveEndDate,
+                          );
 
                           return (
                             <button
                               type="button"
-                              className={`standard-card interactive-row ${theme.borderClass}`}
-                              key={`leave-rescue-extra-${day.dateKey}`}
+                              className={`standard-card interactive-row rise-in ${theme.borderClass}`}
+                              key={`leave-rescue-featured-${day.dateKey}`}
                               onClick={() => setMedicalLeaveRange(day.dateKey, day.dateKey)}
                               style={{
-                                display: "flex",
-                                gap: 12,
-                                alignItems: "center",
+                                display: "grid",
+                                gap: 8,
                                 width: "100%",
                                 textAlign: "left",
                                 cursor: "pointer",
@@ -918,141 +1525,88 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                             >
                               <div
                                 style={{
-                                  display: "grid",
-                                  gap: 4,
-                                  flex: "0 0 auto",
-                                  minWidth: "fit-content",
-                                }}
-                              >
-                                <strong style={{ whiteSpace: "nowrap", wordBreak: "normal" }}>
-                                  {day.label}
-                                </strong>
-                                <span
-                                  style={{
-                                    color: "var(--text-muted)",
-                                    fontSize: 13,
-                                    whiteSpace: "nowrap",
-                                    wordBreak: "normal",
-                                  }}
-                                >
-                                  {day.dateKey}
-                                </span>
-                              </div>
-                              <div
-                                style={{
                                   display: "flex",
                                   gap: 10,
-                                  alignItems: "center",
-                                  justifyContent: "flex-end",
-                                  color: "var(--text-secondary)",
-                                  fontWeight: 700,
+                                  alignItems: "start",
                                   flexWrap: "wrap",
-                                  marginLeft: "auto",
                                 }}
                               >
-                                {isSelected && (
-                                  <span className="status-badge status-badge--info">
-                                    Selected
+                                <div style={{ display: "grid", gap: 2 }}>
+                                  <strong style={{ fontSize: 16 }}>{day.label}</strong>
+                                  <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>
+                                    {day.dateKey}
                                   </span>
-                                )}
-                                <span
-                                  className={`status-badge ${day.intensity === "high" ? "status-badge--danger" : day.intensity === "medium" ? "status-badge--warning" : "status-badge--success"}`}
-                                  style={{ color: theme.color }}
+                                </div>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    gap: 6,
+                                    alignItems: "center",
+                                    flexWrap: "wrap",
+                                    marginLeft: "auto",
+                                  }}
                                 >
-                                  {theme.label}
-                                </span>
-                                <span>
-                                  Missed {day.missed} of {day.total}
-                                </span>
+                                  {isSelected && (
+                                    <span
+                                      className="status-badge"
+                                      style={{
+                                        padding: "4px 8px",
+                                        borderRadius: 999,
+                                        background: "var(--primary)",
+                                        color: "var(--text-on-primary)",
+                                        fontSize: 11,
+                                        fontWeight: 800,
+                                      }}
+                                    >
+                                      Selected
+                                    </span>
+                                  )}
+                                  <span
+                                    className={`status-badge ${
+                                      day.intensity === "high"
+                                        ? "status-badge--danger"
+                                        : day.intensity === "medium"
+                                        ? "status-badge--warning"
+                                        : "status-badge--success"
+                                    }`}
+                                    style={{
+                                      padding: "4px 8px",
+                                      borderRadius: 999,
+                                      background: theme.badgeBackground,
+                                      color: theme.color,
+                                      fontSize: 11,
+                                      fontWeight: 800,
+                                    }}
+                                  >
+                                    {theme.label}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div style={{ color: "var(--text-primary)", fontSize: 20, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                                Missed {day.missed} of {day.total}
+                              </div>
+                              <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
+                                Attended {day.attended} class{day.attended === 1 ? "" : "es"}
                               </div>
                             </button>
                           );
                         })}
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
 
-              <div
-                className="surface-card surface-card--highlight"
-                style={{
-                  display: "grid",
-                  gap: 16,
-                  padding: 18,
-                  borderRadius: 18,
-                  border: "1px solid var(--border-strong)",
-                  background: "var(--bg-card-subtle)",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 12,
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div style={{ display: "grid", gap: 4 }}>
-                    <div style={{ fontWeight: 800, fontSize: 18 }}>Recovery preview</div>
-                    <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                      {selectedLeaveRescueDays.length === 0
-                        ? "Choose a start and end date to preview the medical-leave adjustment."
-                        : `Medical leave: ${formatDateKeyLabel(medicalLeaveStartDate)} to ${formatDateKeyLabel(medicalLeaveEndDate)}`}
-                    </div>
-                  </div>
-                  {selectedLeaveRescueDays.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={clearLeaveRescueSelection}
+                    {/* Preview Container with Compact Table */}
+                    <div
+                      className="surface-card surface-card--highlight"
                       style={{
-                        ...secondaryButtonStyle,
-                        padding: "8px 14px",
-                        marginLeft: "auto",
+                        display: "grid",
+                        gap: 14,
+                        padding: 16,
+                        borderRadius: 14,
+                        border: "1px solid var(--border-strong)",
+                        background: "var(--bg-card-subtle)",
                       }}
                     >
-                      Clear
-                    </button>
-                  )}
-                </div>
-
-                {selectedLeaveRescueDays.length === 0 ? (
-                  <EmptyMessage message="Choose both medical leave dates to preview the impact." />
-                ) : !leaveRescueImpact || !data.overallSummary ? (
-                  <EmptyMessage message="Preview is not available right now." />
-                ) : leaveRescueImpact.addedPresent === 0 ? (
-                  <EmptyMessage message="No absences found on those days." />
-                ) : (
-                  <div style={{ display: "grid", gap: 16 }}>
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>Overall impact</div>
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-                          gap: 10,
-                        }}
-                      >
-                        <Metric
-                          label="Overall"
-                          value={`${formatPercentage(leaveRescueImpact.oldPercentage)} -> ${formatPercentage(leaveRescueImpact.newPercentage)}`}
-                        />
-                        <Metric
-                          label="Recovered"
-                          value={String(leaveRescueImpact.addedPresent)}
-                        />
-                        <Metric
-                          label="Present"
-                          value={`${leaveRescueImpact.oldPresent} -> ${leaveRescueImpact.newPresent}`}
-                        />
-                        <Metric
-                          label="Safe now"
-                          value={String(leaveRescueImpact.crossesThresholdCount)}
-                        />
-                      </div>
-                    </div>
-
-                    <div style={{ display: "grid", gap: 10 }}>
                       <div
                         style={{
                           display: "flex",
@@ -1061,117 +1615,130 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                           flexWrap: "wrap",
                         }}
                       >
-                        <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>Subject impact</div>
-                        <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                          {leaveRescueImpact.unchangedSubjectsCount} unchanged
-                        </span>
-                        {leaveRescueImpact.stillRiskyCount > 0 && (
-                          <span
-                            className="status-badge status-badge--warning"
+                        <div style={{ display: "grid", gap: 3 }}>
+                          <div style={{ fontWeight: 800, fontSize: 16 }}>Medical Adjustment Preview</div>
+                          <div style={{ color: "var(--text-muted)", fontSize: 12.5 }}>
+                            {selectedLeaveRescueDays.length === 0
+                              ? "Choose a start and end date above to preview the adjustment."
+                              : `Applied window: ${formatDateKeyLabel(medicalLeaveStartDate)} to ${formatDateKeyLabel(medicalLeaveEndDate)}`}
+                          </div>
+                        </div>
+                        {selectedLeaveRescueDays.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={clearLeaveRescueSelection}
                             style={{
-                              padding: "6px 10px",
-                              borderRadius: 999,
+                              ...secondaryButtonStyle,
+                              padding: "6px 12px",
                               fontSize: 12,
-                              fontWeight: 800,
+                              marginLeft: "auto",
                             }}
                           >
-                            {leaveRescueImpact.stillRiskyCount} still risky
-                          </span>
+                            Clear
+                          </button>
                         )}
                       </div>
 
-                      {leaveRescueImpact.impactedSubjects.length === 0 ? (
-                        <EmptyMessage message="No subject changes for those days." />
+                      {selectedLeaveRescueDays.length === 0 ? (
+                        <EmptyMessage message="Choose both medical leave dates to preview the impact." />
+                      ) : !leaveRescueImpact || !data.overallSummary ? (
+                        <EmptyMessage message="Preview is not available right now." />
+                      ) : leaveRescueImpact.addedPresent === 0 ? (
+                        <EmptyMessage message="No absences found on those days." />
                       ) : (
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                            gap: 10,
-                          }}
-                        >
-                          {leaveRescueImpact.impactedSubjects.map((subject) => {
-                            const impactTheme = getLeaveRescueImpactTheme(subject);
+                        <div style={{ display: "grid", gap: 14 }}>
+                          <div style={{ display: "grid", gap: 8 }}>
+                            <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 13.5 }}>
+                              Overall Impact Summary
+                            </div>
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                                gap: 8,
+                              }}
+                            >
+                              <Metric
+                                label="Overall"
+                                value={`${formatPercentage(leaveRescueImpact.oldPercentage)} → ${formatPercentage(leaveRescueImpact.newPercentage)}`}
+                              />
+                              <Metric
+                                label="Recovered"
+                                value={String(leaveRescueImpact.addedPresent)}
+                              />
+                              <Metric
+                                label="Present"
+                                value={`${leaveRescueImpact.oldPresent} → ${leaveRescueImpact.newPresent}`}
+                              />
+                              <Metric
+                                label="Safe Now"
+                                value={String(leaveRescueImpact.crossesThresholdCount)}
+                              />
+                            </div>
+                          </div>
 
-                            return (
-                              <div
-                                className={`surface-card interactive-row rise-in ${impactTheme.borderClass}`}
-                                key={`leave-rescue-impact-${subject.id}`}
-                                style={{
-                                  display: "grid",
-                                  gap: 10,
-                                  padding: 16,
-                                  borderRadius: 18,
-                                  border: impactTheme.border,
-                                  background: impactTheme.background,
-                                }}
-                                >
-                                <div style={{ display: "grid", gap: 4 }}>
-                                  <div style={{ fontWeight: 700 }}>{subject.title}</div>
-                                  <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                                    {subject.courseCode} - {subject.componentName}
-                                  </div>
-                                </div>
-
-                                <div
+                          <div style={{ display: "grid", gap: 8 }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: 10,
+                                alignItems: "center",
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 13.5 }}>
+                                Impacted Subjects ({leaveRescueImpact.impactedSubjects.length})
+                              </div>
+                              <span style={{ color: "var(--text-muted)", fontSize: 12 }}>
+                                {leaveRescueImpact.unchangedSubjectsCount} unchanged
+                              </span>
+                              {leaveRescueImpact.stillRiskyCount > 0 && (
+                                <span
+                                  className="status-badge status-badge--warning"
                                   style={{
-                                    display: "flex",
-                                    gap: 8,
-                                    alignItems: "center",
-                                    flexWrap: "wrap",
+                                    padding: "3px 8px",
+                                    borderRadius: 999,
+                                    fontSize: 11,
+                                    fontWeight: 700,
                                   }}
                                 >
-                                  <span
-                                    style={{ color: "var(--text-primary)", fontSize: 20, fontWeight: 800 }}
-                                  >
-                                    {formatPercentage(subject.oldPercentage)}
-                                    {" -> "}
-                                    {formatPercentage(subject.newPercentage)}
-                                  </span>
-                                  <span
-                                    className={`status-badge ${subject.crossesThreshold ? "status-badge--success" : subject.stillRisky ? "status-badge--warning" : "status-badge--info"}`}
-                                    style={{
-                                      padding: "6px 10px",
-                                      borderRadius: 999,
-                                      background: impactTheme.badgeBackground,
-                                      color: impactTheme.color,
-                                      fontSize: 12,
-                                      fontWeight: 800,
-                                    }}
-                                >
-                                  {impactTheme.label}
+                                  {leaveRescueImpact.stillRiskyCount} still risky
                                 </span>
-                              </div>
+                              )}
+                            </div>
 
-                                <div style={{ color: "var(--text-secondary)", fontSize: 14 }}>
-                                  Present {subject.oldPresent}/{subject.total}
-                                  {" -> "}
-                                  {subject.newPresent}/{subject.total}
-                                </div>
-                                <div style={{ color: impactTheme.color, fontSize: 13, fontWeight: 700 }}>
-                                  +{subject.addedPresent} class{subject.addedPresent === 1 ? "" : "es"} recovered
-                                </div>
-                              </div>
-                            );
-                          })}
+                            <CompactMedicalSubjectTable
+                              subjects={leaveRescueImpact.impactedSubjects}
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
               </div>
-            </div>
-          )}
-        </Panel>
-      </section>
+            )}
+          </Panel>
+        </section>
+      )}
 
-      <section style={{ display: "grid", gap: 14 }}>
-        <RedemptionArc
-          data={data.overallSummary}
-          schedule={data.bunkableDays}
-          subjectSummaries={data.subjectSummaries}
-        />
-      </section>
-    </>
+      {/* =========================================================================
+          TAB 3: REDEMPTION ARC (100% ATTENDANCE TARGET)
+          ========================================================================= */}
+      {activeTab === "redemption" && (
+        <section style={{ display: "grid", gap: 14 }} className="rise-in">
+          <Panel
+            title="100% Attendance Target (Redemption Arc)"
+            subtitle="Simulate where your cumulative attendance reaches if you attend every scheduled class until a target milestone date."
+          >
+            <RedemptionArc
+              data={data.overallSummary}
+              schedule={data.bunkableDays}
+              subjectSummaries={data.subjectSummaries}
+            />
+          </Panel>
+        </section>
+      )}
+    </div>
   );
 }
