@@ -971,7 +971,12 @@ function App() {
                 </div>
               </section>
             }>
-              <TodayStatus attendance={attendance} studentContext={studentContext} studentExamInfo={studentExamInfo} />
+              <TodayStatus
+                attendance={attendance}
+                studentContext={studentContext}
+                studentExamInfo={studentExamInfo}
+                knownSchedule={currentWeekFullClasses}
+              />
             </Suspense>
           } />
           <Route path="/strategy" element={<Strategy data={strategyData} handlers={strategyHandlers} />} />

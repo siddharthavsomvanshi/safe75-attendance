@@ -104,9 +104,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.headers.uid && !isAuthRoute) {
-    forwardHeaders["UID"] = Array.isArray(req.headers.uid)
+    const rawUid = Array.isArray(req.headers.uid)
       ? req.headers.uid[0]
       : req.headers.uid;
+    // Only forward UID if it is a valid numeric student ID (1 to 7 digits), never forward a 15-digit roll number
+    if (/^\d{1,7}$/.test(rawUid.trim())) {
+      forwardHeaders["UID"] = rawUid.trim();
+    }
   }
 
   if (req.headers["content-type"]) {

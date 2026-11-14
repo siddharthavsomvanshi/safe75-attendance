@@ -19,11 +19,17 @@ function removeStorage(keys) {
   });
 }
 
+function isValidNumericUid(val) {
+  if (val === null || val === undefined) return false;
+  return /^\d{1,7}$/.test(String(val).trim());
+}
+
 async function getStoredSession() {
   const result = await getStorage(["authToken", "uid", "studentId"]);
+  const rawUid = result.uid ?? result.studentId ?? null;
   return {
     token: result.authToken ?? null,
-    uid: result.uid ?? result.studentId ?? null,
+    uid: isValidNumericUid(rawUid) ? rawUid : null,
   };
 }
 
@@ -220,10 +226,9 @@ async function handleMessage(message) {
         throw new Error("A weekly schedule request needs both weekStartDate and weekEndDate.");
       }
 
-      const searchParams = new URLSearchParams({
-        weekStartDate,
-        weekEndDate,
-      });
+      const searchParams = new URLSearchParams();
+      searchParams.append("weekEndDate", weekEndDate);
+      searchParams.append("weekStartDate", weekStartDate);
 
       const response = await fetchKietJson(`/student/schedule/class?${searchParams.toString()}`);
       return {

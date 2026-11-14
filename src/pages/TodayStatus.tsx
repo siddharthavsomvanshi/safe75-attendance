@@ -14,6 +14,7 @@ export interface TodayStatusProps {
   attendance: StudentDetails | null;
   studentContext: StudentContext | null;
   studentExamInfo?: StudentExamInfo | null;
+  knownSchedule?: ScheduleEntry[];
 }
 
 type TodayClass = {
@@ -30,7 +31,7 @@ let moduleScheduleCaches: Record<string, ScheduleEntry[]> = {};
 let moduleAttendanceCache: Record<string, DatewiseAttendanceBucket[]> = {};
 let moduleLastFetchDateIso: string | null = null;
 
-export function TodayStatus({ attendance, studentContext, studentExamInfo }: TodayStatusProps) {
+export function TodayStatus({ attendance, studentContext, studentExamInfo, knownSchedule }: TodayStatusProps) {
   const [mode, setMode] = useState<"today" | "yesterday">("today");
   const [hasFetchedToday, setHasFetchedToday] = useState(false);
   const [hasFetchedYesterday, setHasFetchedYesterday] = useState(false);
@@ -62,6 +63,10 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
 
       const weekRange = getWeekRange(targetDateObj, 0);
       let schedule = moduleScheduleCaches[weekRange.weekStartDate];
+      if (!schedule && !forceRefresh && targetMode === "today" && knownSchedule && knownSchedule.length > 0) {
+         schedule = knownSchedule;
+         moduleScheduleCaches[weekRange.weekStartDate] = knownSchedule;
+      }
       if (!schedule) {
          schedule = await fetchScheduleUnified(weekRange);
          moduleScheduleCaches[weekRange.weekStartDate] = schedule;
@@ -134,28 +139,40 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
          }
       });
       
-      for (const compKey of uniqueComponents) {
-         if (!moduleAttendanceCache[compKey]) {
+      const uncachedComponents = Array.from(uniqueComponents).filter((k) => !moduleAttendanceCache[k]);
+
+      if (uncachedComponents.length > 0) {
+        setTargetClasses((prev) =>
+          prev.map((tc) => {
+            if (!tc.courseId || !tc.courseComponentId) return tc;
+            const key = `${tc.courseId}-${tc.courseComponentId}`;
+            return uncachedComponents.includes(key) ? { ...tc, isLoading: true, error: null } : tc;
+          })
+        );
+
+        await Promise.allSettled(
+          uncachedComponents.map(async (compKey) => {
             const [cId, ccId] = compKey.split("-").map(Number);
-            setTargetClasses(prev => prev.map(tc => 
-               (tc.courseId === cId && tc.courseComponentId === ccId) ? { ...tc, isLoading: true, error: null } : tc
-            ));
-            
             try {
-               const res = await fetchDatewiseAttendanceUnified({
-                  studentId: studentContext.studentId,
-                  sessionId: studentContext.sessionId,
-                  courseId: cId,
-                  courseCompId: ccId,
-               });
-               moduleAttendanceCache[compKey] = Array.isArray(res) ? res : (res as any)?.data || [];
+              const res = await fetchDatewiseAttendanceUnified({
+                studentId: studentContext.studentId,
+                sessionId: studentContext.sessionId,
+                courseId: cId,
+                courseCompId: ccId,
+              });
+              moduleAttendanceCache[compKey] = Array.isArray(res) ? res : (res as any)?.data || [];
             } catch (err) {
-               const errorMsg = err instanceof Error ? err.message : String(err);
-               setTargetClasses(prev => prev.map(tc => 
-                  (tc.courseId === cId && tc.courseComponentId === ccId) ? { ...tc, isLoading: false, error: errorMsg } : tc
-               ));
+              const errorMsg = err instanceof Error ? err.message : String(err);
+              setTargetClasses((prev) =>
+                prev.map((tc) =>
+                  tc.courseId === cId && tc.courseComponentId === ccId
+                    ? { ...tc, isLoading: false, error: errorMsg }
+                    : tc
+                )
+              );
             }
-         }
+          })
+        );
       }
       
       // Update attendanceStatus mapping
@@ -199,7 +216,7 @@ export function TodayStatus({ attendance, studentContext, studentExamInfo }: Tod
     } finally {
       setIsLoadingSchedule(false);
     }
-  }, [attendance, studentContext, studentExamInfo]);
+  }, [attendance, studentContext, studentExamInfo, knownSchedule]);
 
   useEffect(() => {
     if (studentContext && attendance) {

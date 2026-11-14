@@ -70,6 +70,14 @@ export function sanitizeToken(token: string): string {
   return `GlobalEducation ${cleaned}`;
 }
 
+export function isValidNumericUid(val: unknown): boolean {
+  if (val === null || val === undefined) return false;
+  const str = String(val).trim();
+  // Valid student database IDs in CyberVidya are short numbers (1 to 7 digits),
+  // whereas roll numbers / usernames are 10-15 digits.
+  return /^\d{1,7}$/.test(str);
+}
+
 export function extractClaimsFromToken(token: string): { studentId?: string | number; sessionId?: string | number } | null {
   try {
     const raw = token.replace(/^GlobalEducation\s+/i, "").replace(/^Bearer\s+/i, "").trim();
@@ -77,11 +85,13 @@ export function extractClaimsFromToken(token: string): { studentId?: string | nu
     if (parts.length === 3) {
       const payloadBase64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
       const json = JSON.parse(atob(payloadBase64));
-      const studentId = json.studentId || json.userId || json.uid || json.id || json.sub;
-      const sessionId = json.sessionId;
+      // Do NOT fall back to json.sub or roll number! Only accept short numeric database IDs.
+      const candidateId = json.studentId || json.userId || json.uid || json.id;
+      const studentId = isValidNumericUid(candidateId) ? Number(candidateId) : undefined;
+      const sessionId = isValidNumericUid(json.sessionId) ? Number(json.sessionId) : undefined;
       return {
-        studentId: studentId && !isNaN(Number(studentId)) ? Number(studentId) : studentId,
-        sessionId: sessionId && !isNaN(Number(sessionId)) ? Number(sessionId) : sessionId,
+        studentId,
+        sessionId,
       };
     }
   } catch {
@@ -93,15 +103,19 @@ export function extractClaimsFromToken(token: string): { studentId?: string | nu
 export function getStoredSession() {
   const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
   const capturedAt = localStorage.getItem(STORAGE_KEYS.CAPTURED_AT);
-  const studentId = localStorage.getItem(STORAGE_KEYS.STUDENT_ID);
-  const sessionId = localStorage.getItem(STORAGE_KEYS.SESSION_ID);
+  const rawStudentId = localStorage.getItem(STORAGE_KEYS.STUDENT_ID);
+  const rawSessionId = localStorage.getItem(STORAGE_KEYS.SESSION_ID);
+
+  // Validate studentId and sessionId so contaminated roll numbers are sanitized out
+  const studentId = isValidNumericUid(rawStudentId) ? Number(rawStudentId) : null;
+  const sessionId = isValidNumericUid(rawSessionId) ? Number(rawSessionId) : null;
 
   return {
     hasToken: Boolean(token),
     token: token ? sanitizeToken(token) : null,
     capturedAt: capturedAt ? parseInt(capturedAt, 10) : null,
-    studentId: studentId ? (isNaN(Number(studentId)) ? studentId : Number(studentId)) : null,
-    sessionId: sessionId ? (isNaN(Number(sessionId)) ? sessionId : Number(sessionId)) : null,
+    studentId,
+    sessionId,
   };
 }
 
@@ -109,11 +123,15 @@ export function saveStoredToken(rawToken: string, studentId?: string | number | 
   const token = sanitizeToken(rawToken);
   localStorage.setItem(STORAGE_KEYS.TOKEN, token);
   localStorage.setItem(STORAGE_KEYS.CAPTURED_AT, String(Date.now()));
-  if (studentId !== undefined && studentId !== null) {
+  if (isValidNumericUid(studentId)) {
     localStorage.setItem(STORAGE_KEYS.STUDENT_ID, String(studentId));
+  } else if (studentId === null) {
+    localStorage.removeItem(STORAGE_KEYS.STUDENT_ID);
   }
-  if (sessionId !== undefined && sessionId !== null) {
+  if (isValidNumericUid(sessionId)) {
     localStorage.setItem(STORAGE_KEYS.SESSION_ID, String(sessionId));
+  } else if (sessionId === null) {
+    localStorage.removeItem(STORAGE_KEYS.SESSION_ID);
   }
 }
 
@@ -131,10 +149,10 @@ async function requestApi<T>(
   let session = getStoredSession();
   const isAuthRoute = pathname.startsWith("/auth/");
 
-  // Automatic UID resolution if session token exists but studentId is not yet in storage
+  // Automatic UID resolution if session token exists but valid numeric studentId is not yet in storage
   if (
     session.token &&
-    !session.studentId &&
+    !isValidNumericUid(session.studentId) &&
     !options._isInternalLookup &&
     !isAuthRoute &&
     pathname !== "/student/dashboard/registered-courses"
@@ -152,7 +170,7 @@ async function requestApi<T>(
         ? (infoRes as any).payload
         : [];
       const first = courseList[0] || null;
-      if (first?.studentId) {
+      if (isValidNumericUid(first?.studentId)) {
         saveStoredToken(session.token, first.studentId, first.sessionId);
         session = getStoredSession();
       }
@@ -172,7 +190,8 @@ async function requestApi<T>(
     if (session.token) {
       headers["Authorization"] = session.token;
     }
-    if (session.studentId && !headers["UID"]) {
+    // ONLY attach UID header if it's a verified numeric database ID
+    if (isValidNumericUid(session.studentId) && !headers["UID"]) {
       headers["UID"] = String(session.studentId);
     }
   }
@@ -199,7 +218,11 @@ async function requestApi<T>(
       }
 
       if (response.status === 401) {
-        clearStoredSession();
+        // Only invalidate stored session if the core attendance request is rejected with 401
+        // Ancillary/background requests hitting 401 should never purge the active session
+        if (pathname === "/attendance/course/component/student" || isAuthRoute) {
+          clearStoredSession();
+        }
         throw new Error("Your KIET session expired. Please log in again.");
       }
 
@@ -395,8 +418,12 @@ export async function fetchStudentIdDirect(): Promise<{ studentId: number | stri
     const sessionId = first?.sessionId ?? null;
 
     const stored = getStoredSession();
-    const effectiveStudentId = studentId ?? stored.studentId ?? null;
-    const effectiveSessionId = sessionId ?? stored.sessionId ?? null;
+    const effectiveStudentId = isValidNumericUid(studentId)
+      ? Number(studentId)
+      : (isValidNumericUid(stored.studentId) ? Number(stored.studentId) : null);
+    const effectiveSessionId = isValidNumericUid(sessionId)
+      ? Number(sessionId)
+      : (isValidNumericUid(stored.sessionId) ? Number(stored.sessionId) : null);
 
     if (effectiveStudentId || effectiveSessionId) {
       saveStoredToken(localStorage.getItem(STORAGE_KEYS.TOKEN) || "", effectiveStudentId, effectiveSessionId);
@@ -405,7 +432,7 @@ export async function fetchStudentIdDirect(): Promise<{ studentId: number | stri
     return { studentId: effectiveStudentId, sessionId: effectiveSessionId };
   } catch (err) {
     const stored = getStoredSession();
-    if (stored.studentId) {
+    if (isValidNumericUid(stored.studentId)) {
       return { studentId: stored.studentId, sessionId: stored.sessionId };
     }
     throw err;
@@ -413,7 +440,9 @@ export async function fetchStudentIdDirect(): Promise<{ studentId: number | stri
 }
 
 export async function fetchScheduleDirect(weekStartDate: string, weekEndDate: string): Promise<ScheduleEntry[]> {
-  const params = new URLSearchParams({ weekStartDate, weekEndDate });
+  const params = new URLSearchParams();
+  params.append("weekEndDate", weekEndDate);
+  params.append("weekStartDate", weekStartDate);
   const res = await requestApi<{ data: ScheduleEntry[] }>(`/student/schedule/class?${params.toString()}`);
   return Array.isArray(res?.data) ? res.data : Array.isArray(res) ? (res as unknown as ScheduleEntry[]) : [];
 }

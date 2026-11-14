@@ -109,7 +109,7 @@ function extractUid() {
         }
       } catch (e) {}
       const clean = val.replace(/^"|"$/g, "");
-      if (/^\d+$/.test(clean)) {
+      if (/^\d{1,7}$/.test(clean)) {
         return clean;
       }
     }
