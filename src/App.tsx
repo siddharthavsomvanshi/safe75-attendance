@@ -985,7 +985,7 @@ function App() {
           <Route path="/history" element={<AttendanceHistory studentContext={studentContext} subjects={subjectSummaries} knownSchedule={currentWeekFullClasses} />} />
           <Route path="/exam" element={<Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading exam resources...</div>}><ExamMode attendance={attendance} subjects={subjectSummaries} overallSummary={overallSummary} studentExamInfo={studentExamInfo} /></Suspense>} />
           <Route path="/contribute" element={<Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading upload form...</div>}><Contribute /></Suspense>} />
-          <Route path="/feedback" element={<Snitch />} />
+          <Route path="/feedback" element={<Snitch attendance={attendance} studentContext={studentContext} />} />
           <Route path="/admin-login" element={
             <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading admin sign in...</div>}>
               <AdminLogin />
