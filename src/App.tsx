@@ -40,7 +40,7 @@ import type {
 import { getStudentExamSchedule } from "./data/mse2Datesheet";
 import type { StudentExamInfo } from "./data/mse2Datesheet";
 import { lazy, Suspense } from "react";
-import { Routes, Route, Link, useLocation } from "react-router-dom";
+import { Routes, Route, Link, useLocation, useNavigate } from "react-router-dom";
 import { Dashboard } from "./pages/Dashboard";
 import { Strategy } from "./pages/Strategy";
 import { CalendarPage } from "./pages/Calendar";
@@ -80,6 +80,7 @@ import {
   X,
   Github,
   AlertTriangle,
+  Lock,
 } from "./components/Icons";
 
 const AdminLogin = lazy(() => import('./pages/AdminLogin').then(m => ({ default: m.AdminLogin })));
@@ -938,6 +939,26 @@ function App() {
     bunkableDays,
   };
 
+  const navigate = useNavigate();
+  const brandBadgeClicksRef = useRef<{ count: number; lastTime: number }>({ count: 0, lastTime: 0 });
+
+  const handleBrandBadgeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const now = Date.now();
+    if (now - brandBadgeClicksRef.current.lastTime < 1200) {
+      brandBadgeClicksRef.current.count += 1;
+    } else {
+      brandBadgeClicksRef.current.count = 1;
+    }
+    brandBadgeClicksRef.current.lastTime = now;
+
+    if (brandBadgeClicksRef.current.count >= 3) {
+      brandBadgeClicksRef.current.count = 0;
+      navigate('/admin');
+    }
+  };
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -957,7 +978,15 @@ function App() {
                   style={{ width: 28, height: 28, borderRadius: 8, objectFit: "contain" }}
                 />
                 <span className="app-nav-brand-title">
-                  Safe75 <span className="brand-badge">ERP</span>
+                  Safe75{" "}
+                  <span
+                    className="brand-badge"
+                    onClick={handleBrandBadgeClick}
+                    style={{ cursor: "pointer", userSelect: "none" }}
+                    title="Tap 3 times for Admin Portal"
+                  >
+                    ERP
+                  </span>
                 </span>
               </Link>
 
@@ -1054,6 +1083,16 @@ function App() {
               <Link to="/feedback" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/feedback' ? 'active' : ''}`}>
                 <MessageSquareWarning size={15} /> Feedback & Report
               </Link>
+              <div style={{ borderTop: "1px solid var(--border)", marginTop: 6, paddingTop: 6 }}>
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`nav-link ${location.pathname.startsWith('/admin') ? 'active' : ''}`}
+                  style={{ color: "var(--text-muted)", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}
+                >
+                  <Lock size={15} /> Admin Portal
+                </Link>
+              </div>
             </div>
           )}
         </nav>
@@ -1228,7 +1267,17 @@ function App() {
               Made with precision for students • <strong>Safe75 Attendance</strong>
             </div>
             <div>
-              MIT Licensed • Client-Side Privacy
+              MIT Licensed • Client-Side Privacy •{" "}
+              <Link
+                to="/admin"
+                style={{
+                  color: "var(--text-muted)",
+                  textDecoration: "underline",
+                  textUnderlineOffset: 3,
+                }}
+              >
+                Admin
+              </Link>
             </div>
           </div>
         </footer>
