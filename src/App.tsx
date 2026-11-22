@@ -80,7 +80,6 @@ import {
   X,
   Github,
   AlertTriangle,
-  Lock,
 } from "./components/Icons";
 
 const AdminLogin = lazy(() => import('./pages/AdminLogin').then(m => ({ default: m.AdminLogin })));
@@ -983,7 +982,6 @@ function App() {
                     className="brand-badge"
                     onClick={handleBrandBadgeClick}
                     style={{ cursor: "pointer", userSelect: "none" }}
-                    title="Tap 3 times for Admin Portal"
                   >
                     ERP
                   </span>
@@ -1083,16 +1081,6 @@ function App() {
               <Link to="/feedback" onClick={() => setMobileMenuOpen(false)} className={`nav-link ${location.pathname === '/feedback' ? 'active' : ''}`}>
                 <MessageSquareWarning size={15} /> Feedback & Report
               </Link>
-              <div style={{ borderTop: "1px solid var(--border)", marginTop: 6, paddingTop: 6 }}>
-                <Link
-                  to="/admin"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`nav-link ${location.pathname.startsWith('/admin') ? 'active' : ''}`}
-                  style={{ color: "var(--text-muted)", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}
-                >
-                  <Lock size={15} /> Admin Portal
-                </Link>
-              </div>
             </div>
           )}
         </nav>
@@ -1267,17 +1255,7 @@ function App() {
               Made with precision for students • <strong>Safe75 Attendance</strong>
             </div>
             <div>
-              MIT Licensed • Client-Side Privacy •{" "}
-              <Link
-                to="/admin"
-                style={{
-                  color: "var(--text-muted)",
-                  textDecoration: "underline",
-                  textUnderlineOffset: 3,
-                }}
-              >
-                Admin
-              </Link>
+              MIT Licensed • Client-Side Privacy
             </div>
           </div>
         </footer>
