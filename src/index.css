@@ -1059,6 +1059,10 @@ label {
     font-size: 12.5px !important;
     min-height: 38px;
   }
+
+  .erp-status-label {
+    display: none !important;
+  }
 }
 
 /* =========================================================================

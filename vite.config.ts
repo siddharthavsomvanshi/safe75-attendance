@@ -25,6 +25,29 @@ export default defineConfig({
             res.end(JSON.stringify({ ok: true, enabled: true }));
             return;
           }
+          if (req.url && req.url.startsWith("/api/health")) {
+            res.setHeader("Content-Type", "application/json");
+            res.end(
+              JSON.stringify({
+                status: "operational",
+                latencyMs: 145,
+                primary: {
+                  url: "https://kiet.cybervidya.net/api",
+                  status: 200,
+                  latencyMs: 145,
+                  alive: true,
+                },
+                backup: {
+                  url: "https://cybervidya.amanpal.tech/api",
+                  status: 200,
+                  latencyMs: 180,
+                  alive: true,
+                },
+                timestamp: new Date().toISOString(),
+              })
+            );
+            return;
+          }
           next();
         });
       },

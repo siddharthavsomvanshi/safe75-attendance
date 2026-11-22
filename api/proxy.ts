@@ -1,5 +1,45 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+// Rate limiter state across warm container invocations
+const ipRateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_MAX = 60; // Max 60 requests per minute
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+
+async function logIncidentAsync(
+  upstream: string,
+  endpoint: string,
+  statusCode: number,
+  errorMessage?: string
+) {
+  try {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.VITE_SUPABASE_ANON_KEY ||
+      process.env.SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey) return;
+
+    await fetch(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/system_incidents`, {
+      method: "POST",
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        upstream,
+        endpoint,
+        status_code: statusCode,
+        error_message: errorMessage || `Upstream returned status ${statusCode}`,
+      }),
+      signal: AbortSignal.timeout(2000),
+    });
+  } catch {
+    // Non-blocking fire-and-forget
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS Headers
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -75,6 +115,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     clientIp = "49.36.1.1"; // Reliance Jio Indian residential IP
   }
 
+  // Vercel Quota Shield: Anti-runaway client loop rate limiter
+  const now = Date.now();
+  const rateLimitKey = clientIp || "unknown";
+  const rateLimitRecord = ipRateLimitMap.get(rateLimitKey);
+
+  if (rateLimitRecord && now < rateLimitRecord.resetAt) {
+    if (rateLimitRecord.count >= RATE_LIMIT_MAX) {
+      res.status(429).json({
+        error: "Too Many Requests",
+        message: "Proxy rate limit exceeded (max 60 req/min). Please slow down to protect server capacity.",
+        retryAfter: Math.ceil((rateLimitRecord.resetAt - now) / 1000),
+      });
+      return;
+    }
+    rateLimitRecord.count += 1;
+  } else {
+    ipRateLimitMap.set(rateLimitKey, {
+      count: 1,
+      resetAt: now + RATE_LIMIT_WINDOW_MS,
+    });
+  }
+
+  // Periodic cleanup if map grows too large
+  if (ipRateLimitMap.size > 2000) {
+    for (const [key, val] of ipRateLimitMap.entries()) {
+      if (now >= val.resetAt) {
+        ipRateLimitMap.delete(key);
+      }
+    }
+  }
+
   const forwardHeaders: Record<string, string> = {
     Accept: "application/json, text/plain, */*",
     Origin: "https://kiet.cybervidya.net",
@@ -144,6 +215,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // If this upstream returns 403 Forbidden or 5xx Server Error, try the next candidate
       if ((response.status === 403 || response.status >= 500) && i < upstreamCandidates.length - 1) {
+        void logIncidentAsync(upstreamUrl, targetPath, response.status);
         console.warn(`Upstream ${upstreamUrl} returned status ${response.status}, falling back to next upstream...`);
         continue;
       }
@@ -169,6 +241,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       return;
     } catch (err) {
+      void logIncidentAsync(targetUrl, targetPath, 0, err instanceof Error ? err.message : String(err));
       console.warn(`Upstream ${targetUrl} failed:`, err);
       lastError = err instanceof Error ? err : new Error(String(err));
     }

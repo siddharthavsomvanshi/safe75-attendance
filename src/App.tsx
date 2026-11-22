@@ -61,6 +61,7 @@ import {
 } from "./services/cybervidyaApi";
 import { sendSnapshotAsync } from "./services/notificationService";
 
+import { ERPStatusIndicator } from "./components/ERPStatusIndicator";
 import { FooterCollaborators } from "./components/FooterCollaborators";
 import { MultiversePage } from "./pages/Multiverse";
 import { WhatsNewModal } from "./components/WhatsNewModal";
@@ -1017,6 +1018,7 @@ function App() {
             </div>
             
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              <ERPStatusIndicator />
               <button 
                 type="button"
                 className="theme-toggle-btn"

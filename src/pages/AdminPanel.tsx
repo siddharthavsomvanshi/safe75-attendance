@@ -20,7 +20,9 @@ import {
   FileText,
   Calendar,
   Plus,
+  ShieldCheck,
 } from '../components/Icons';
+import type { SystemHealthData } from '../components/ERPStatusIndicator';
 import { formatIsoDate } from '../utils/date';
 import {
   fetchAllAcademicEventsAdmin,
@@ -81,7 +83,15 @@ const STATUS_CONFIG: Record<
 export function AdminPanel() {
   const navigate = useNavigate();
   const [loadingSession, setLoadingSession] = useState(true);
-  const [adminTab, setAdminTab] = useState<'resources' | 'snitch' | 'events'>('snitch');
+  const [adminTab, setAdminTab] = useState<'resources' | 'snitch' | 'events' | 'health'>('snitch');
+
+  // ==========================================
+  // System Health & Proxy Monitor State
+  // ==========================================
+  const [healthData, setHealthData] = useState<SystemHealthData | null>(null);
+  const [testingHealth, setTestingHealth] = useState(false);
+  const [incidents, setIncidents] = useState<any[]>([]);
+  const [loadingIncidents, setLoadingIncidents] = useState(false);
 
   // ==========================================
   // Academic Events & Off-Days State
@@ -140,6 +150,7 @@ export function AdminPanel() {
     fetchResources();
     fetchReports();
     fetchEvents();
+    runHealthPing();
   }, []);
 
   const fetchEvents = async () => {
@@ -265,6 +276,39 @@ export function AdminPanel() {
         return [...withoutAll, sem];
       }
     });
+  };
+
+  const runHealthPing = async (fresh = false) => {
+    setTestingHealth(true);
+    try {
+      const res = await fetch(`/api/health${fresh ? '?fresh=1' : ''}`);
+      if (res.ok) {
+        const data = (await res.json()) as SystemHealthData;
+        setHealthData(data);
+      }
+    } catch (err: any) {
+      console.warn('Could not run health ping:', err);
+    } finally {
+      setTestingHealth(false);
+    }
+  };
+
+  const fetchIncidents = async () => {
+    setLoadingIncidents(true);
+    try {
+      const { data, error } = await supabase
+        .from('system_incidents')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (!error && data) {
+        setIncidents(data);
+      }
+    } catch {
+      // Non-blocking
+    } finally {
+      setLoadingIncidents(false);
+    }
   };
 
   const checkSession = async () => {
@@ -639,6 +683,50 @@ export function AdminPanel() {
           <Calendar size={15} />
           <span>Academic Events & Off-Days</span>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({events.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setAdminTab('health');
+            runHealthPing(true);
+            fetchIncidents();
+          }}
+          className={`filter-tab ${adminTab === 'health' ? 'active' : ''}`}
+          style={{
+            padding: '8px 18px',
+            fontSize: '13px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            cursor: 'pointer',
+          }}
+        >
+          <ShieldCheck size={15} />
+          <span>System & ERP Health</span>
+          {healthData && (
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                backgroundColor:
+                  healthData.status === 'operational'
+                    ? 'var(--success)'
+                    : healthData.status === 'degraded'
+                    ? 'var(--warning)'
+                    : 'var(--danger)',
+                display: 'inline-block',
+                boxShadow: `0 0 6px ${
+                  healthData.status === 'operational'
+                    ? 'var(--success)'
+                    : healthData.status === 'degraded'
+                    ? 'var(--warning)'
+                    : 'var(--danger)'
+                }`,
+              }}
+            />
+          )}
         </button>
       </div>
 
@@ -1779,6 +1867,271 @@ export function AdminPanel() {
               {events.length === 0 && !loadingEvents && (
                 <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '24px' }}>
                   No academic events recorded yet. Use the form above to announce off-days or working Saturdays.
+                </div>
+              )}
+            </div>
+          </Panel>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 4: SYSTEM & ERP HEALTH MONITOR                                        */}
+      {/* ========================================================================= */}
+      {adminTab === 'health' && (
+        <div style={{ display: 'grid', gap: '16px' }}>
+          {/* KPI Summary Cards */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: 12,
+            }}
+          >
+            <div className="standard-card" style={{ padding: '16px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                ERP Status
+              </div>
+              <div
+                style={{
+                  fontSize: '24px',
+                  fontWeight: 800,
+                  marginTop: '4px',
+                  color:
+                    healthData?.status === 'operational'
+                      ? 'var(--success)'
+                      : healthData?.status === 'degraded'
+                      ? 'var(--warning)'
+                      : 'var(--danger)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    backgroundColor:
+                      healthData?.status === 'operational'
+                        ? 'var(--success)'
+                        : healthData?.status === 'degraded'
+                        ? 'var(--warning)'
+                        : 'var(--danger)',
+                    display: 'inline-block',
+                    boxShadow: `0 0 8px ${
+                      healthData?.status === 'operational'
+                        ? 'var(--success)'
+                        : healthData?.status === 'degraded'
+                        ? 'var(--warning)'
+                        : 'var(--danger)'
+                    }`,
+                  }}
+                />
+                <span style={{ textTransform: 'capitalize' }}>{healthData?.status || 'Probing...'}</span>
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                Round-trip latency: <strong>{healthData?.latencyMs ?? 0} ms</strong>
+              </div>
+            </div>
+
+            <div className="standard-card" style={{ padding: '16px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--info)', textTransform: 'uppercase' }}>
+                Primary Upstream
+              </div>
+              <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px', color: 'var(--text-primary)' }}>
+                {healthData?.primary?.alive ? 'Reachable' : 'Blocked / Offline'}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                kiet.cybervidya.net ({healthData?.primary?.latencyMs ?? 0} ms)
+              </div>
+            </div>
+
+            <div className="standard-card" style={{ padding: '16px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', textTransform: 'uppercase' }}>
+                Backup Gateway
+              </div>
+              <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px', color: 'var(--text-primary)' }}>
+                {healthData?.backup?.alive ? 'Standby Ready' : 'Offline'}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                cybervidya.amanpal.tech ({healthData?.backup?.latencyMs ?? 0} ms)
+              </div>
+            </div>
+
+            <div className="standard-card" style={{ padding: '16px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase' }}>
+                Vercel Quota Shield
+              </div>
+              <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px', color: 'var(--text-primary)' }}>
+                Active (60 req/m)
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                Sliding-window IP throttle protection
+              </div>
+            </div>
+          </div>
+
+          {/* Upstream Diagnostics Card */}
+          <Panel
+            title="Live CyberVidya Upstream Diagnostics"
+            subtitle="Real-time connectivity and round-trip responsiveness testing across candidate serverless proxy gateways."
+          >
+            <div style={{ display: 'grid', gap: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                  Last Checked: {healthData?.timestamp ? new Date(healthData.timestamp).toLocaleTimeString() : 'Just now'}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => runHealthPing(true)}
+                  disabled={testingHealth}
+                  className="action-button action-button--primary"
+                  style={{ padding: '8px 16px', fontSize: '12.5px', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <RefreshCw size={13} className={testingHealth ? 'spin' : ''} />
+                  <span>{testingHealth ? 'Testing Ping...' : 'Run Live Ping Test'}</span>
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+                {/* Primary Card */}
+                <div className="standard-card" style={{ padding: '16px', display: 'grid', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 700, fontSize: '13.5px', color: 'var(--text-primary)' }}>
+                      1. Official College Server (Primary)
+                    </span>
+                    <span
+                      className={`status-badge ${healthData?.primary?.alive ? 'status-badge--success' : 'status-badge--danger'}`}
+                      style={{ fontSize: '11px' }}
+                    >
+                      {healthData?.primary?.alive ? 'Online' : 'Unreachable'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    <strong>URL:</strong> https://kiet.cybervidya.net/api
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    <strong>HTTP Status:</strong> {healthData?.primary?.status || 'N/A'}
+                    <span style={{ marginLeft: 10 }}>
+                      <strong>Latency:</strong> {healthData?.primary?.latencyMs ?? 0} ms
+                    </span>
+                  </div>
+                  {healthData?.primary?.error && (
+                    <div style={{ fontSize: '11.5px', color: 'var(--danger)', background: 'var(--danger-soft)', padding: '6px 8px', borderRadius: 6 }}>
+                      {healthData.primary.error}
+                    </div>
+                  )}
+                </div>
+
+                {/* Backup Card */}
+                <div className="standard-card" style={{ padding: '16px', display: 'grid', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 700, fontSize: '13.5px', color: 'var(--text-primary)' }}>
+                      2. Fallback Proxy Gateway (Secondary)
+                    </span>
+                    <span
+                      className={`status-badge ${healthData?.backup?.alive ? 'status-badge--success' : 'status-badge--danger'}`}
+                      style={{ fontSize: '11px' }}
+                    >
+                      {healthData?.backup?.alive ? 'Standby Online' : 'Offline'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    <strong>URL:</strong> https://cybervidya.amanpal.tech/api
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    <strong>HTTP Status:</strong> {healthData?.backup?.status || 'N/A'}
+                    <span style={{ marginLeft: 10 }}>
+                      <strong>Latency:</strong> {healthData?.backup?.latencyMs ?? 0} ms
+                    </span>
+                  </div>
+                  {healthData?.backup?.error && (
+                    <div style={{ fontSize: '11.5px', color: 'var(--danger)', background: 'var(--danger-soft)', padding: '6px 8px', borderRadius: 6 }}>
+                      {healthData.backup.error}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Panel>
+
+          {/* Vercel Quota Shield Info */}
+          <Panel
+            title="Proxy Traffic & Anti-Loop Shield"
+            subtitle="Configured safeguards to protect your Vercel serverless function usage from runaway loops and scrapers."
+          >
+            <div style={{ display: 'grid', gap: 10, fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 12, background: 'var(--bg-card-subtle)', borderRadius: 8 }}>
+                <span style={{ fontSize: 16 }}>🛡️</span>
+                <div>
+                  <strong style={{ color: 'var(--text-primary)' }}>Anti-Runaway Client Limiter Active:</strong> Any single IP address exceeding <strong>60 requests per minute</strong> receives an instant <code>429 Too Many Requests</code> response without hitting CyberVidya, stopping infinite refresh loops.
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 12, background: 'var(--bg-card-subtle)', borderRadius: 8 }}>
+                <span style={{ fontSize: 16 }}>⚡</span>
+                <div>
+                  <strong style={{ color: 'var(--text-primary)' }}>Edge CDN Health Caching:</strong> The <code>/api/health</code> endpoint serves with <code>s-maxage=60, stale-while-revalidate=120</code>. Even if hundreds of students open Safe75 concurrently, Vercel caches the response globally, consuming only ~1 serverless invocation per minute.
+                </div>
+              </div>
+            </div>
+          </Panel>
+
+          {/* Recent ERP Incidents Log */}
+          <Panel
+            title="Recent ERP Proxy Incidents & Outages"
+            subtitle="Automatic log of 403 blocks, 5xx server errors, or gateway timeouts encountered during live student traffic."
+          >
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+              <button
+                type="button"
+                onClick={fetchIncidents}
+                disabled={loadingIncidents}
+                className="action-button action-button--secondary"
+                style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <RefreshCw size={13} className={loadingIncidents ? 'spin' : ''} />
+                <span>Refresh Incidents</span>
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gap: 8 }}>
+              {incidents.map((inc) => (
+                <div
+                  key={inc.id}
+                  className="standard-card"
+                  style={{
+                    padding: '12px 16px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 12,
+                    flexWrap: 'wrap',
+                    borderLeft: `4px solid ${inc.status_code === 403 ? 'var(--warning)' : 'var(--danger)'}`,
+                  }}
+                >
+                  <div style={{ display: 'grid', gap: 2 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span className={`status-badge ${inc.status_code === 403 ? 'status-badge--warning' : 'status-badge--danger'}`} style={{ fontSize: '11px' }}>
+                        HTTP {inc.status_code || 'Timeout'}
+                      </span>
+                      <span style={{ fontWeight: 600, fontSize: '12.5px', color: 'var(--text-primary)' }}>
+                        {inc.endpoint || '/api'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                      {inc.upstream} • {inc.error_message}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    {new Date(inc.created_at).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+
+              {incidents.length === 0 && !loadingIncidents && (
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '24px' }}>
+                  No upstream proxy incidents recorded. CyberVidya ERP servers have been stable.
                 </div>
               )}
             </div>
