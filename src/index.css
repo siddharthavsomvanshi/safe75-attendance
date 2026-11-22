@@ -1102,6 +1102,17 @@ label {
   display: none;
 }
 
+/* =========================================================================
+   Admin Panel Mobile Optimizations
+   ========================================================================= */
+.admin-tabs-scroll-bar {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.admin-tabs-scroll-bar::-webkit-scrollbar {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .planner-subject-row {
     flex-direction: column !important;

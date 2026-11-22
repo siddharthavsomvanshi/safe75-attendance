@@ -579,7 +579,7 @@ export function AdminPanel() {
   };
 
   return (
-    <div style={{ display: 'grid', gap: '16px' }}>
+    <div style={{ display: 'grid', gap: '16px', width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
       {/* Header with Title and Tab Switcher */}
       <div
         style={{
@@ -611,11 +611,17 @@ export function AdminPanel() {
 
       {/* Top Level Nav Tabs */}
       <div
+        className="admin-tabs-scroll-bar"
         style={{
           display: 'flex',
           gap: 8,
           borderBottom: '1px solid var(--border)',
           paddingBottom: 8,
+          overflowX: 'auto',
+          maxWidth: '100%',
+          minWidth: 0,
+          scrollbarWidth: 'none',
+          WebkitOverflowScrolling: 'touch',
         }}
       >
         <button
@@ -623,12 +629,14 @@ export function AdminPanel() {
           onClick={() => setAdminTab('snitch')}
           className={`filter-tab ${adminTab === 'snitch' ? 'active' : ''}`}
           style={{
-            padding: '8px 18px',
+            padding: '8px 16px',
             fontSize: '13px',
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
             cursor: 'pointer',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
           }}
         >
           <MessageSquareWarning size={15} />
@@ -654,12 +662,14 @@ export function AdminPanel() {
           onClick={() => setAdminTab('resources')}
           className={`filter-tab ${adminTab === 'resources' ? 'active' : ''}`}
           style={{
-            padding: '8px 18px',
+            padding: '8px 16px',
             fontSize: '13px',
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
             cursor: 'pointer',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
           }}
         >
           <FileText size={15} />
@@ -672,12 +682,14 @@ export function AdminPanel() {
           onClick={() => setAdminTab('events')}
           className={`filter-tab ${adminTab === 'events' ? 'active' : ''}`}
           style={{
-            padding: '8px 18px',
+            padding: '8px 16px',
             fontSize: '13px',
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
             cursor: 'pointer',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
           }}
         >
           <Calendar size={15} />
@@ -694,12 +706,14 @@ export function AdminPanel() {
           }}
           className={`filter-tab ${adminTab === 'health' ? 'active' : ''}`}
           style={{
-            padding: '8px 18px',
+            padding: '8px 16px',
             fontSize: '13px',
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
             cursor: 'pointer',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
           }}
         >
           <ShieldCheck size={15} />
@@ -739,13 +753,13 @@ export function AdminPanel() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
               gap: '12px',
             }}
           >
             <div
               className="standard-card"
-              style={{ padding: '14px 16px', borderLeft: '4px solid var(--warning)' }}
+              style={{ padding: '14px 16px', borderLeft: '4px solid var(--warning)', minWidth: 0 }}
             >
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Open Tickets</div>
               <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--warning)', marginTop: 4 }}>
@@ -756,7 +770,7 @@ export function AdminPanel() {
 
             <div
               className="standard-card"
-              style={{ padding: '14px 16px', borderLeft: '4px solid var(--info)' }}
+              style={{ padding: '14px 16px', borderLeft: '4px solid var(--info)', minWidth: 0 }}
             >
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Under Investigation</div>
               <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--info)', marginTop: 4 }}>
@@ -767,7 +781,7 @@ export function AdminPanel() {
 
             <div
               className="standard-card"
-              style={{ padding: '14px 16px', borderLeft: '4px solid var(--success)' }}
+              style={{ padding: '14px 16px', borderLeft: '4px solid var(--success)', minWidth: 0 }}
             >
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Resolved</div>
               <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--success)', marginTop: 4 }}>
@@ -778,7 +792,7 @@ export function AdminPanel() {
 
             <div
               className="standard-card"
-              style={{ padding: '14px 16px', borderLeft: '4px solid var(--primary-border)' }}
+              style={{ padding: '14px 16px', borderLeft: '4px solid var(--primary-border)', minWidth: 0 }}
             >
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Total Tickets</div>
               <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>
@@ -824,7 +838,18 @@ export function AdminPanel() {
                 }}
               >
                 {/* Status Tabs */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                <div
+                  className="admin-tabs-scroll-bar"
+                  style={{
+                    display: 'flex',
+                    gap: '6px',
+                    overflowX: 'auto',
+                    maxWidth: '100%',
+                    minWidth: 0,
+                    scrollbarWidth: 'none',
+                    WebkitOverflowScrolling: 'touch',
+                  }}
+                >
                   {(['all', 'open', 'investigating', 'resolved', 'closed'] as const).map((st) => (
                     <button
                       key={st}
@@ -835,6 +860,8 @@ export function AdminPanel() {
                         padding: '6px 12px',
                         fontSize: '12px',
                         textTransform: 'capitalize',
+                        flexShrink: 0,
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       {st}
@@ -854,6 +881,7 @@ export function AdminPanel() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
+                    flexShrink: 0,
                   }}
                   title="Refresh reports"
                 >
@@ -863,7 +891,7 @@ export function AdminPanel() {
               </div>
 
               {/* Secondary Filters: Category + Search Input */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
@@ -1166,8 +1194,11 @@ export function AdminPanel() {
                                   fontSize: '11px',
                                   fontFamily: 'monospace',
                                   color: 'var(--text-secondary)',
-                                  maxHeight: 160,
+                                  maxHeight: 180,
                                   overflowY: 'auto',
+                                  overflowX: 'auto',
+                                  whiteSpace: 'pre-wrap',
+                                  wordBreak: 'break-all',
                                 }}
                               >
                                 {JSON.stringify(diag, null, 2)}
@@ -1188,7 +1219,7 @@ export function AdminPanel() {
                           borderTop: '1px solid var(--border)',
                         }}
                       >
-                        <div style={{ flex: 1, minWidth: 240 }}>
+                        <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                           <input
                             type="text"
                             placeholder="Add internal resolution note (e.g. Fixed in patch v2.4, student emailed)..."
@@ -1196,7 +1227,7 @@ export function AdminPanel() {
                             onChange={(e) =>
                               setAdminNotesMap({ ...adminNotesMap, [report.id]: e.target.value })
                             }
-                            style={{ ...inputStyle, padding: '6px 10px', fontSize: '12px' }}
+                            style={{ ...inputStyle, padding: '6px 10px', fontSize: '12px', width: '100%', boxSizing: 'border-box' }}
                           />
                         </div>
 
@@ -1204,7 +1235,7 @@ export function AdminPanel() {
                           type="button"
                           onClick={() => handleSaveAdminNote(report.id)}
                           className="action-button action-button--secondary"
-                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                          style={{ padding: '6px 12px', fontSize: '12px', flexShrink: 0 }}
                         >
                           Save Note
                         </button>
@@ -1220,6 +1251,7 @@ export function AdminPanel() {
                             cursor: 'pointer',
                             padding: '6px 8px',
                             fontWeight: 600,
+                            flexShrink: 0,
                           }}
                         >
                           Delete
@@ -1272,7 +1304,7 @@ export function AdminPanel() {
                 </div>
               )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                 <div style={{ display: 'grid', gap: '6px' }}>
                   <label style={{ fontSize: '13px', fontWeight: 700 }}>Subject</label>
                   <input
@@ -1301,7 +1333,7 @@ export function AdminPanel() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                 <div style={{ display: 'grid', gap: '6px' }}>
                   <label style={{ fontSize: '13px', fontWeight: 700 }}>Title</label>
                   <input
@@ -1329,7 +1361,7 @@ export function AdminPanel() {
                 )}
               </div>
 
-              <div style={{ display: 'flex', gap: '16px', padding: '6px 0' }}>
+              <div style={{ display: 'flex', gap: '16px', padding: '6px 0', flexWrap: 'wrap' }}>
                 <label style={{ display: 'flex', gap: '8px', alignItems: 'center', cursor: 'pointer', fontSize: 13 }}>
                   <input
                     type="radio"
@@ -1386,12 +1418,24 @@ export function AdminPanel() {
           </Panel>
 
           <Panel title="Manage Resources" subtitle={`${resources.length} total resources.`}>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+            <div
+              className="admin-tabs-scroll-bar"
+              style={{
+                display: 'flex',
+                gap: '10px',
+                marginBottom: '16px',
+                overflowX: 'auto',
+                maxWidth: '100%',
+                minWidth: 0,
+                scrollbarWidth: 'none',
+                WebkitOverflowScrolling: 'touch',
+              }}
+            >
               <button
                 type="button"
                 onClick={() => setResourceActiveTab('pending')}
                 className={`filter-tab ${resourceActiveTab === 'pending' ? 'active' : ''}`}
-                style={{ padding: '8px 16px' }}
+                style={{ padding: '8px 16px', flexShrink: 0, whiteSpace: 'nowrap' }}
               >
                 Pending ({resources.filter((r) => r.status === 'pending').length})
               </button>
@@ -1399,7 +1443,7 @@ export function AdminPanel() {
                 type="button"
                 onClick={() => setResourceActiveTab('approved')}
                 className={`filter-tab ${resourceActiveTab === 'approved' ? 'active' : ''}`}
-                style={{ padding: '8px 16px' }}
+                style={{ padding: '8px 16px', flexShrink: 0, whiteSpace: 'nowrap' }}
               >
                 Live ({resources.filter((r) => r.status === 'approved').length})
               </button>
@@ -1416,6 +1460,8 @@ export function AdminPanel() {
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: 12,
                       padding: '14px 16px',
                     }}
                   >
@@ -1492,11 +1538,11 @@ export function AdminPanel() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
               gap: 12,
             }}
           >
-            <div className="standard-card" style={{ padding: '16px' }}>
+            <div className="standard-card" style={{ padding: '16px', minWidth: 0 }}>
               <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 Total Events
               </div>
@@ -1508,7 +1554,7 @@ export function AdminPanel() {
               </div>
             </div>
 
-            <div className="standard-card" style={{ padding: '16px' }}>
+            <div className="standard-card" style={{ padding: '16px', minWidth: 0 }}>
               <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--warning)', textTransform: 'uppercase' }}>
                 Off-Days & Hackathons
               </div>
@@ -1520,7 +1566,7 @@ export function AdminPanel() {
               </div>
             </div>
 
-            <div className="standard-card" style={{ padding: '16px' }}>
+            <div className="standard-card" style={{ padding: '16px', minWidth: 0 }}>
               <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--info)', textTransform: 'uppercase' }}>
                 Working Saturdays & Swaps
               </div>
@@ -1532,7 +1578,7 @@ export function AdminPanel() {
               </div>
             </div>
 
-            <div className="standard-card" style={{ padding: '16px' }}>
+            <div className="standard-card" style={{ padding: '16px', minWidth: 0 }}>
               <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', textTransform: 'uppercase' }}>
                 Active in App
               </div>
@@ -1883,11 +1929,11 @@ export function AdminPanel() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
               gap: 12,
             }}
           >
-            <div className="standard-card" style={{ padding: '16px' }}>
+            <div className="standard-card" style={{ padding: '16px', minWidth: 0 }}>
               <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 ERP Status
               </div>
@@ -1935,7 +1981,7 @@ export function AdminPanel() {
               </div>
             </div>
 
-            <div className="standard-card" style={{ padding: '16px' }}>
+            <div className="standard-card" style={{ padding: '16px', minWidth: 0 }}>
               <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--info)', textTransform: 'uppercase' }}>
                 Primary Upstream
               </div>
@@ -1947,7 +1993,7 @@ export function AdminPanel() {
               </div>
             </div>
 
-            <div className="standard-card" style={{ padding: '16px' }}>
+            <div className="standard-card" style={{ padding: '16px', minWidth: 0 }}>
               <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', textTransform: 'uppercase' }}>
                 Backup Gateway
               </div>
@@ -1959,7 +2005,7 @@ export function AdminPanel() {
               </div>
             </div>
 
-            <div className="standard-card" style={{ padding: '16px' }}>
+            <div className="standard-card" style={{ padding: '16px', minWidth: 0 }}>
               <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase' }}>
                 Vercel Quota Shield
               </div>
@@ -1994,9 +2040,9 @@ export function AdminPanel() {
                 </button>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
                 {/* Primary Card */}
-                <div className="standard-card" style={{ padding: '16px', display: 'grid', gap: 8 }}>
+                <div className="standard-card" style={{ padding: '16px', display: 'grid', gap: 8, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: 700, fontSize: '13.5px', color: 'var(--text-primary)' }}>
                       1. Official College Server (Primary)
@@ -2008,7 +2054,7 @@ export function AdminPanel() {
                       {healthData?.primary?.alive ? 'Online' : 'Unreachable'}
                     </span>
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', wordBreak: 'break-all' }}>
                     <strong>URL:</strong> https://kiet.cybervidya.net/api
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
@@ -2018,14 +2064,14 @@ export function AdminPanel() {
                     </span>
                   </div>
                   {healthData?.primary?.error && (
-                    <div style={{ fontSize: '11.5px', color: 'var(--danger)', background: 'var(--danger-soft)', padding: '6px 8px', borderRadius: 6 }}>
+                    <div style={{ fontSize: '11.5px', color: 'var(--danger)', background: 'var(--danger-soft)', padding: '6px 8px', borderRadius: 6, wordBreak: 'break-all' }}>
                       {healthData.primary.error}
                     </div>
                   )}
                 </div>
 
                 {/* Backup Card */}
-                <div className="standard-card" style={{ padding: '16px', display: 'grid', gap: 8 }}>
+                <div className="standard-card" style={{ padding: '16px', display: 'grid', gap: 8, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: 700, fontSize: '13.5px', color: 'var(--text-primary)' }}>
                       2. Fallback Proxy Gateway (Secondary)
@@ -2037,7 +2083,7 @@ export function AdminPanel() {
                       {healthData?.backup?.alive ? 'Standby Online' : 'Offline'}
                     </span>
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', wordBreak: 'break-all' }}>
                     <strong>URL:</strong> https://cybervidya.amanpal.tech/api
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
@@ -2047,7 +2093,7 @@ export function AdminPanel() {
                     </span>
                   </div>
                   {healthData?.backup?.error && (
-                    <div style={{ fontSize: '11.5px', color: 'var(--danger)', background: 'var(--danger-soft)', padding: '6px 8px', borderRadius: 6 }}>
+                    <div style={{ fontSize: '11.5px', color: 'var(--danger)', background: 'var(--danger-soft)', padding: '6px 8px', borderRadius: 6, wordBreak: 'break-all' }}>
                       {healthData.backup.error}
                     </div>
                   )}
@@ -2110,16 +2156,16 @@ export function AdminPanel() {
                     borderLeft: `4px solid ${inc.status_code === 403 ? 'var(--warning)' : 'var(--danger)'}`,
                   }}
                 >
-                  <div style={{ display: 'grid', gap: 2 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'grid', gap: 2, minWidth: 0, flex: '1 1 200px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       <span className={`status-badge ${inc.status_code === 403 ? 'status-badge--warning' : 'status-badge--danger'}`} style={{ fontSize: '11px' }}>
                         HTTP {inc.status_code || 'Timeout'}
                       </span>
-                      <span style={{ fontWeight: 600, fontSize: '12.5px', color: 'var(--text-primary)' }}>
+                      <span style={{ fontWeight: 600, fontSize: '12.5px', color: 'var(--text-primary)', wordBreak: 'break-all' }}>
                         {inc.endpoint || '/api'}
                       </span>
                     </div>
-                    <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', wordBreak: 'break-all' }}>
                       {inc.upstream} • {inc.error_message}
                     </div>
                   </div>
