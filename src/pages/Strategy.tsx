@@ -985,7 +985,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
   }
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
+    <div style={{ display: "grid", gap: 16, width: "100%", maxWidth: "100%", minWidth: 0, boxSizing: "border-box" }}>
       {/* =========================================================================
           TOP SEGMENTED SWITCHER (SOLUTION 1)
           ========================================================================= */}
@@ -999,6 +999,10 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
           borderRadius: 14,
           background: "var(--bg-card)",
           border: "1px solid var(--border)",
+          width: "100%",
+          maxWidth: "100%",
+          minWidth: 0,
+          boxSizing: "border-box",
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
@@ -1025,6 +1029,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
             overflowX: "auto",
             width: "100%",
             maxWidth: "100%",
+            minWidth: 0,
             boxSizing: "border-box",
             WebkitOverflowScrolling: "touch",
           }}

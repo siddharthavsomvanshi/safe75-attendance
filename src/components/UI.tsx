@@ -21,6 +21,10 @@ export function Panel({
         background: "var(--bg-card)",
         border: "1px solid var(--border)",
         boxShadow: "var(--shadow-sm)",
+        width: "100%",
+        maxWidth: "100%",
+        minWidth: 0,
+        boxSizing: "border-box",
       }}
     >
       <div

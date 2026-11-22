@@ -279,6 +279,8 @@ h6,
 
 .app-wrap > * {
   min-width: 0;
+  max-width: 100%;
+  width: 100%;
 }
 
 /* Refined Card Surfaces */
@@ -292,6 +294,10 @@ h6,
   border-radius: 14px !important;
   box-shadow: var(--shadow-sm) !important;
   padding: 18px 20px !important;
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+  width: 100%;
+  min-width: 0;
 }
 
 .subject-card-compact {
@@ -964,6 +970,10 @@ label {
   .status-card {
     padding: 14px 16px !important;
     border-radius: 12px !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    width: 100% !important;
   }
 
   .metric-chip {
