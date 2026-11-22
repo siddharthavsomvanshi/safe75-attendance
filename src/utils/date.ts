@@ -37,6 +37,14 @@ export function getWeekRange(baseDate: Date, weekOffset = 0) {
   };
 }
 
+export function getCurrentWeekSaturdayIso(baseDate = new Date()): string {
+  const d = new Date(baseDate);
+  const day = d.getDay();
+  const diff = (6 - day + 7) % 7;
+  d.setDate(d.getDate() + diff);
+  return formatIsoDate(d);
+}
+
 export function normalizeIsoDateString(dateInput: string | Date | null | undefined): string | null {
   if (!dateInput) return null;
   if (dateInput instanceof Date) {
@@ -104,12 +112,113 @@ export function parseKietDateTime(value: string): Date {
   return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 }
 
+export interface ScheduleFilterOptions {
+  customExcludedDates?: Set<string>;
+  allowedSaturdayDates?: Set<string>;
+}
+
+function parseFilterOptions(arg?: Set<string> | ScheduleFilterOptions): ScheduleFilterOptions {
+  if (!arg) return {};
+  if (arg instanceof Set) {
+    return { customExcludedDates: arg };
+  }
+  return arg;
+}
+
+export const DAY_NAME_TO_INDEX: Record<string, number> = {
+  SUNDAY: 0,
+  MONDAY: 1,
+  TUESDAY: 2,
+  WEDNESDAY: 3,
+  THURSDAY: 4,
+  FRIDAY: 5,
+  SATURDAY: 6,
+};
+
+export interface DaySwapConfig {
+  date: string; // Target date "YYYY-MM-DD" (e.g. Saturday 2026-11-28)
+  mirrorDay: string; // "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY"
+}
+
+/**
+ * Projects a target weekday's classes onto another day (e.g. Saturday follows Monday's timetable).
+ * Clones the schedule entries with updated timestamps and synthetic unique IDs.
+ */
+export function projectMirroredDayClasses(
+  entries: ScheduleEntry[],
+  daySwaps: DaySwapConfig[]
+): ScheduleEntry[] {
+  if (!daySwaps || daySwaps.length === 0) return [];
+
+  const syntheticEntries: ScheduleEntry[] = [];
+
+  for (const swap of daySwaps) {
+    const targetDateIso = swap.date;
+    const targetDayIndex = DAY_NAME_TO_INDEX[swap.mirrorDay.toUpperCase()];
+    if (targetDayIndex === undefined) continue;
+
+    const [tYear, tMonth, tDay] = targetDateIso.split("-").map(Number);
+    if (!tYear || !tMonth || !tDay) continue;
+
+    // Find entries that match the mirror day
+    // First, look within the same week
+    const targetDateObj = new Date(tYear, tMonth - 1, tDay);
+    const { weekStartDate, weekEndDate } = getWeekRange(targetDateObj, 0);
+
+    let templateClasses = entries.filter((e) => {
+      if (e.type !== "CLASS") return false;
+      const eDate = formatIsoDate(parseKietDateTime(e.start));
+      const eDay = parseKietDateTime(e.start).getDay();
+      return eDay === targetDayIndex && eDate >= weekStartDate && eDate <= weekEndDate;
+    });
+
+    // If no classes found in the same week (e.g. future week or partial timetable),
+    // find any template classes with that day of week from available entries
+    if (templateClasses.length === 0) {
+      templateClasses = entries.filter((e) => {
+        if (e.type !== "CLASS") return false;
+        return parseKietDateTime(e.start).getDay() === targetDayIndex;
+      });
+      // Deduplicate by courseCode and time slot so we only clone 1 day's worth
+      const seenSlots = new Set<string>();
+      templateClasses = templateClasses.filter((e) => {
+        const sTime = parseKietDateTime(e.start);
+        const slotKey = `${e.courseCode}-${sTime.getHours()}:${sTime.getMinutes()}`;
+        if (seenSlots.has(slotKey)) return false;
+        seenSlots.add(slotKey);
+        return true;
+      });
+    }
+
+    for (let i = 0; i < templateClasses.length; i++) {
+      const orig = templateClasses[i];
+      const origStart = parseKietDateTime(orig.start);
+      const origEnd = parseKietDateTime(orig.end);
+
+      const startIso = `${targetDateIso} ${String(origStart.getHours()).padStart(2, "0")}:${String(origStart.getMinutes()).padStart(2, "0")}:${String(origStart.getSeconds()).padStart(2, "0")}`;
+      const endIso = `${targetDateIso} ${String(origEnd.getHours()).padStart(2, "0")}:${String(origEnd.getMinutes()).padStart(2, "0")}:${String(origEnd.getSeconds()).padStart(2, "0")}`;
+
+      syntheticEntries.push({
+        ...orig,
+        id: `synth-${targetDateIso}-${orig.courseCode || "cls"}-${i}`,
+        start: startIso,
+        end: endIso,
+        dateTime: startIso,
+        type: "CLASS",
+      });
+    }
+  }
+
+  return syntheticEntries;
+}
+
 export function getUpcomingClasses(
   entries: ScheduleEntry[],
-  customExcludedDates?: Set<string>,
+  filterInput?: Set<string> | ScheduleFilterOptions,
 ): ScheduleEntry[] {
   const now = Date.now();
   const seen = new Set<string>();
+  const { customExcludedDates, allowedSaturdayDates } = parseFilterOptions(filterInput);
 
   // 1. Identify any dates that have exams planned in CyberVidya raw schedule entries.
   const examDates = new Set<string>();
@@ -144,10 +253,15 @@ export function getUpcomingClasses(
       // Exclude non-class entries
       if (entry.type !== "CLASS") return false;
       
-      // Exclude weekend entries (Saturday = 6, Sunday = 0) as no actual classes occur on weekends
+      // Weekend filter: Sunday is always excluded. Saturday is excluded UNLESS explicitly allowed as a working Saturday.
       const startDate = parseKietDateTime(entry.start);
       const dayOfWeek = startDate.getDay();
-      if (dayOfWeek === 0 || dayOfWeek === 6) return false;
+      if (dayOfWeek === 0) return false;
+      if (dayOfWeek === 6) {
+        if (!allowedSaturdayDates || !allowedSaturdayDates.has(eventDate)) {
+          return false;
+        }
+      }
 
       return true;
     })
@@ -168,9 +282,10 @@ export function getUpcomingClasses(
 
 export function getWeeklyClasses(
   entries: ScheduleEntry[],
-  customExcludedDates?: Set<string>,
+  filterInput?: Set<string> | ScheduleFilterOptions,
 ): ScheduleEntry[] {
   const seen = new Set<string>();
+  const { customExcludedDates, allowedSaturdayDates } = parseFilterOptions(filterInput);
 
   // 1. Identify any dates that have exams planned.
   const examDates = new Set<string>();
@@ -205,10 +320,15 @@ export function getWeeklyClasses(
       // Exclude non-class entries
       if (entry.type !== "CLASS") return false;
 
-      // Exclude weekend entries (Saturday = 6, Sunday = 0) as no actual classes occur on weekends
+      // Weekend filter: Sunday is always excluded. Saturday is excluded UNLESS explicitly allowed as a working Saturday.
       const startDate = parseKietDateTime(entry.start);
       const dayOfWeek = startDate.getDay();
-      if (dayOfWeek === 0 || dayOfWeek === 6) return false;
+      if (dayOfWeek === 0) return false;
+      if (dayOfWeek === 6) {
+        if (!allowedSaturdayDates || !allowedSaturdayDates.has(eventDate)) {
+          return false;
+        }
+      }
       
       return true;
     })
@@ -247,14 +367,20 @@ export function formatCapturedAt(timestamp: number | null): string {
   }).format(timestamp);
 }
 
-export function getPreviousWorkingDay(date: Date): Date {
+export function getPreviousWorkingDay(date: Date, isSaturdayWorking = false): Date {
   const prev = new Date(date);
   prev.setDate(prev.getDate() - 1);
   
   if (prev.getDay() === 0) { // Sunday
-    prev.setDate(prev.getDate() - 2);
+    if (isSaturdayWorking) {
+      prev.setDate(prev.getDate() - 1); // Saturday was working
+    } else {
+      prev.setDate(prev.getDate() - 2); // Fall back to Friday
+    }
   } else if (prev.getDay() === 6) { // Saturday
-    prev.setDate(prev.getDate() - 1);
+    if (!isSaturdayWorking) {
+      prev.setDate(prev.getDate() - 1); // Fall back to Friday
+    }
   }
   
   return prev;

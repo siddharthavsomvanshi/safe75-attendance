@@ -18,7 +18,19 @@ import {
   ChevronUp,
   MessageSquareWarning,
   FileText,
+  Calendar,
+  Plus,
 } from '../components/Icons';
+import { formatIsoDate } from '../utils/date';
+import {
+  fetchAllAcademicEventsAdmin,
+  createAcademicEvent,
+  updateAcademicEvent,
+  deleteAcademicEvent,
+  type AcademicEvent,
+  type AcademicEventType,
+  type MirrorDay,
+} from '../services/academicEvents';
 
 interface ExamResource {
   id: string;
@@ -69,7 +81,28 @@ const STATUS_CONFIG: Record<
 export function AdminPanel() {
   const navigate = useNavigate();
   const [loadingSession, setLoadingSession] = useState(true);
-  const [adminTab, setAdminTab] = useState<'resources' | 'snitch'>('snitch');
+  const [adminTab, setAdminTab] = useState<'resources' | 'snitch' | 'events'>('snitch');
+
+  // ==========================================
+  // Academic Events & Off-Days State
+  // ==========================================
+  const [events, setEvents] = useState<AcademicEvent[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+  const [eventsError, setEventsError] = useState<string | null>(null);
+  const [eventsSuccess, setEventsSuccess] = useState<string | null>(null);
+
+  // New Event Form State
+  const [evTitle, setEvTitle] = useState('');
+  const [evType, setEvType] = useState<AcademicEventType>('holiday');
+  const [evStartDate, setEvStartDate] = useState(() => formatIsoDate(new Date()));
+  const [evEndDate, setEvEndDate] = useState(() => formatIsoDate(new Date()));
+  const [evBranches, setEvBranches] = useState<string[]>(['ALL']);
+  const [evSemesters, setEvSemesters] = useState<string[]>(['ALL']);
+  const [evMirrorDay, setEvMirrorDay] = useState<MirrorDay>('MONDAY');
+  const [evNotes, setEvNotes] = useState('');
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [togglingEventId, setTogglingEventId] = useState<string | null>(null);
 
   // ==========================================
   // Exam Resources State
@@ -106,7 +139,133 @@ export function AdminPanel() {
     checkSession();
     fetchResources();
     fetchReports();
+    fetchEvents();
   }, []);
+
+  const fetchEvents = async () => {
+    setLoadingEvents(true);
+    setEventsError(null);
+    try {
+      const data = await fetchAllAcademicEventsAdmin();
+      setEvents(data);
+    } catch (err: any) {
+      if (err.code === '42P01') {
+        setEventsError(
+          'The "academic_events" table is not found in Supabase yet. Please execute api/notifications/migrations/create_academic_events.sql in your Supabase SQL Editor.'
+        );
+      } else {
+        setEventsError(err.message || 'Failed to fetch academic events');
+      }
+    } finally {
+      setLoadingEvents(false);
+    }
+  };
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!evTitle.trim()) {
+      setEventsError('Event title is required');
+      return;
+    }
+
+    setIsCreatingEvent(true);
+    setEventsError(null);
+    setEventsSuccess(null);
+
+    try {
+      const isOffDay = evType === 'holiday';
+      const mirrorDay = evType === 'holiday' ? null : evMirrorDay;
+
+      await createAcademicEvent({
+        title: evTitle.trim(),
+        event_type: evType,
+        start_date: evStartDate,
+        end_date: evEndDate,
+        is_off_day: isOffDay,
+        affected_branches: evBranches.length === 0 ? ['ALL'] : evBranches,
+        affected_semesters: evSemesters.length === 0 ? ['ALL'] : evSemesters,
+        mirror_day: mirrorDay,
+        notes: evNotes.trim() || null,
+        is_active: true,
+      });
+
+      setEventsSuccess(`Event "${evTitle.trim()}" published successfully.`);
+      setEvTitle('');
+      setEvNotes('');
+      setEvType('holiday');
+      setEvBranches(['ALL']);
+      setEvSemesters(['ALL']);
+      await fetchEvents();
+      setTimeout(() => setEventsSuccess(null), 4000);
+    } catch (err: any) {
+      setEventsError(err.message || 'Failed to create academic event');
+    } finally {
+      setIsCreatingEvent(false);
+    }
+  };
+
+  const handleToggleEventActive = async (event: AcademicEvent) => {
+    setTogglingEventId(event.id);
+    try {
+      await updateAcademicEvent(event.id, { is_active: !event.is_active });
+      setEvents((prev) =>
+        prev.map((ev) => (ev.id === event.id ? { ...ev, is_active: !ev.is_active } : ev))
+      );
+    } catch (err: any) {
+      setEventsError(err.message || 'Failed to update event status');
+    } finally {
+      setTogglingEventId(null);
+    }
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+      return;
+    }
+    setDeletingEventId(id);
+    try {
+      await deleteAcademicEvent(id);
+      setEvents((prev) => prev.filter((ev) => ev.id !== id));
+      setEventsSuccess('Event deleted successfully.');
+      setTimeout(() => setEventsSuccess(null), 3000);
+    } catch (err: any) {
+      setEventsError(err.message || 'Failed to delete event');
+    } finally {
+      setDeletingEventId(null);
+    }
+  };
+
+  const toggleBranchSelection = (branch: string) => {
+    if (branch === 'ALL') {
+      setEvBranches(['ALL']);
+      return;
+    }
+    setEvBranches((prev) => {
+      const withoutAll = prev.filter((b) => b !== 'ALL');
+      if (withoutAll.includes(branch)) {
+        const next = withoutAll.filter((b) => b !== branch);
+        return next.length === 0 ? ['ALL'] : next;
+      } else {
+        return [...withoutAll, branch];
+      }
+    });
+  };
+
+  const toggleSemesterSelection = (sem: string) => {
+    if (sem === 'ALL') {
+      setEvSemesters(['ALL']);
+      return;
+    }
+    setEvSemesters((prev) => {
+      const withoutAll = prev.filter((s) => s !== 'ALL');
+      if (withoutAll.includes(sem)) {
+        const next = withoutAll.filter((s) => s !== sem);
+        return next.length === 0 ? ['ALL'] : next;
+      } else {
+        return [...withoutAll, sem];
+      }
+    });
+  };
 
   const checkSession = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -462,6 +621,24 @@ export function AdminPanel() {
           <FileText size={15} />
           <span>Exam Resources</span>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({resources.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setAdminTab('events')}
+          className={`filter-tab ${adminTab === 'events' ? 'active' : ''}`}
+          style={{
+            padding: '8px 18px',
+            fontSize: '13px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            cursor: 'pointer',
+          }}
+        >
+          <Calendar size={15} />
+          <span>Academic Events & Off-Days</span>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({events.length})</span>
         </button>
       </div>
 
@@ -1211,6 +1388,397 @@ export function AdminPanel() {
               {resources.filter((r) => r.status === resourceActiveTab).length === 0 && (
                 <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '24px' }}>
                   No resources in this list yet.
+                </div>
+              )}
+            </div>
+          </Panel>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 3: ACADEMIC EVENTS, OFF-DAYS & WORKING SATURDAYS                      */}
+      {/* ========================================================================= */}
+      {adminTab === 'events' && (
+        <div style={{ display: 'grid', gap: '16px' }}>
+          {/* KPI Summary Cards */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: 12,
+            }}
+          >
+            <div className="standard-card" style={{ padding: '16px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                Total Events
+              </div>
+              <div style={{ fontSize: '26px', fontWeight: 800, marginTop: '4px', color: 'var(--text-primary)' }}>
+                {events.length}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                All configured academic events
+              </div>
+            </div>
+
+            <div className="standard-card" style={{ padding: '16px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--warning)', textTransform: 'uppercase' }}>
+                Off-Days & Hackathons
+              </div>
+              <div style={{ fontSize: '26px', fontWeight: 800, marginTop: '4px', color: 'var(--warning)' }}>
+                {events.filter((e) => e.is_off_day).length}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                College or branch-specific off-days
+              </div>
+            </div>
+
+            <div className="standard-card" style={{ padding: '16px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--info)', textTransform: 'uppercase' }}>
+                Working Saturdays & Swaps
+              </div>
+              <div style={{ fontSize: '26px', fontWeight: 800, marginTop: '4px', color: 'var(--info)' }}>
+                {events.filter((e) => !e.is_off_day).length}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                Compensatory classes & day-swaps
+              </div>
+            </div>
+
+            <div className="standard-card" style={{ padding: '16px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', textTransform: 'uppercase' }}>
+                Active in App
+              </div>
+              <div style={{ fontSize: '26px', fontWeight: 800, marginTop: '4px', color: 'var(--success)' }}>
+                {events.filter((e) => e.is_active).length}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                Currently affecting student schedules
+              </div>
+            </div>
+          </div>
+
+          {eventsError && (
+            <div
+              className="notice-banner"
+              style={{
+                padding: '12px 16px',
+                background: 'var(--danger-soft)',
+                border: '1px solid var(--danger-border)',
+                borderRadius: '8px',
+                color: 'var(--danger)',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+              }}
+            >
+              <AlertTriangle size={16} />
+              <div>
+                <strong>Action Needed:</strong> {eventsError}
+              </div>
+            </div>
+          )}
+
+          {eventsSuccess && (
+            <div
+              className="notice-banner"
+              style={{
+                padding: '12px 16px',
+                background: 'var(--success-soft)',
+                border: '1px solid var(--success-border)',
+                borderRadius: '8px',
+                color: 'var(--success)',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+              }}
+            >
+              <CheckCircle2 size={16} />
+              <div>{eventsSuccess}</div>
+            </div>
+          )}
+
+          {/* Form: Add Academic Event */}
+          <Panel
+            title="Publish Academic Event / Timetable Override"
+            subtitle="Broadcast college-wide or branch-specific off-days, working Saturdays, and day-swaps directly to all students."
+          >
+            <form onSubmit={handleCreateEvent} className="standard-card" style={{ display: 'grid', gap: '16px' }}>
+              <div style={{ display: 'grid', gap: '6px' }}>
+                <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Event Title *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. AI & AIML Hackathon Off-Day, Guru Nanak Jayanti, or Compensatory Saturday"
+                  value={evTitle}
+                  onChange={(e) => setEvTitle(e.target.value)}
+                  className="input-field"
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+                <div style={{ display: 'grid', gap: '6px' }}>
+                  <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Event Type *
+                  </label>
+                  <select
+                    value={evType}
+                    onChange={(e) => setEvType(e.target.value as AcademicEventType)}
+                    className="input-field"
+                  >
+                    <option value="holiday">🏖️ Off-Day / Hackathon (No Classes)</option>
+                    <option value="working_day">📅 Working Saturday (Compensatory Classes)</option>
+                    <option value="day_swap">🔄 Timetable Day-Swap (Follows Another Day)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gap: '6px' }}>
+                  <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Start Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={evStartDate}
+                    onChange={(e) => {
+                      setEvStartDate(e.target.value);
+                      if (e.target.value > evEndDate) setEvEndDate(e.target.value);
+                    }}
+                    className="input-field"
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gap: '6px' }}>
+                  <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    End Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={evEndDate}
+                    onChange={(e) => setEvEndDate(e.target.value)}
+                    className="input-field"
+                    required
+                  />
+                </div>
+
+                {evType !== 'holiday' && (
+                  <div style={{ display: 'grid', gap: '6px' }}>
+                    <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      Mirror Timetable Day *
+                    </label>
+                    <select
+                      value={evMirrorDay}
+                      onChange={(e) => setEvMirrorDay(e.target.value as MirrorDay)}
+                      className="input-field"
+                    >
+                      <option value="MONDAY">Monday's Schedule</option>
+                      <option value="TUESDAY">Tuesday's Schedule</option>
+                      <option value="WEDNESDAY">Wednesday's Schedule</option>
+                      <option value="THURSDAY">Thursday's Schedule</option>
+                      <option value="FRIDAY">Friday's Schedule</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Target Branches Selector */}
+              <div style={{ display: 'grid', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Affected Branches
+                  </label>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    {evBranches.includes('ALL') ? 'Applies to everyone' : `Selected (${evBranches.length})`}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {['ALL', 'CSE', 'CSEAIML', 'CSEDS', 'CSECS', 'IT', 'CSIT', 'ECE', 'ECEVLSI', 'EEE', 'ELCE', 'ME', 'MCA', 'MBA'].map((b) => {
+                    const isSelected = evBranches.includes(b);
+                    return (
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() => toggleBranchSelection(b)}
+                        className={`filter-tab ${isSelected ? 'active' : ''}`}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '11.5px',
+                          cursor: 'pointer',
+                          borderRadius: '6px',
+                        }}
+                      >
+                        {b === 'ALL' ? '🌐 All Branches' : b}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Target Semesters Selector */}
+              <div style={{ display: 'grid', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Affected Semesters
+                  </label>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    {evSemesters.includes('ALL') ? 'All Semesters' : `Selected (${evSemesters.length})`}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {['ALL', '1', '3', '5', '7'].map((s) => {
+                    const isSelected = evSemesters.includes(s);
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => toggleSemesterSelection(s)}
+                        className={`filter-tab ${isSelected ? 'active' : ''}`}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '11.5px',
+                          cursor: 'pointer',
+                          borderRadius: '6px',
+                        }}
+                      >
+                        {s === 'ALL' ? '🎓 All Semesters' : `Sem ${s}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gap: '6px' }}>
+                <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Internal Notes / Reference (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Dean Academics Notice dated Nov 21"
+                  value={evNotes}
+                  onChange={(e) => setEvNotes(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                <button
+                  type="submit"
+                  disabled={isCreatingEvent}
+                  className="action-button action-button--primary"
+                  style={{ padding: '8px 20px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Plus size={15} />
+                  <span>{isCreatingEvent ? 'Publishing...' : 'Publish Academic Event'}</span>
+                </button>
+              </div>
+            </form>
+          </Panel>
+
+          {/* Events Stream */}
+          <Panel
+            title="Active & Upcoming Academic Events"
+            subtitle="Events configured here dynamically update the class schedule, attendance forecasts, and bunk planner for targeted students."
+          >
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+              <button
+                type="button"
+                onClick={fetchEvents}
+                disabled={loadingEvents}
+                className="action-button action-button--secondary"
+                style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <RefreshCw size={13} className={loadingEvents ? 'spin' : ''} />
+                <span>Refresh</span>
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {events.map((ev) => (
+                <div
+                  key={ev.id}
+                  className="standard-card"
+                  style={{
+                    padding: '16px',
+                    display: 'grid',
+                    gap: 10,
+                    opacity: ev.is_active ? 1 : 0.6,
+                    borderLeft: `4px solid ${ev.is_off_day ? 'var(--warning)' : 'var(--info)'}`,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'grid', gap: 4 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {ev.title}
+                        </span>
+                        <span
+                          className={`status-badge ${ev.is_off_day ? 'status-badge--warning' : 'status-badge--info'}`}
+                          style={{ fontSize: '11px', padding: '2px 8px' }}
+                        >
+                          {ev.is_off_day ? '🏖️ Off-Day' : '📅 Working Day'}
+                        </span>
+                        {ev.mirror_day && (
+                          <span className="status-badge status-badge--neutral" style={{ fontSize: '11px', padding: '2px 8px' }}>
+                            🔄 Follows {ev.mirror_day} Schedule
+                          </span>
+                        )}
+                        <span
+                          className={`status-badge ${ev.is_active ? 'status-badge--success' : 'status-badge--neutral'}`}
+                          style={{ fontSize: '10.5px', padding: '1px 6px' }}
+                        >
+                          {ev.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        <strong>Date:</strong> {ev.start_date === ev.end_date ? ev.start_date : `${ev.start_date} to ${ev.end_date}`}
+                        {ev.notes && <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>• {ev.notes}</span>}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleEventActive(ev)}
+                        disabled={togglingEventId === ev.id}
+                        className={`status-badge ${ev.is_active ? 'status-badge--warning' : 'status-badge--success'}`}
+                        style={{ border: 'none', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '11.5px' }}
+                      >
+                        {ev.is_active ? 'Pause' : 'Activate'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteEvent(ev.id)}
+                        disabled={deletingEventId === ev.id}
+                        className="status-badge status-badge--danger"
+                        style={{ border: 'none', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '11.5px' }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', paddingTop: 4, borderTop: '1px solid var(--border)' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Branches:</span>
+                    <span className="status-badge status-badge--neutral" style={{ fontSize: '10.5px' }}>
+                      {ev.affected_branches.includes('ALL') ? 'All Branches' : ev.affected_branches.join(', ')}
+                    </span>
+
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: 8 }}>Semesters:</span>
+                    <span className="status-badge status-badge--neutral" style={{ fontSize: '10.5px' }}>
+                      {ev.affected_semesters.includes('ALL') ? 'All Semesters' : `Sem ${ev.affected_semesters.join(', ')}`}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {events.length === 0 && !loadingEvents && (
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '24px' }}>
+                  No academic events recorded yet. Use the form above to announce off-days or working Saturdays.
                 </div>
               )}
             </div>

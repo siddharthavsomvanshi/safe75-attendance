@@ -3,12 +3,14 @@ import { Panel, EmptyMessage } from "../components/UI";
 import { Clock, MapPin, User } from "../components/Icons";
 import type { ScheduleEntry } from "../types/kiet";
 import type { StudentExamInfo } from "../data/mse2Datesheet";
+import type { AcademicEvent } from "../services/academicEvents";
 import { formatScheduleDay, formatScheduleTime, parseKietDateTime } from "../utils/date";
 
 export interface CalendarData {
   upcomingClasses: ScheduleEntry[];
   currentWeekFullClasses: ScheduleEntry[];
   studentExamInfo?: StudentExamInfo | null;
+  applicableAcademicEvents?: AcademicEvent[];
 }
 
 export function CalendarPage({ data }: { data: CalendarData }) {
@@ -30,6 +32,36 @@ export function CalendarPage({ data }: { data: CalendarData }) {
         title="Weekly Timetable"
         subtitle="Your complete schedule for the current week."
       >
+        {data.applicableAcademicEvents && data.applicableAcademicEvents.length > 0 && (
+          <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
+            {data.applicableAcademicEvents.map((ev) => (
+              <div
+                key={ev.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  background: ev.is_off_day ? "var(--warning-soft)" : "var(--info-soft)",
+                  border: `1px solid ${ev.is_off_day ? "var(--warning-border)" : "var(--info-border)"}`,
+                  color: "var(--text-primary)",
+                  fontSize: 12.5,
+                  gap: 8,
+                  flexWrap: "wrap",
+                }}
+              >
+                <span>
+                  <strong>{ev.title}</strong>: {ev.is_off_day ? "Classes Off" : `Working Day (${ev.mirror_day || "Normal"} Timetable)`} ({ev.start_date === ev.end_date ? ev.start_date : `${ev.start_date} to ${ev.end_date}`})
+                </span>
+                <span className="status-badge status-badge--neutral" style={{ fontSize: 11 }}>
+                  {ev.affected_branches.includes("ALL") ? "All Branches" : ev.affected_branches.join(", ")}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {dayLabels.length === 0 ? (
           <EmptyMessage message="No classes found for this week." />
         ) : (

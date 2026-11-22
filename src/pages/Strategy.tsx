@@ -27,6 +27,7 @@ import type {
 } from "../App";
 import type { StudentDetails } from "../types/kiet";
 import type { DayStreakRecord, SubjectAbsencesByDate } from "../utils/streak";
+import type { AcademicEvent, MirrorDay } from "../services/academicEvents";
 
 function formatDateKeyLabel(dateKey: string): string {
   const [year, month, day] = dateKey.split("-").map(Number);
@@ -181,10 +182,17 @@ export interface StrategyData {
   isSyncingFuture?: boolean;
   studentDetails?: StudentDetails | null;
   studentContext?: StudentContext | null;
+  saturdaySimulator?: {
+    enabled: boolean;
+    mirrorDay: MirrorDay;
+    saturdayDateIso: string;
+  };
+  applicableAcademicEvents?: AcademicEvent[];
 }
 
 export interface StrategyHandlers {
   handleWholeDayToggle: (dateKey: string) => void;
+  handleToggleSaturdaySimulator?: (enabled: boolean, mirrorDay?: MirrorDay) => void;
 }
 
 /* =========================================================================
@@ -1151,6 +1159,133 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
               >
                 <div style={{ color: "var(--text-secondary)", fontSize: 13.5, maxWidth: "72ch" }}>
                   Pick future class dates to forecast how missing them impacts your overall and subject-level standing.
+                </div>
+              </div>
+
+              {/* Academic Events Notice (if any branch-specific or college off-days exist) */}
+              {data.applicableAcademicEvents && data.applicableAcademicEvents.length > 0 && (
+                <div style={{ display: "grid", gap: 8, width: "100%", minWidth: 0 }}>
+                  {data.applicableAcademicEvents.map((ev) => (
+                    <div
+                      key={ev.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "10px 14px",
+                        borderRadius: 10,
+                        background: ev.is_off_day ? "var(--warning-soft)" : "var(--info-soft)",
+                        border: `1px solid ${ev.is_off_day ? "var(--warning-border)" : "var(--info-border)"}`,
+                        color: "var(--text-primary)",
+                        fontSize: 13,
+                        gap: 10,
+                        flexWrap: "wrap",
+                        boxSizing: "border-box",
+                        width: "100%",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 16 }}>{ev.is_off_day ? "🏖️" : "📅"}</span>
+                        <span>
+                          <strong>{ev.title}</strong> ({ev.start_date === ev.end_date ? ev.start_date : `${ev.start_date} to ${ev.end_date}`})
+                          {ev.is_off_day ? " — Branch Off-Day / No Classes" : ` — Working Day (${ev.mirror_day || "Normal"} Timetable)`}
+                        </span>
+                      </div>
+                      <span
+                        className="status-badge status-badge--neutral"
+                        style={{ fontSize: 11, padding: "2px 8px" }}
+                      >
+                        {ev.affected_branches.includes("ALL") ? "All Branches" : ev.affected_branches.join(", ")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Working Saturday Simulator Card */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  background: data.saturdaySimulator?.enabled ? "var(--primary-soft)" : "var(--bg-card-subtle)",
+                  border: `1px solid ${data.saturdaySimulator?.enabled ? "var(--primary)" : "var(--border)"}`,
+                  flexWrap: "wrap",
+                  width: "100%",
+                  minWidth: 0,
+                  boxSizing: "border-box",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <div style={{ display: "grid", gap: 2, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontWeight: 600, fontSize: 13.5, color: "var(--text-primary)" }}>
+                      ⚡ Working Saturday Simulator
+                    </span>
+                    {data.saturdaySimulator?.enabled && (
+                      <span className="status-badge status-badge--success" style={{ fontSize: 11, padding: "1px 6px" }}>
+                        Active in calculation
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+                    College sent a notice for class on Saturday? Add this Saturday ({data.saturdaySimulator?.saturdayDateIso || "this week"}) to the bunk formula.
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  {data.saturdaySimulator?.enabled && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Follows:</span>
+                      <select
+                        value={data.saturdaySimulator.mirrorDay}
+                        onChange={(e) =>
+                          handlers.handleToggleSaturdaySimulator?.(
+                            true,
+                            e.target.value as MirrorDay
+                          )
+                        }
+                        style={{
+                          fontSize: 12,
+                          padding: "4px 8px",
+                          borderRadius: 6,
+                          background: "var(--bg-surface)",
+                          color: "var(--text-primary)",
+                          border: "1px solid var(--border)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <option value="MONDAY">Monday's Schedule</option>
+                        <option value="TUESDAY">Tuesday's Schedule</option>
+                        <option value="WEDNESDAY">Wednesday's Schedule</option>
+                        <option value="THURSDAY">Thursday's Schedule</option>
+                        <option value="FRIDAY">Friday's Schedule</option>
+                      </select>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handlers.handleToggleSaturdaySimulator?.(
+                        !data.saturdaySimulator?.enabled,
+                        data.saturdaySimulator?.mirrorDay
+                      )
+                    }
+                    className={`btn-action ${data.saturdaySimulator?.enabled ? "btn-action--primary" : "btn-action--secondary"}`}
+                    style={{
+                      fontSize: 12,
+                      padding: "6px 14px",
+                      borderRadius: 8,
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {data.saturdaySimulator?.enabled ? "✓ Saturday Added" : "+ Add This Saturday"}
+                  </button>
                 </div>
               </div>
 

@@ -16,7 +16,15 @@ import {
   getWeekRange,
   parseKietDateTime,
   normalizeIsoDateString,
+  getCurrentWeekSaturdayIso,
 } from "./utils/date";
+import {
+  fetchActiveAcademicEvents,
+  computeStudentScheduleContext,
+  isEventApplicableToStudent,
+  type AcademicEvent,
+  type MirrorDay,
+} from "./services/academicEvents";
 import {
   calculateStrictStreak,
   fetchGlobalDatewiseAttendance,
@@ -168,6 +176,33 @@ function App() {
   const [upcomingClasses, setUpcomingClasses] = useState<ScheduleEntry[]>([]);
   const [currentWeekFullClasses, setCurrentWeekFullClasses] = useState<ScheduleEntry[]>([]);
   const [futureClasses, setFutureClasses] = useState<ScheduleEntry[]>([]);
+  const [academicEvents, setAcademicEvents] = useState<AcademicEvent[]>([]);
+  const rawCurrentWeekScheduleRef = useRef<ScheduleEntry[]>([]);
+  const rawFutureWeekSchedulesRef = useRef<ScheduleEntry[]>([]);
+
+  const [saturdaySimulator, setSaturdaySimulator] = useState<{
+    enabled: boolean;
+    mirrorDay: MirrorDay;
+    saturdayDateIso: string;
+  }>(() => {
+    const defDate = getCurrentWeekSaturdayIso();
+    try {
+      const saved = localStorage.getItem("safe75_saturday_simulator_pref");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          enabled: Boolean(parsed.enabled),
+          mirrorDay: parsed.mirrorDay || "MONDAY",
+          saturdayDateIso: parsed.saturdayDateIso || defDate,
+        };
+      }
+    } catch {}
+    return {
+      enabled: false,
+      mirrorDay: "MONDAY",
+      saturdayDateIso: defDate,
+    };
+  });
   const [plannedBunks, setPlannedBunks] = useState<Set<string>>(new Set());
   const [showWholeDayPlanner, setShowWholeDayPlanner] = useState(false);
   const [activeSubjectOverlay, setActiveSubjectOverlay] = useState<SubjectOverlayState>(null);
@@ -499,28 +534,41 @@ function App() {
             },
       );
 
-      const [attendanceData, currentWeekScheduleUnfiltered] = await Promise.all([
+      const [attendanceData, currentWeekScheduleUnfiltered, activeAcademicEvents] = await Promise.all([
         fetchAttendanceUnified(),
         fetchScheduleUnified(getWeekRange(now, 0)).catch((schedErr) => {
           console.warn("Could not fetch current week schedule (non-fatal):", schedErr);
           return [] as ScheduleEntry[];
         }),
+        fetchActiveAcademicEvents().catch((evErr) => {
+          console.warn("Could not fetch active academic events (non-fatal):", evErr);
+          return [] as AcademicEvent[];
+        }),
       ]);
 
-      const examInfo = getStudentExamSchedule(attendanceData);
+      const eventsList = activeAcademicEvents || [];
+      setAcademicEvents(eventsList);
 
       const currentWeekSchedule = currentWeekScheduleUnfiltered ?? [];
-      const currentWeekClasses = getUpcomingClasses(currentWeekSchedule, examInfo.allExcludedDates);
-      const fullWeekClasses = getWeeklyClasses(currentWeekSchedule, examInfo.allExcludedDates);
-      
+      rawCurrentWeekScheduleRef.current = currentWeekSchedule;
+      rawFutureWeekSchedulesRef.current = [];
+
+      const schedContext = computeStudentScheduleContext(
+        attendanceData,
+        currentWeekSchedule,
+        [],
+        eventsList,
+        saturdaySimulator
+      );
+
       setAttendance(attendanceData);
-      setUpcomingClasses(currentWeekClasses);
-      setCurrentWeekFullClasses(fullWeekClasses);
-      setFutureClasses(currentWeekClasses); // Base initial future classes
+      setUpcomingClasses(schedContext.upcomingClasses);
+      setCurrentWeekFullClasses(schedContext.fullWeekClasses);
+      setFutureClasses(schedContext.upcomingClasses); // Base initial future classes
       setLoadState("ready");
 
       // Non-blocking fire-and-forget Unified Snapshot save for notification subsystem
-      if (attendanceData && fullWeekClasses.length > 0) {
+      if (attendanceData && schedContext.fullWeekClasses.length > 0) {
         const attendanceFingerprint = (attendanceData.attendanceCourseComponentInfoList || [])
           .flatMap((c) =>
             (c.attendanceCourseComponentNameInfoList || []).map(
@@ -533,7 +581,7 @@ function App() {
 
         if (lastSnapshotDedupeKeyRef.current !== dedupeKey) {
           lastSnapshotDedupeKeyRef.current = dedupeKey;
-          void sendSnapshotAsync(attendanceData, fullWeekClasses).catch((snapshotErr) => {
+          void sendSnapshotAsync(attendanceData, schedContext.fullWeekClasses).catch((snapshotErr) => {
             console.warn("Non-blocking notification snapshot skipped:", snapshotErr);
           });
         }
@@ -543,14 +591,25 @@ function App() {
       setIsSyncingFuture(true);
       void (async () => {
         try {
-          const futureWeekSchedules = [];
+          const futureWeekSchedules: ScheduleEntry[][] = [];
           for (let weekOffset = 1; weekOffset < FUTURE_WEEKS_TO_FETCH; weekOffset++) {
             futureWeekSchedules.push(
               await fetchScheduleUnified(getWeekRange(now, weekOffset))
             );
           }
-          const allSchedules = [currentWeekScheduleUnfiltered, ...futureWeekSchedules];
-          const allFutureClasses = getUpcomingClasses(allSchedules.flat(), examInfo.allExcludedDates);
+          const allFutureRaw = futureWeekSchedules.flat();
+          rawFutureWeekSchedulesRef.current = allFutureRaw;
+
+          const combinedAllSchedules = [currentWeekSchedule, ...allFutureRaw];
+          const futureSchedContext = computeStudentScheduleContext(
+            attendanceData,
+            currentWeekSchedule,
+            combinedAllSchedules,
+            eventsList,
+            saturdaySimulator
+          );
+
+          const allFutureClasses = futureSchedContext.allFutureClasses;
           const availableBunkDates = new Set(allFutureClasses.map(getScheduleDateKey));
           
           setFutureClasses(allFutureClasses);
@@ -580,9 +639,52 @@ function App() {
       setStreakSubjectAbsencesByDate({});
       setStreakResult(null);
       setStreakLoading(false);
+      setAcademicEvents([]);
+      rawCurrentWeekScheduleRef.current = [];
+      rawFutureWeekSchedulesRef.current = [];
       setError(caughtError instanceof Error ? caughtError.message : String(caughtError));
     }
+  }, [saturdaySimulator]);
+
+  const applicableAcademicEvents = useMemo(() => {
+    if (!attendance) return [];
+    return academicEvents.filter((ev) =>
+      isEventApplicableToStudent(ev, attendance.branchShortName, attendance.semesterName)
+    );
+  }, [attendance, academicEvents]);
+
+  const handleToggleSaturdaySimulator = useCallback((enabled: boolean, mirrorDay?: MirrorDay) => {
+    setSaturdaySimulator((prev) => {
+      const next = {
+        enabled,
+        mirrorDay: mirrorDay || prev.mirrorDay,
+        saturdayDateIso: getCurrentWeekSaturdayIso(),
+      };
+      try {
+        localStorage.setItem("safe75_saturday_simulator_pref", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
   }, []);
+
+  // When Saturday Simulator or Academic Events change, re-enrich schedules in memory instantly
+  useEffect(() => {
+    if (!attendance || rawCurrentWeekScheduleRef.current.length === 0) return;
+    const combinedAll = [
+      ...rawCurrentWeekScheduleRef.current,
+      ...rawFutureWeekSchedulesRef.current,
+    ];
+    const res = computeStudentScheduleContext(
+      attendance,
+      rawCurrentWeekScheduleRef.current,
+      combinedAll,
+      academicEvents,
+      saturdaySimulator
+    );
+    setUpcomingClasses(res.upcomingClasses);
+    setCurrentWeekFullClasses(res.fullWeekClasses);
+    setFutureClasses(res.allFutureClasses);
+  }, [saturdaySimulator, academicEvents]);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -810,16 +912,20 @@ function App() {
     streakIsReliable: streakResult?.isReliable ?? false,
     studentDetails: attendance,
     studentContext,
+    saturdaySimulator,
+    applicableAcademicEvents,
   };
 
   const strategyHandlers = {
     handleWholeDayToggle,
+    handleToggleSaturdaySimulator,
   };
 
   const calendarData = {
     upcomingClasses,
     currentWeekFullClasses,
     studentExamInfo,
+    applicableAcademicEvents,
   };
 
   const multiverseData = {
