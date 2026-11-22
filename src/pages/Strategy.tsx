@@ -206,7 +206,7 @@ function CompactBunkSubjectTable({
   };
 
   return (
-    <div style={{ display: "grid", gap: 10 }}>
+    <div style={{ display: "grid", gap: 10, width: "100%", minWidth: 0 }}>
       <div
         style={{
           display: "flex",
@@ -215,6 +215,8 @@ function CompactBunkSubjectTable({
           flexWrap: "wrap",
           gap: 8,
           padding: "2px 0",
+          width: "100%",
+          minWidth: 0,
         }}
       >
         <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
@@ -274,7 +276,10 @@ function CompactBunkSubjectTable({
             gap: 6,
             maxHeight: 520,
             overflowY: "auto",
-            paddingRight: 4,
+            overflowX: "hidden",
+            paddingRight: 2,
+            width: "100%",
+            minWidth: 0,
           }}
         >
           {subjects.map((subject) => {
@@ -300,21 +305,27 @@ function CompactBunkSubjectTable({
                   background: isExpanded ? "var(--bg-card-subtle)" : "var(--bg-card)",
                   transition: "all 0.15s ease",
                   cursor: "pointer",
+                  width: "100%",
+                  minWidth: 0,
+                  boxSizing: "border-box",
                 }}
                 onClick={() => toggleExpand(subject.id)}
               >
                 <div
+                  className="planner-subject-row"
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
                     flexWrap: "wrap",
                     gap: 10,
+                    width: "100%",
+                    minWidth: 0,
                   }}
                 >
                   {/* Left: Subject Identity */}
-                  <div style={{ display: "grid", gap: 2, minWidth: 150, flex: "1 1 180px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ display: "grid", gap: 2, minWidth: 0, flex: "1 1 150px", maxWidth: "100%" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                       <span
                         style={{
                           fontSize: 10.5,
@@ -344,6 +355,8 @@ function CompactBunkSubjectTable({
                         fontSize: 13.5,
                         color: "var(--text-primary)",
                         lineHeight: 1.3,
+                        wordBreak: "break-word",
+                        overflowWrap: "anywhere",
                       }}
                     >
                       {subject.title}
@@ -352,33 +365,38 @@ function CompactBunkSubjectTable({
 
                   {/* Middle / Right: Percentage & Status */}
                   <div
+                    className="planner-subject-row-stats"
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 12,
+                      gap: 10,
                       flexWrap: "wrap",
+                      justifyContent: "flex-end",
                       marginLeft: "auto",
+                      minWidth: 0,
                     }}
                   >
                     <div style={{ textAlign: "right" }}>
                       <div
                         style={{
                           fontWeight: 700,
-                          fontSize: 13.5,
+                          fontSize: 13,
                           color: isSafe ? "var(--success)" : "var(--danger)",
                           fontVariantNumeric: "tabular-nums",
+                          whiteSpace: "nowrap",
                         }}
                       >
                         {subject.currentPercentage.toFixed(1)}% → {subject.afterSelectedPercentage.toFixed(1)}%
                       </div>
                       <div
                         style={{
-                          fontSize: 11.5,
+                          fontSize: 11,
                           color: "var(--text-muted)",
                           display: "flex",
                           gap: 6,
                           justifyContent: "flex-end",
                           fontVariantNumeric: "tabular-nums",
+                          whiteSpace: "nowrap",
                         }}
                       >
                         <span style={{ color: delta < 0 ? "var(--danger)" : "var(--text-muted)" }}>
@@ -398,10 +416,11 @@ function CompactBunkSubjectTable({
                           : "status-badge--danger"
                       }`}
                       style={{
-                        minWidth: 76,
                         textAlign: "center",
                         fontSize: 11,
                         padding: "3px 8px",
+                        whiteSpace: "nowrap",
+                        flexShrink: 0,
                       }}
                     >
                       {isSafe ? "Safe ≥75%" : isRecoverable ? "Recoverable" : "Drops <75%"}
@@ -418,6 +437,7 @@ function CompactBunkSubjectTable({
                         padding: 2,
                         display: "flex",
                         alignItems: "center",
+                        flexShrink: 0,
                       }}
                     >
                       {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
@@ -433,6 +453,8 @@ function CompactBunkSubjectTable({
                       gap: 10,
                       paddingTop: 10,
                       borderTop: "1px solid var(--border)",
+                      width: "100%",
+                      minWidth: 0,
                     }}
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -450,8 +472,10 @@ function CompactBunkSubjectTable({
                     <div
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 85px), 1fr))",
                         gap: 8,
+                        width: "100%",
+                        minWidth: 0,
                       }}
                     >
                       <Metric
@@ -483,11 +507,14 @@ function CompactBunkSubjectTable({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
             gap: 10,
             maxHeight: 620,
             overflowY: "auto",
-            paddingRight: 4,
+            overflowX: "hidden",
+            paddingRight: 2,
+            width: "100%",
+            minWidth: 0,
           }}
         >
           {subjects.map((subject) => (
@@ -598,7 +625,7 @@ function CompactMedicalSubjectTable({
   };
 
   return (
-    <div style={{ display: "grid", gap: 6 }}>
+    <div style={{ display: "grid", gap: 6, width: "100%", minWidth: 0 }}>
       {subjects.map((subject) => {
         const isExpanded = expandedId === subject.id;
         const impactTheme = getLeaveRescueImpactTheme(subject);
@@ -615,21 +642,27 @@ function CompactMedicalSubjectTable({
               background: isExpanded ? "var(--bg-card-subtle)" : "var(--bg-card)",
               transition: "all 0.15s ease",
               cursor: "pointer",
+              width: "100%",
+              minWidth: 0,
+              boxSizing: "border-box",
             }}
             onClick={() => toggleExpand(subject.id)}
           >
             <div
+              className="planner-subject-row"
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
                 flexWrap: "wrap",
                 gap: 10,
+                width: "100%",
+                minWidth: 0,
               }}
             >
               {/* Left: Subject Info */}
-              <div style={{ display: "grid", gap: 2, minWidth: 150, flex: "1 1 180px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ display: "grid", gap: 2, minWidth: 0, flex: "1 1 150px", maxWidth: "100%" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                   <span
                     style={{
                       fontSize: 10.5,
@@ -659,6 +692,8 @@ function CompactMedicalSubjectTable({
                     fontSize: 13.5,
                     color: "var(--text-primary)",
                     lineHeight: 1.3,
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere",
                   }}
                 >
                   {subject.title}
@@ -667,26 +702,30 @@ function CompactMedicalSubjectTable({
 
               {/* Right: Percentage & Status */}
               <div
+                className="planner-subject-row-stats"
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 12,
+                  gap: 10,
                   flexWrap: "wrap",
+                  justifyContent: "flex-end",
                   marginLeft: "auto",
+                  minWidth: 0,
                 }}
               >
                 <div style={{ textAlign: "right" }}>
                   <div
                     style={{
                       fontWeight: 700,
-                      fontSize: 13.5,
+                      fontSize: 13,
                       color: "var(--text-primary)",
                       fontVariantNumeric: "tabular-nums",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {formatPercentage(subject.oldPercentage)} → {formatPercentage(subject.newPercentage)}
                   </div>
-                  <div style={{ fontSize: 11.5, color: impactTheme.color, fontWeight: 600 }}>
+                  <div style={{ fontSize: 11, color: impactTheme.color, fontWeight: 600, whiteSpace: "nowrap" }}>
                     +{subject.addedPresent} class{subject.addedPresent === 1 ? "" : "es"} recovered
                   </div>
                 </div>
@@ -700,10 +739,11 @@ function CompactMedicalSubjectTable({
                       : "status-badge--info"
                   }`}
                   style={{
-                    minWidth: 76,
                     textAlign: "center",
                     fontSize: 11,
                     padding: "3px 8px",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
                   }}
                 >
                   {impactTheme.label}
@@ -720,6 +760,7 @@ function CompactMedicalSubjectTable({
                     padding: 2,
                     display: "flex",
                     alignItems: "center",
+                    flexShrink: 0,
                   }}
                 >
                   {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
@@ -973,6 +1014,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
 
         {/* 3-Pill Segmented Switcher */}
         <div
+          className="planner-tab-switcher"
           style={{
             display: "flex",
             gap: 6,
@@ -981,8 +1023,10 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
             borderRadius: 10,
             border: "1px solid var(--border)",
             overflowX: "auto",
-            width: "fit-content",
+            width: "100%",
             maxWidth: "100%",
+            boxSizing: "border-box",
+            WebkitOverflowScrolling: "touch",
           }}
         >
           <button
@@ -1003,6 +1047,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
               boxShadow: activeTab === "bunk" ? "var(--shadow-xs)" : "none",
               transition: "all 0.15s ease",
               whiteSpace: "nowrap",
+              flexShrink: 0,
             }}
           >
             <Target size={14} style={{ color: activeTab === "bunk" ? "var(--primary)" : "inherit" }} />
@@ -1035,6 +1080,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
               boxShadow: activeTab === "medical" ? "var(--shadow-xs)" : "none",
               transition: "all 0.15s ease",
               whiteSpace: "nowrap",
+              flexShrink: 0,
             }}
           >
             <Stethoscope size={14} style={{ color: activeTab === "medical" ? "var(--primary)" : "inherit" }} />
@@ -1067,6 +1113,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
               boxShadow: activeTab === "redemption" ? "var(--shadow-xs)" : "none",
               transition: "all 0.15s ease",
               whiteSpace: "nowrap",
+              flexShrink: 0,
             }}
           >
             <TrendingUp size={14} style={{ color: activeTab === "redemption" ? "var(--primary)" : "inherit" }} />
@@ -1084,7 +1131,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
             title="Whole Day Absence Planner"
             subtitle="Plan off-days safely without dropping below the 75% threshold."
           >
-            <div className="planner-panel-shell" style={{ display: "grid", gap: 18 }}>
+            <div className="planner-panel-shell" style={{ display: "grid", gap: 18, width: "100%", minWidth: 0 }}>
               <div
                 className="planner-panel-toolbar"
                 style={{
@@ -1093,6 +1140,8 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                   gap: 12,
                   alignItems: "center",
                   flexWrap: "wrap",
+                  width: "100%",
+                  minWidth: 0,
                 }}
               >
                 <div style={{ color: "var(--text-secondary)", fontSize: 13.5, maxWidth: "72ch" }}>
@@ -1101,15 +1150,16 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
               </div>
 
               <div
+                className="planner-two-col-grid"
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-                  gap: 20,
                   alignItems: "start",
+                  width: "100%",
+                  maxWidth: "100%",
+                  minWidth: 0,
                 }}
               >
                 {/* Left: Day Checklist */}
-                <div style={{ display: "grid", gap: 10 }}>
+                <div style={{ display: "grid", gap: 10, width: "100%", minWidth: 0 }}>
                   <div
                     style={{
                       display: "flex",
@@ -1120,10 +1170,14 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                       borderRadius: 10,
                       background: "var(--bg-card-subtle)",
                       border: "1px solid var(--border)",
+                      flexWrap: "wrap",
+                      width: "100%",
+                      boxSizing: "border-box",
+                      minWidth: 0,
                     }}
                   >
                     <strong style={{ fontSize: 13 }}>Upcoming Class Days</strong>
-                    <span className="status-badge status-badge--neutral" style={{ fontSize: 12 }}>
+                    <span className="status-badge status-badge--neutral" style={{ fontSize: 11.5, wordBreak: "break-word" }}>
                       {data.selectedBunkDates.size} day{data.selectedBunkDates.size === 1 ? "" : "s"} selected
                       {data.selectedBunkCutoffDateKey
                         ? ` • thru ${formatDateKeyLabel(data.selectedBunkCutoffDateKey)}`
@@ -1140,7 +1194,10 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                         gap: 8,
                         maxHeight: 560,
                         overflowY: "auto",
-                        paddingRight: 4,
+                        overflowX: "hidden",
+                        width: "100%",
+                        minWidth: 0,
+                        paddingRight: 2,
                       }}
                     >
                       {data.bunkableDays.map((day) => {
@@ -1160,6 +1217,10 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                               border: `1px solid ${isSelected ? "var(--primary)" : "var(--border)"}`,
                               background: isSelected ? "var(--primary-soft)" : "var(--bg-card)",
                               cursor: "pointer",
+                              width: "100%",
+                              maxWidth: "100%",
+                              minWidth: 0,
+                              boxSizing: "border-box",
                             }}
                           >
                             <input
@@ -1168,12 +1229,12 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                               onChange={() => handlers.handleWholeDayToggle(day.dateKey)}
                               style={{ marginTop: 2, accentColor: "var(--primary)" }}
                             />
-                            <div style={{ display: "grid", gap: 3 }}>
+                            <div style={{ display: "grid", gap: 3, minWidth: 0, overflow: "hidden" }}>
                               <div style={{ fontWeight: 600, fontSize: 14 }}>{day.label}</div>
                               <div style={{ color: "var(--text-secondary)", fontSize: 12 }}>
                                 {day.entries.length} class{day.entries.length === 1 ? "" : "es"}
                               </div>
-                              <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+                              <div style={{ color: "var(--text-muted)", fontSize: 12, wordBreak: "break-word", overflowWrap: "anywhere" }}>
                                 {day.entries
                                   .slice(0, 3)
                                   .map((entry) => entry.courseCode ?? entry.title)
@@ -1189,7 +1250,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                 </div>
 
                 {/* Right: Cumulative Impact & Master-Detail Compact Table */}
-                <div style={{ display: "grid", gap: 14 }}>
+                <div style={{ display: "grid", gap: 14, width: "100%", minWidth: 0 }}>
                   {data.selectedBunkDates.size === 0 || !data.overallWholeDayPlan ? (
                     <EmptyMessage message="Select one or more future dates from the list to preview the bunk projection." />
                   ) : (
@@ -1200,6 +1261,10 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                         style={{
                           display: "grid",
                           gap: 10,
+                          width: "100%",
+                          maxWidth: "100%",
+                          minWidth: 0,
+                          boxSizing: "border-box",
                         }}
                       >
                         <div
@@ -1209,15 +1274,19 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                             gap: 12,
                             alignItems: "baseline",
                             flexWrap: "wrap",
+                            width: "100%",
+                            minWidth: 0,
                           }}
                         >
-                          <div>
-                            <div style={{ fontWeight: 800, fontSize: 17 }}>Overall Standing After Planned Leave</div>
+                          <div style={{ minWidth: 0, flex: "1 1 180px", maxWidth: "100%" }}>
+                            <div style={{ fontWeight: 800, fontSize: 16, wordBreak: "break-word" }}>
+                              Overall Standing After Planned Leave
+                            </div>
                             <div style={{ color: "var(--text-muted)", fontSize: 12.5 }}>
                               Your projected attendance through the last selected day.
                             </div>
                           </div>
-                          <div style={{ display: "grid", gap: 4, justifyItems: "end" }}>
+                          <div style={{ display: "grid", gap: 4, justifyItems: "end", minWidth: 0 }}>
                             <strong
                               style={{
                                 color:
@@ -1225,6 +1294,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                                     ? "var(--success)"
                                     : "var(--danger)",
                                 fontVariantNumeric: "tabular-nums",
+                                whiteSpace: "nowrap",
                               }}
                             >
                               Current: {data.overallWholeDayPlan.currentPercentage.toFixed(1)}%
@@ -1238,6 +1308,7 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                                 fontWeight: 700,
                                 fontSize: 13,
                                 fontVariantNumeric: "tabular-nums",
+                                whiteSpace: "nowrap",
                               }}
                             >
                               After leave:{" "}
@@ -1260,10 +1331,12 @@ export function Strategy({ data, handlers }: { data: StrategyData; handlers: Str
                         <div
                           style={{
                             display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
-                            gap: 10,
+                            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 85px), 1fr))",
+                            gap: 8,
                             color: "var(--text-secondary)",
-                            fontSize: 13.5,
+                            fontSize: 13,
+                            width: "100%",
+                            minWidth: 0,
                           }}
                         >
                           <Metric

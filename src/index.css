@@ -159,11 +159,17 @@ html {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  max-width: 100vw;
+  width: 100%;
+  overflow-x: hidden;
   min-height: 100vh;
   color: var(--text-primary);
   background-color: var(--bg-body) !important;
@@ -173,10 +179,14 @@ body {
   font-variant-numeric: tabular-nums;
   font-weight: 450;
   line-height: 1.5;
+  position: relative;
 }
 
 #root {
   min-height: 100vh;
+  max-width: 100vw;
+  width: 100%;
+  overflow-x: hidden;
   position: relative;
 }
 
@@ -1015,11 +1025,7 @@ label {
   }
 }
 
-@media (max-width: 480px) {
-  .app-shell {
-    padding: 8px 8px 24px !important;
-  }
-
+@media (max-width: 768px) {
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -1031,11 +1037,78 @@ label {
   .standard-input {
     font-size: 16px !important;
   }
+}
+
+@media (max-width: 480px) {
+  .app-shell {
+    padding: 8px 8px 24px !important;
+  }
 
   .action-button {
     padding: 8px 12px !important;
     font-size: 12.5px !important;
     min-height: 38px;
+  }
+}
+
+/* =========================================================================
+   Bunk Planner & Strategy Mobile Responsiveness
+   ========================================================================= */
+.planner-two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .planner-two-col-grid {
+    grid-template-columns: minmax(280px, 1fr) minmax(340px, 1.4fr);
+    gap: 20px;
+  }
+}
+
+.planner-tab-switcher {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: var(--bg-section);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.planner-tab-switcher::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .planner-subject-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .planner-subject-row-stats {
+    width: 100% !important;
+    justify-content: space-between !important;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border-subtle);
+    margin-left: 0 !important;
+  }
+
+  .planner-subject-row-stats > div:first-child {
+    text-align: left !important;
+  }
+
+  .planner-subject-row-stats > div:first-child > div:last-child {
+    justify-content: flex-start !important;
   }
 }
 

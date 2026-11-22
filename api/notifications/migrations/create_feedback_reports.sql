@@ -68,10 +68,13 @@ BEGIN
     END IF;
 END $$;
 
--- 4. Enable Row Level Security (RLS)
+-- 4. Grant table privileges to Supabase roles
+GRANT ALL ON TABLE public.feedback_reports TO anon, authenticated, service_role;
+
+-- 5. Enable Row Level Security (RLS)
 ALTER TABLE public.feedback_reports ENABLE ROW LEVEL SECURITY;
 
--- 5. Row Level Security Policies
+-- 6. Row Level Security Policies
 DO $$
 BEGIN
     -- Policy 1: Allow any user (anonymous or student) to submit reports

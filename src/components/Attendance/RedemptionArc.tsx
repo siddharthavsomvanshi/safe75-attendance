@@ -233,60 +233,74 @@ export function RedemptionArc({ data, schedule, subjectSummaries }: RedemptionAr
                       key={subj.id}
                       className="surface-card interactive-row"
                       style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: 12,
                         padding: "10px 12px",
                         borderRadius: 10,
                         border: "1px solid var(--border)",
                         background: "var(--bg-card-subtle)",
-                        flexWrap: "wrap",
+                        width: "100%",
+                        minWidth: 0,
+                        boxSizing: "border-box",
                       }}
                     >
-                      <div style={{ display: "grid", gap: 2, minWidth: 160, flex: "1 1 200px" }}>
-                        <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>
-                          {displayName}
-                        </span>
-                        {subj.courseCode && (
-                          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                            {subj.courseCode}
-                          </span>
-                        )}
-                      </div>
-
                       <div
+                        className="planner-subject-row"
                         style={{
                           display: "flex",
+                          justifyContent: "space-between",
                           alignItems: "center",
-                          gap: 14,
+                          gap: 10,
                           flexWrap: "wrap",
-                          justifyContent: "flex-end",
-                          marginLeft: "auto",
+                          width: "100%",
+                          minWidth: 0,
                         }}
                       >
-                        <div style={{ textAlign: "right" }}>
-                          <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
-                            {subj.currentPercentage.toFixed(1)}% → {subj.projectedPercentage.toFixed(1)}%
-                          </div>
-                          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                            {subj.classesAdded > 0
-                              ? `+${subj.classesAdded} class${subj.classesAdded === 1 ? "" : "es"}`
-                              : "No classes"}
-                          </div>
+                        <div style={{ display: "grid", gap: 2, minWidth: 0, flex: "1 1 150px", maxWidth: "100%" }}>
+                          <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)", wordBreak: "break-word" }}>
+                            {displayName}
+                          </span>
+                          {subj.courseCode && (
+                            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                              {subj.courseCode}
+                            </span>
+                          )}
                         </div>
 
-                        <span
-                          className={`status-badge ${subj.isSafe ? "status-badge--success" : "status-badge--danger"}`}
+                        <div
+                          className="planner-subject-row-stats"
                           style={{
-                            minWidth: 80,
-                            textAlign: "center",
-                            fontSize: 11,
-                            padding: "3px 8px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            flexWrap: "wrap",
+                            justifyContent: "flex-end",
+                            marginLeft: "auto",
+                            minWidth: 0,
                           }}
                         >
-                          {subj.isSafe ? "Safe" : "Below 75%"}
-                        </span>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+                              {subj.currentPercentage.toFixed(1)}% → {subj.projectedPercentage.toFixed(1)}%
+                            </div>
+                            <div style={{ fontSize: 11, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+                              {subj.classesAdded > 0
+                                ? `+${subj.classesAdded} class${subj.classesAdded === 1 ? "" : "es"}`
+                                : "No classes"}
+                            </div>
+                          </div>
+
+                          <span
+                            className={`status-badge ${subj.isSafe ? "status-badge--success" : "status-badge--danger"}`}
+                            style={{
+                              textAlign: "center",
+                              fontSize: 11,
+                              padding: "3px 8px",
+                              whiteSpace: "nowrap",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {subj.isSafe ? "Safe" : "Below 75%"}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   );
